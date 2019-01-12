@@ -2,7 +2,7 @@ import backpropagation
 import tensorflow as tf
 
 
-class FANeuralNetwork(backpropagation.NeuralNetwork):
+class FeedbackAlignment(backpropagation.NeuralNetwork):
     def backpropagation(self, da, z, a, eta, scope):
         with tf.variable_scope(scope, reuse=tf.AUTO_REUSE):
             w = tf.get_variable("weights")
@@ -19,9 +19,9 @@ class FANeuralNetwork(backpropagation.NeuralNetwork):
 
 
 if __name__ == '__main__':
-    NN = backpropagation.NeuralNetwork([784, 50,50,50,30, 10])
+    NN = backpropagation.NeuralNetwork([784, 50, 50, 50, 30, 10])
     NN.load_data()
     NN.train(batch_num=1000)
-    FNN = FANeuralNetwork([784, 50,50,50,30, 10],scope_name="FA_scope")
+    FNN = FeedbackAlignment([784, 50, 50, 50, 30, 10], scope_name="FA_scope")
     FNN.load_data()
     FNN.train()
