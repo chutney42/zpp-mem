@@ -32,20 +32,20 @@ class NeuralNetwork(object):
         self.acct_res = tf.reduce_sum(tf.cast(self.acct_mat, tf.float32))
 
     def __fully_connected_layer(self, x, y_dim, act_func, scope):
-        with tf.variable_scope(scope) as scope:
+        with tf.variable_scope(scope):
             w = tf.get_variable("weights", [x.shape[1], y_dim], initializer=tf.random_normal_initializer())
             b = tf.get_variable("biases", [y_dim], initializer=tf.constant_initializer())
             z = tf.add(tf.matmul(x, w), b)
             return z, act_func(z)
 
     def __backpropagation(self, da, z, a, eta, scope):
-        with tf.variable_scope(scope, reuse=True) as scope:
+        with tf.variable_scope(scope, reuse=True):
             w = tf.get_variable("weights")
             b = tf.get_variable("biases")
             dz = tf.multiply(da, sigmoid_prime(z))
             db = dz
             dw = tf.matmul(tf.transpose(a), dz)
-            dal = tf.matmul(dz, tf.transpose(w))
+            dal = tf.matmul(dz, tf.transpose(w)) #da lower
             return dal, tf.assign(w, tf.subtract(w, tf.multiply(eta, dw))), tf.assign(b, tf.subtract(b, tf.multiply(eta, tf.reduce_mean(db, axis=[0]))))
 
     def load_data(self):
