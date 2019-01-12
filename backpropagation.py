@@ -78,6 +78,6 @@ class NeuralNetwork(object):
         return res
 
 if __name__ == '__main__':
-    NN = NeuralNetwork([784, 50, 30, 10])
+    NN = NeuralNetwork([784, 50,50,50, 30, 10])
     NN.load_data()
     NN.train()
