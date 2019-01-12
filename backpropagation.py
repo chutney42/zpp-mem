@@ -1,4 +1,5 @@
 import os
+os.environ['KMP_DUPLICATE_LIB_OK']='True' # hacked by Adam
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 os.environ['KMP_DUPLICATE_LIB_OK']= 'True'
 import tensorflow as tf
