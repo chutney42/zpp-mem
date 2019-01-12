@@ -3,15 +3,11 @@ import tensorflow as tf
 
 
 class FANeuralNetwork(backpropagation.NeuralNetwork):
-    # def __init__(self, sizes, eta=0.5):
-    #     super().__init__(self,sizes,eta=eta)
-
-    def __backpropagation(self, da, z, a, eta, scope):
-        with tf.variable_scope(scope, reuse=True) as scope:
-            # FAw = tf.get_variable("backprop_FAweights")
+    def backpropagation(self, da, z, a, eta, scope):
+        with tf.variable_scope(scope, reuse=tf.AUTO_REUSE):
             w = tf.get_variable("weights")
             FAw = tf.get_variable("backprop_FAweights", shape=tf.transpose(w).get_shape().as_list(),
-                                  initializer=tf.zeros_initializer())
+                                  initializer=tf.random_normal_initializer())
             b = tf.get_variable("biases")
             dz = tf.multiply(da, backpropagation.sigmoid_prime(z))
             db = dz
@@ -23,6 +19,9 @@ class FANeuralNetwork(backpropagation.NeuralNetwork):
 
 
 if __name__ == '__main__':
-    NN = FANeuralNetwork([784, 50, 30, 10])
+    NN = backpropagation.NeuralNetwork([784, 50,50,50,30, 10])
     NN.load_data()
-    NN.train()
+    NN.train(batch_num=1000)
+    FNN = FANeuralNetwork([784, 50,50,50,30, 10],scope_name="FA_scope")
+    FNN.load_data()
+    FNN.train()

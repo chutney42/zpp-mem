@@ -10,7 +10,7 @@ def sigmoid_prime(x):
     return tf.multiply(tf.sigmoid(x), (tf.constant(1.0) - tf.sigmoid(x)))
 
 class NeuralNetwork(object):
-    def __init__(self, sizes, eta=0.5):
+    def __init__(self, sizes, eta=0.5,scope_name="main_scope"):
         self.num_layers = len(sizes)
         self.sizes = sizes
         self.y = tf.placeholder(tf.float32, [None, self.sizes[-1]])
@@ -20,25 +20,25 @@ class NeuralNetwork(object):
         self.zs = []
         a = self.x
         for i in range(1, self.num_layers):
-            z, a = self.__fully_connected_layer(a, self.sizes[i], tf.sigmoid, 'h{}'.format(i))
+            z, a = self.fully_connected_layer(a, self.sizes[i], tf.sigmoid, '{}_h{}'.format(scope_name,i))
             self.acts.append(a)
             self.zs.append(z)
         da = tf.subtract(a, self.y)
         self.step = []
         for i in range(len(self.zs) - 1, -1, -1):
-            da, w_update, b_update = self.__backpropagation(da, self.zs[i], self.acts[i], self.eta, 'h{}'.format(i + 1))
+            da, w_update, b_update = self.backpropagation(da, self.zs[i], self.acts[i], self.eta, '{}_h{}'.format(scope_name,i+1))
             self.step.append((w_update, b_update))
         self.acct_mat = tf.equal(tf.argmax(self.acts[-1], 1), tf.argmax(self.y, 1))
         self.acct_res = tf.reduce_sum(tf.cast(self.acct_mat, tf.float32))
 
-    def __fully_connected_layer(self, x, y_dim, act_func, scope):
+    def fully_connected_layer(self, x, y_dim, act_func, scope):
         with tf.variable_scope(scope):
             w = tf.get_variable("weights", [x.shape[1], y_dim], initializer=tf.random_normal_initializer())
             b = tf.get_variable("biases", [y_dim], initializer=tf.constant_initializer())
             z = tf.add(tf.matmul(x, w), b)
             return z, act_func(z)
 
-    def __backpropagation(self, da, z, a, eta, scope):
+    def backpropagation(self, da, z, a, eta, scope):
         with tf.variable_scope(scope, reuse=True):
             w = tf.get_variable("weights")
             b = tf.get_variable("biases")
@@ -78,6 +78,6 @@ class NeuralNetwork(object):
         return res
 
 if __name__ == '__main__':
-    NN = NeuralNetwork([784, 50,50,50, 30, 10])
+    NN = NeuralNetwork([784, 50,50,50,30, 10])
     NN.load_data()
     NN.train()
