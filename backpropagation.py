@@ -1,85 +1,99 @@
 import os
 os.environ['KMP_DUPLICATE_LIB_OK']='True' # hacked by Adam
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
-os.environ['KMP_DUPLICATE_LIB_OK']= 'True'
 import tensorflow as tf
 import numpy as np
+from utils import *
 
 from tensorflow.examples.tutorials.mnist import input_data
 mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
 
-def sigmoid_prime(x):
-    return tf.multiply(tf.sigmoid(x), (tf.constant(1.0) - tf.sigmoid(x)))
-
 class NeuralNetwork(object):
-    def __init__(self, sizes, eta=0.5,scope_name="main_scope"):
+    def __init__(self, sizes, learning_rate=0.5, scope="main"):
+        self.scope = scope
         self.num_layers = len(sizes)
         self.sizes = sizes
-        self.y = tf.placeholder(tf.float32, [None, self.sizes[-1]])
-        self.eta = tf.constant(eta)
-        self.x = tf.placeholder(tf.float32, [None, self.sizes[0]])
-        self.acts = [self.x]
+        self.learning_rate = tf.constant(learning_rate)
+        self.labels = tf.placeholder(tf.float32, [None, self.sizes[-1]])
+        self.features = tf.placeholder(tf.float32, [None, self.sizes[0]])
+
+    def build(self):
+        self.acts = [self.features]
         self.zs = []
-        a = self.x
+        a = self.acts[0]
         for i in range(1, self.num_layers):
-            z, a = self.fully_connected_layer(a, self.sizes[i], tf.sigmoid, '{}_h{}'.format(scope_name,i))
+            z, a = self.fully_connected_layer(a, self.sizes[i], '{}_layer{}'.format(self.scope, i))
             self.acts.append(a)
             self.zs.append(z)
-        da = tf.subtract(a, self.y)
+        error = tf.subtract(a, self.labels)
         self.step = []
         for i in range(len(self.zs) - 1, -1, -1):
-            da, w_update, b_update = self.backpropagation(da, self.zs[i], self.acts[i], self.eta, '{}_h{}'.format(scope_name,i+1))
-            self.step.append((w_update, b_update))
-        self.acct_mat = tf.equal(tf.argmax(self.acts[-1], 1), tf.argmax(self.y, 1))
+            error, weights_update, biases_update = self.backpropagation(error, self.zs[i], self.acts[i],
+                                                                        '{}_layer{}'.format(self.scope, i + 1))
+            self.step.append((weights_update, biases_update))
+        self.acct_mat = tf.equal(tf.argmax(self.acts[-1], 1), tf.argmax(self.labels, 1))
         self.acct_res = tf.reduce_sum(tf.cast(self.acct_mat, tf.float32))
 
-    def fully_connected_layer(self, x, y_dim, act_func, scope):
+    def fully_connected_layer(self, input_act, output_dim, scope):
         with tf.variable_scope(scope):
-            w = tf.get_variable("weights", [x.shape[1], y_dim], initializer=tf.random_normal_initializer())
-            b = tf.get_variable("biases", [y_dim], initializer=tf.constant_initializer())
-            z = tf.add(tf.matmul(x, w), b)
-            return z, act_func(z)
+            weights = tf.get_variable("weights",
+                                      [input_act.shape[1], output_dim],
+                                      initializer=tf.random_normal_initializer())
+            biases = tf.get_variable("biases",
+                                     [output_dim],
+                                     initializer=tf.constant_initializer())
+            z = tf.add(tf.matmul(input_act, weights), biases)
+            return z, tf.sigmoid(z)
 
-    def backpropagation(self, da, z, a, eta, scope):
+    def backpropagation(self, input_error, z, a, scope):
         with tf.variable_scope(scope, reuse=True):
-            w = tf.get_variable("weights")
-            b = tf.get_variable("biases")
-            dz = tf.multiply(da, sigmoid_prime(z))
-            db = dz
-            dw = tf.matmul(tf.transpose(a), dz)
-            dal = tf.matmul(dz, tf.transpose(w)) #da lower
-            return dal, tf.assign(w, tf.subtract(w, tf.multiply(eta, dw))), tf.assign(b, tf.subtract(b, tf.multiply(eta, tf.reduce_mean(db, axis=[0]))))
+            weights = tf.get_variable("weights")
+            biases = tf.get_variable("biases")
+            error = tf.multiply(input_error, sigmoid_prime(z))
+            roc_cost_over_biases = error
+            roc_cost_over_weights = tf.matmul(tf.transpose(a), error)
+            output_error = tf.matmul(error, tf.transpose(weights))
+            return output_error, \
+                tf.assign(weights,
+                          tf.subtract(weights,
+                                      tf.multiply(self.learning_rate,
+                                                  roc_cost_over_weights))), \
+                tf.assign(biases,
+                          tf.subtract(biases,
+                                      tf.multiply(self.learning_rate,
+                                                  tf.reduce_mean(roc_cost_over_biases,
+                                                                 axis=[0]))))
 
     def load_data(self):
         #TODO Proponowałbym tu sprawne uzycie tf.data oraz jako osobny moduł parsowanie mnista.
         pass
 
-    def train(self, batch_size=10, batch_num=10000):
+    def train(self, batch_size=10, batch_num=100000):
         #TODO generlize it to other datasets using tf.data for example
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
             for i in range(batch_num):
                 batch_xs, batch_ys = mnist.train.next_batch(batch_size)
-                sess.run(self.step, feed_dict={self.x: batch_xs, self.y: batch_ys})
+                sess.run(self.step, feed_dict={self.features: batch_xs, self.labels: batch_ys})
                 if i % 1000 == 0:
-                    res = sess.run(self.acct_res, feed_dict={self.x: mnist.test.images[:1000],
-                                                             self.y: mnist.test.labels[:1000]})
-                    print(res)
+                    res = sess.run(self.acct_res, feed_dict={self.features: mnist.test.images[:1000],
+                                                             self.labels: mnist.test.labels[:1000]})
+                    print("{}%".format(res / 10))
             #TODO save model
 
     def infer(self, x):
         #TODO restore model
         with tf.Session() as sess:
-            res = sess.run(self.acts[-1], feed_dict={self.x: x})
+            res = sess.run(self.activations[-1], feed_dict={self.features: x})
         return res
 
     def test(self, x, y):
         #TODO restore model
         with tf.Session() as sess:
-            res = sess.run(self.acct_res, feed_dict={self.x: x, self.y: y})
+            res = sess.run(self.acct_res, feed_dict={self.features: x, self.labels: y})
         return res
 
 if __name__ == '__main__':
-    NN = NeuralNetwork([784, 50,50,50,30, 10])
-    NN.load_data()
+    NN = NeuralNetwork([784, 100, 50, 30, 10])
+    NN.build()
     NN.train()
