@@ -25,23 +25,23 @@ class NeuralNetwork(object):
             z, a = self.fully_connected_layer(a, self.sizes[i], '{}_layer{}'.format(self.scope, i))
             self.acts.append(a)
             self.zs.append(z)
+
+        self.acct_mat = tf.equal(tf.argmax(a, 1), tf.argmax(self.labels, 1))
+        self.acct_res = tf.reduce_sum(tf.cast(self.acct_mat, tf.float32))
+
         error = tf.subtract(a, self.labels)
         self.step = []
         for i in range(len(self.zs) - 1, -1, -1):
             error, weights_update, biases_update = self.backpropagation(error, self.zs[i], self.acts[i],
-                                                                        '{}_layer{}'.format(self.scope, i + 1))
+                '{}_layer{}'.format(self.scope, i + 1))
             self.step.append((weights_update, biases_update))
-        self.acct_mat = tf.equal(tf.argmax(self.acts[-1], 1), tf.argmax(self.labels, 1))
-        self.acct_res = tf.reduce_sum(tf.cast(self.acct_mat, tf.float32))
 
     def fully_connected_layer(self, input_act, output_dim, scope):
         with tf.variable_scope(scope):
-            weights = tf.get_variable("weights",
-                                      [input_act.shape[1], output_dim],
-                                      initializer=tf.random_normal_initializer())
-            biases = tf.get_variable("biases",
-                                     [output_dim],
-                                     initializer=tf.constant_initializer())
+            weights = tf.get_variable("weights", [input_act.shape[1], output_dim],
+                initializer=tf.random_normal_initializer())
+            biases = tf.get_variable("biases", [output_dim],
+                initializer=tf.constant_initializer())
             z = tf.add(tf.matmul(input_act, weights), biases)
             return z, tf.sigmoid(z)
 
@@ -53,16 +53,10 @@ class NeuralNetwork(object):
             roc_cost_over_biases = error
             roc_cost_over_weights = tf.matmul(tf.transpose(a), error)
             output_error = tf.matmul(error, tf.transpose(weights))
-            return output_error, \
-                tf.assign(weights,
-                          tf.subtract(weights,
-                                      tf.multiply(self.learning_rate,
-                                                  roc_cost_over_weights))), \
-                tf.assign(biases,
-                          tf.subtract(biases,
-                                      tf.multiply(self.learning_rate,
-                                                  tf.reduce_mean(roc_cost_over_biases,
-                                                                 axis=[0]))))
+            weights = tf.assign(weights, tf.subtract(weights, tf.multiply(self.learning_rate, roc_cost_over_weights)))
+            biases = tf.assign(biases, tf.subtract(biases, tf.multiply(self.learning_rate, tf.reduce_mean(roc_cost_over_biases,
+                axis=[0]))))
+            return output_error, weights, biases
 
     def load_data(self):
         #TODO Proponowałbym tu sprawne uzycie tf.data oraz jako osobny moduł parsowanie mnista.
@@ -71,14 +65,18 @@ class NeuralNetwork(object):
     def train(self, batch_size=10, batch_num=100000):
         #TODO generlize it to other datasets using tf.data for example
         with tf.Session() as sess:
+            writer = tf.summary.FileWriter("./demo/{}".format(self.scope))
+            writer.add_graph(sess.graph)
             sess.run(tf.global_variables_initializer())
             for i in range(batch_num):
                 batch_xs, batch_ys = mnist.train.next_batch(batch_size)
                 sess.run(self.step, feed_dict={self.features: batch_xs, self.labels: batch_ys})
                 if i % 1000 == 0:
-                    res = sess.run(self.acct_res, feed_dict={self.features: mnist.test.images[:1000],
-                                                             self.labels: mnist.test.labels[:1000]})
+                    res = sess.run(self.acct_res, feed_dict={self.features: mnist.test.images[:1000], self.labels:
+                        mnist.test.labels[:1000]})
                     print("{}%".format(res / 10))
+            res = sess.run(self.acct_res, feed_dict={self.features: mnist.test.images, self.labels: mnist.test.labels})
+            print("{}%".format(res / len(mnist.test.labels) * 100))
             #TODO save model
 
     def infer(self, x):
@@ -94,6 +92,6 @@ class NeuralNetwork(object):
         return res
 
 if __name__ == '__main__':
-    NN = NeuralNetwork([784, 100, 50, 30, 10])
+    NN = NeuralNetwork([784, 50, 30, 10], scope='BP')
     NN.build()
     NN.train()
