@@ -1,8 +1,6 @@
 import os
 
-os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'  # hacked by Adam
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 import tensorflow as tf
 import numpy as np
 
@@ -16,7 +14,7 @@ def sigmoid_prime(x):
 
 
 class NeuralNetwork(object):
-    def __init__(self, sizes, eta=0.5, scope_name="main_scope"):
+    def __init__(self, sizes, eta=0.5):
         self.num_layers = len(sizes)
         self.sizes = sizes
         self.y = tf.placeholder(tf.float32, [None, self.sizes[-1]])
@@ -26,34 +24,66 @@ class NeuralNetwork(object):
         self.zs = []
         a = self.x
         for i in range(1, self.num_layers):
-            z, a = self.fully_connected_layer(a, self.sizes[i], tf.sigmoid, '{}_h{}'.format(scope_name, i))
+            z, a = self.fully_connected_normalized_layer(a, self.sizes[i], tf.sigmoid, 'h{}'.format(i))
             self.acts.append(a)
             self.zs.append(z)
         da = tf.subtract(a, self.y)
         self.step = []
         for i in range(len(self.zs) - 1, -1, -1):
-            da, w_update, b_update = self.backpropagation(da, self.zs[i], self.acts[i], self.eta,
-                                                          '{}_h{}'.format(scope_name, i + 1))
+            da, w_update, b_update = self.__backpropagation(da, self.zs[i], self.acts[i], self.eta, 'h{}'.format(i + 1))
             self.step.append((w_update, b_update))
         self.acct_mat = tf.equal(tf.argmax(self.acts[-1], 1), tf.argmax(self.y, 1))
         self.acct_res = tf.reduce_sum(tf.cast(self.acct_mat, tf.float32))
 
-    def fully_connected_layer(self, x, y_dim, act_func, scope):
-        with tf.variable_scope(scope):
+    def __fully_connected_layer(self, x, y_dim, act_func, scope):
+        with tf.variable_scope(scope) as scope:
             w = tf.get_variable("weights", [x.shape[1], y_dim], initializer=tf.random_normal_initializer())
             b = tf.get_variable("biases", [y_dim], initializer=tf.constant_initializer())
             z = tf.add(tf.matmul(x, w), b)
             return z, act_func(z)
 
-    def backpropagation(self, da, z, a, eta, scope):
+    def fully_connected_normalized_layer(self, x, y_dim, act_func, scope):
+        with tf.variable_scope(scope):
+            epsilon = 0.001  # In case batch_var=0, division by zero is not cool
+            w = tf.get_variable("weights", [x.shape[1], y_dim], initializer=tf.random_normal_initializer())
+            bias = tf.get_variable("biases", [y_dim], initializer=tf.constant_initializer())
+            z = tf.matmul(x, w)
+            batch_mean, batch_var = tf.nn.moments(z, [0])
+            z_hat = (z - batch_mean) / tf.sqrt(batch_var + epsilon)
+
+            scale = tf.Variable(tf.ones([y_dim]))
+
+            z_normalized = scale * z_hat + bias
+
+            return z_normalized, act_func(z_normalized)
+
+    def __backpropagation(self, da, z, a, eta, scope):
         with tf.variable_scope(scope, reuse=True):
             w = tf.get_variable("weights")
             b = tf.get_variable("biases")
             dz = tf.multiply(da, sigmoid_prime(z))
             db = dz
             dw = tf.matmul(tf.transpose(a), dz)
-            dal = tf.matmul(dz, tf.transpose(w)) #da lower
-            return dal, tf.assign(w, tf.subtract(w, tf.multiply(eta, dw))), tf.assign(b, tf.subtract(b, tf.multiply(eta, tf.reduce_mean(db, axis=[0]))))
+            dal = tf.matmul(dz, tf.transpose(w))
+            return dal,
+            tf.assign(w, tf.subtract(w, tf.multiply(eta, dw))),
+            tf.assign(b, tf.subtract(b, tf.multiply(eta,axis=[0])))
+
+    def normalized_backprogation(self, da, z, a, eta, scope):
+        with tf.variable_scope(scope, reuse=True):
+            w = tf.get_variable("weights")
+            b = tf.get_variable("biases")
+            dz = tf.multiply(da, sigmoid_prime(z))
+            db = dz
+            dw = tf.matmul(tf.transpose(a), dz)
+            dal = tf.matmul(dz, tf.transpose(w))
+            return dal,
+            tf.assign(w, tf.subtract(w, tf.multiply(eta, dw))),
+            tf.assign(b, tf.subtract(b, tf.multiply(eta,axis=[0])))
+
+
+
+
 
     def load_data(self):
         # TODO Proponowałbym tu sprawne uzycie tf.data oraz jako osobny moduł parsowanie mnista.
@@ -86,6 +116,6 @@ class NeuralNetwork(object):
 
 
 if __name__ == '__main__':
-    NN = NeuralNetwork([784, 50, 50, 50, 30, 10])
+    NN = NeuralNetwork([784, 50, 30, 10])
     NN.load_data()
     NN.train()
