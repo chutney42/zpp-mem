@@ -4,59 +4,42 @@ os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 import tensorflow as tf
 import numpy as np
 from utils import *
-
+from layer import *
 from tensorflow.examples.tutorials.mnist import input_data
 mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
 
 class NeuralNetwork(object):
-    def __init__(self, sizes, learning_rate=0.5, scope="main"):
+    def __init__(self, input_dim, sequence, output_dim, learning_rate=0.1, scope="main"):
         self.scope = scope
-        self.num_layers = len(sizes)
-        self.sizes = sizes
+        self.sequence = sequence
         self.learning_rate = tf.constant(learning_rate)
-        self.labels = tf.placeholder(tf.float32, [None, self.sizes[-1]])
-        self.features = tf.placeholder(tf.float32, [None, self.sizes[0]])
+
+        self.features = tf.placeholder(tf.float32, [None, input_dim])
+        self.labels = tf.placeholder(tf.float32, [None, output_dim])
 
     def build(self):
-        self.acts = [self.features]
-        self.zs = []
-        a = self.acts[0]
-        for i in range(1, self.num_layers):
-            z, a = self.fully_connected_layer(a, self.sizes[i], '{}_layer{}'.format(self.scope, i))
-            self.acts.append(a)
-            self.zs.append(z)
+        a = self.build_forward()
+        self.build_test(a)
+        self.build_backward(a)
 
+    def build_forward(self):
+        a = self.features
+        for i, layer in enumerate(self.sequence):
+            layer.scope = '{}_{}_{}'.format(self.scope, layer.scope, i)
+            a = layer.build_forward(a)
+        return a
+
+    def build_test(self, a):
         self.acct_mat = tf.equal(tf.argmax(a, 1), tf.argmax(self.labels, 1))
         self.acct_res = tf.reduce_sum(tf.cast(self.acct_mat, tf.float32))
 
-        error = tf.subtract(a, self.labels)
+    def build_backward(self, output_vec):
+        error = tf.subtract(output_vec, self.labels)
         self.step = []
-        for i in range(len(self.zs) - 1, -1, -1):
-            error, weights_update, biases_update = self.backpropagation(error, self.zs[i], self.acts[i],
-                '{}_layer{}'.format(self.scope, i + 1))
-            self.step.append((weights_update, biases_update))
-
-    def fully_connected_layer(self, input_act, output_dim, scope):
-        with tf.variable_scope(scope):
-            weights = tf.get_variable("weights", [input_act.shape[1], output_dim],
-                initializer=tf.random_normal_initializer())
-            biases = tf.get_variable("biases", [output_dim],
-                initializer=tf.constant_initializer())
-            z = tf.add(tf.matmul(input_act, weights), biases)
-            return z, tf.sigmoid(z)
-
-    def backpropagation(self, input_error, z, a, scope):
-        with tf.variable_scope(scope, reuse=True):
-            weights = tf.get_variable("weights")
-            biases = tf.get_variable("biases")
-            error = tf.multiply(input_error, sigmoid_prime(z))
-            roc_cost_over_biases = error
-            roc_cost_over_weights = tf.matmul(tf.transpose(a), error)
-            output_error = tf.matmul(error, tf.transpose(weights))
-            weights = tf.assign(weights, tf.subtract(weights, tf.multiply(self.learning_rate, roc_cost_over_weights)))
-            biases = tf.assign(biases, tf.subtract(biases, tf.multiply(self.learning_rate, tf.reduce_mean(roc_cost_over_biases,
-                axis=[0]))))
-            return output_error, weights, biases
+        for i, layer in reversed(list(enumerate(self.sequence))):
+            error = layer.build_backward(error)
+            if (layer.trainable):
+                self.step.append(layer.step)
 
     def load_data(self):
         #TODO Proponowałbym tu sprawne uzycie tf.data oraz jako osobny moduł parsowanie mnista.
@@ -92,6 +75,15 @@ class NeuralNetwork(object):
         return res
 
 if __name__ == '__main__':
-    NN = NeuralNetwork([784, 50, 30, 10], scope='BP')
+    #NN = NeuralNetwork([784, 50, 30, 10], scope='BP')
+    NN = NeuralNetwork(784,
+                       [FullyConnected(50),
+                        Sigmoid(),
+                        FullyConnected(30),
+                        Sigmoid(),
+                        FullyConnected(10),
+                        Sigmoid()],
+                       10,
+                       'BP')
     NN.build()
     NN.train()
