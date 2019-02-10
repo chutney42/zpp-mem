@@ -8,6 +8,8 @@ from layer import *
 from tensorflow.examples.tutorials.mnist import input_data
 mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
 
+file_name = "run_auto_increment"
+
 class NeuralNetwork(object):
     def __init__(self, input_dim, sequence, output_dim, learning_rate=0.1, scope="main"):
         self.scope = scope
@@ -16,6 +18,14 @@ class NeuralNetwork(object):
 
         self.features = tf.placeholder(tf.float32, [None, input_dim])
         self.labels = tf.placeholder(tf.float32, [None, output_dim])
+
+        with open(file_name) as file:
+            self.run_number = int(file.read())
+
+        self.run_number += 1
+
+        with open(file_name, 'w') as file:
+            file.write(str(self.run_number))
 
     def build(self):
         a = self.build_forward()
@@ -32,6 +42,7 @@ class NeuralNetwork(object):
     def build_test(self, a):
         self.acct_mat = tf.equal(tf.argmax(a, 1), tf.argmax(self.labels, 1))
         self.acct_res = tf.reduce_sum(tf.cast(self.acct_mat, tf.float32))
+        tf.summary.scalar("result", self.acct_res)
 
     def build_backward(self, output_vec):
         error = tf.subtract(output_vec, self.labels)
@@ -45,21 +56,26 @@ class NeuralNetwork(object):
         #TODO Proponowałbym tu sprawne uzycie tf.data oraz jako osobny moduł parsowanie mnista.
         pass
 
-    def train(self, batch_size=10, batch_num=100000):
+    def train(self, batch_size=10, batch_num=10000):
         #TODO generlize it to other datasets using tf.data for example
         with tf.Session() as sess:
-            writer = tf.summary.FileWriter("./demo/{}".format(self.scope))
-            writer.add_graph(sess.graph)
+            writer = tf.summary.FileWriter("./demo/{}_{}".format(self.scope, self.run_number), sess.graph)
             sess.run(tf.global_variables_initializer())
             for i in range(batch_num):
                 batch_xs, batch_ys = mnist.train.next_batch(batch_size)
                 sess.run(self.step, feed_dict={self.features: batch_xs, self.labels: batch_ys})
                 if i % 1000 == 0:
-                    res = sess.run(self.acct_res, feed_dict={self.features: mnist.test.images[:1000], self.labels:
-                        mnist.test.labels[:1000]})
+                    merged = tf.summary.merge_all()
+                    run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+                    run_metadata = tf.RunMetadata()
+                    summary, res = sess.run([merged, self.acct_res], options=run_options, run_metadata=run_metadata,
+                        feed_dict={self.features: mnist.test.images[:1000], self.labels: mnist.test.labels[:1000]})
+                    writer.add_summary(summary, i)
+                    writer.add_run_metadata(run_metadata, 'step%d' % i)
                     print("{}%".format(res / 10))
             res = sess.run(self.acct_res, feed_dict={self.features: mnist.test.images, self.labels: mnist.test.labels})
             print("{}%".format(res / len(mnist.test.labels) * 100))
+            writer.close()
             #TODO save model
 
     def infer(self, x):
@@ -75,6 +91,10 @@ class NeuralNetwork(object):
         return res
 
 if __name__ == '__main__':
+    if not os.path.isfile(file_name):
+        with open(file_name, 'w+') as file:
+            file.write(str(0))
+
     #NN = NeuralNetwork([784, 50, 30, 10], scope='BP')
     NN = NeuralNetwork(784,
                        [FullyConnected(50),
