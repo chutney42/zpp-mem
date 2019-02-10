@@ -20,12 +20,12 @@ class NeuralNetwork(object):
         self.features = tf.placeholder(tf.float32, [None, self.sizes[0]])
 
         with open(file_name) as file:
-            self.version = int(file.read())
+            self.run_number = int(file.read())
 
-        self.version += 1
+        self.run_number += 1
 
         with open(file_name, 'w') as file:
-            file.write(str(self.version))
+            file.write(str(self.run_number))
 
     def build(self):
         self.acts = [self.features]
@@ -77,7 +77,7 @@ class NeuralNetwork(object):
     def train(self, batch_size=10, batch_num=10000):
         #TODO generlize it to other datasets using tf.data for example
         with tf.Session() as sess:
-            writer = tf.summary.FileWriter("./demo/{}_{}".format(self.scope, self.version), sess.graph)
+            writer = tf.summary.FileWriter("./demo/{}_{}".format(self.scope, self.run_number), sess.graph)
             sess.run(tf.global_variables_initializer())
             for i in range(batch_num):
                 batch_xs, batch_ys = mnist.train.next_batch(batch_size)
