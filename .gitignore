@@ -2,3 +2,5 @@
 .ipynb_checkpoints/*
 demo/*
 run_auto_increment
+MNIST_data/*
+__pycache__/*
