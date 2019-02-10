@@ -42,6 +42,7 @@ class NeuralNetwork(object):
     def build_test(self, a):
         self.acct_mat = tf.equal(tf.argmax(a, 1), tf.argmax(self.labels, 1))
         self.acct_res = tf.reduce_sum(tf.cast(self.acct_mat, tf.float32))
+        tf.summary.scalar("result", self.acct_res)
 
     def build_backward(self, output_vec):
         error = tf.subtract(output_vec, self.labels)
