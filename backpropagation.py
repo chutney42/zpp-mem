@@ -1,19 +1,12 @@
 import os
-
-os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'  # hacked by Adam
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
+os.environ['KMP_DUPLICATE_LIB_OK']='True' # hacked by Adam
+os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 import tensorflow as tf
 import numpy as np
+from utils import *
 
 from tensorflow.examples.tutorials.mnist import input_data
-
 mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
-
-
-def sigmoid_prime(x):
-    return tf.multiply(tf.sigmoid(x), (tf.constant(1.0) - tf.sigmoid(x)))
-
 
 class NeuralNetwork(object):
     def __init__(self, sizes, learning_rate=0.5, scope="main"):
@@ -150,6 +143,7 @@ class NeuralNetwork(object):
             return input_act_normalized
 
     def train(self, batch_size=10, batch_num=100000):
+        #TODO generlize it to other datasets using tf.data for example
         with tf.Session() as sess:
             writer = tf.summary.FileWriter("logs/miron", sess.graph)
             sess.run(tf.global_variables_initializer())
@@ -166,20 +160,19 @@ class NeuralNetwork(object):
             writer.close()
 
     def infer(self, x):
-        # TODO restore model
+        #TODO restore model
         with tf.Session() as sess:
             res = sess.run(self.activations[-1], feed_dict={self.features: x})
         return res
 
     def test(self, x, y):
-        # TODO restore model
+        #TODO restore model
         with tf.Session() as sess:
             res = sess.run(self.acct_res, feed_dict={self.features: x, self.labels: y})
         return res
 
-
 if __name__ == '__main__':
-    NN = NeuralNetwork([("-", 784), ("f", 50), ("a", 50), ("a", 50), ("f", 10), ("a", 10)])
+    NN = NeuralNetwork([("-", 784), ("f", 50), ("a", 50), ("f", 10), ("a", 10)])
     # NN = NeuralNetwork([("-", 784), ("f", 50), ("n", 50),("a", 50), ("f", 10), ("a", 10)])
     NN.build()
     NN.train()
