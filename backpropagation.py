@@ -5,8 +5,23 @@ import tensorflow as tf
 import numpy as np
 from utils import *
 
-from tensorflow.examples.tutorials.mnist import input_data
-mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
+from tensorflow.keras.utils import to_categorical
+(train_features, train_labels), (test_features, test_labels) = tf.keras.datasets.mnist.load_data()
+
+train_features = train_features.reshape(train_features.shape[0], -1)
+test_features = test_features.reshape(test_features.shape[0], -1)
+test_labels = to_categorical(test_labels)
+train_labels = to_categorical(train_labels)
+
+train_features = train_features.astype('float32') / 255.0
+test_features = test_features.astype('float32') / 255.0
+
+
+def shuffle(features, labels):
+    tmp = list(zip(features, labels))
+    np.random.shuffle(tmp)
+    return list(zip(*tmp))
+
 
 class NeuralNetwork(object):
     def __init__(self, sizes, learning_rate=0.5, scope="main"):
@@ -62,21 +77,25 @@ class NeuralNetwork(object):
         #TODO Proponowałbym tu sprawne uzycie tf.data oraz jako osobny moduł parsowanie mnista.
         pass
 
-    def train(self, batch_size=10, batch_num=100000):
+    def train(self, batch_size=10, epoch=150):
         #TODO generlize it to other datasets using tf.data for example
         with tf.Session() as sess:
             writer = tf.summary.FileWriter("./demo/{}".format(self.scope))
             writer.add_graph(sess.graph)
             sess.run(tf.global_variables_initializer())
-            for i in range(batch_num):
-                batch_xs, batch_ys = mnist.train.next_batch(batch_size)
-                sess.run(self.step, feed_dict={self.features: batch_xs, self.labels: batch_ys})
-                if i % 1000 == 0:
-                    res = sess.run(self.acct_res, feed_dict={self.features: mnist.test.images[:1000], self.labels:
-                        mnist.test.labels[:1000]})
-                    print("{}%".format(res / 10))
-            res = sess.run(self.acct_res, feed_dict={self.features: mnist.test.images, self.labels: mnist.test.labels})
-            print("{}%".format(res / len(mnist.test.labels) * 100))
+            for e in range(epoch):
+                features, labels = shuffle(train_features, train_labels)
+                for i in np.arange(0, len(features), batch_size):
+                    batch_xs = features[i: i+batch_size]
+                    batch_ys = labels[i: i+batch_size]
+                    sess.run(self.step, feed_dict={self.features: batch_xs, self.labels: batch_ys})
+
+                res = sess.run(self.acct_res, feed_dict={self.features: test_features[:1000], self.labels:
+                    test_labels[:1000]})
+                print("{}%".format(res / 10))
+
+            res = sess.run(self.acct_res, feed_dict={self.features: test_features, self.labels: test_labels})
+            print("{}%".format(res / len(test_labels) * 100))
             #TODO save model
 
     def infer(self, x):

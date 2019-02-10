@@ -1,0 +1,6 @@
+.idea/*
+.ipynb_checkpoints/*
+MNIST_data/*
+__pycache__/*
+demo/*
+models/*
