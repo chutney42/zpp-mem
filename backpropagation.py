@@ -9,7 +9,7 @@ from tensorflow.examples.tutorials.mnist import input_data
 mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
 
 class NeuralNetwork(object):
-    def __init__(self, input_dim, sequence, output_dim, learning_rate=0.5, scope="main"):
+    def __init__(self, input_dim, sequence, output_dim, learning_rate=0.1, scope="main"):
         self.scope = scope
         self.sequence = sequence
         self.learning_rate = tf.constant(learning_rate)
@@ -27,7 +27,6 @@ class NeuralNetwork(object):
         for i, layer in enumerate(self.sequence):
             layer.scope = '{}_{}_{}'.format(self.scope, layer.scope, i)
             a = layer.build_forward(a)
-            print(a.get_shape())
         return a
 
     def build_test(self, a):
