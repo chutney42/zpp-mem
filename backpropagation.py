@@ -1,19 +1,22 @@
 import os
-os.environ['KMP_DUPLICATE_LIB_OK']='True' # hacked by Adam
-os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
+
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'  # hacked by Adam
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import tensorflow as tf
 import numpy as np
 from utils import *
 
 from tensorflow.examples.tutorials.mnist import input_data
+
 mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
 
+
 class NeuralNetwork(object):
-    def __init__(self, sizes, learning_rate=0.5, scope="main"):
+    def __init__(self, layers, learning_rate=0.5, scope="main"):
         self.scope = scope
-        self.num_layers = len(sizes)
-        self.types = [a[0] for a in sizes]
-        self.sizes = [a[1] for a in sizes]
+        self.num_layers = len(layers)
+        self.types = [a[0] for a in layers]
+        self.sizes = [a[1] for a in layers]
         self.labels = tf.placeholder(tf.float32, [None, self.sizes[-1]])
         self.learning_rate = tf.constant(learning_rate)
         self.features = tf.placeholder(tf.float32, [None, self.sizes[0]])
@@ -42,6 +45,8 @@ class NeuralNetwork(object):
             elif normalize(i):
                 self.vars.append(a)
                 a = self.normalization_layer(a, self.sizes[i], '{}_layer{}'.format(self.scope, i))
+            else:
+                raise Exception('{} is not recognized layer type'.format(self.types[i]))
 
         output = a
         upstream_error = tf.subtract(output, self.labels)
@@ -50,23 +55,24 @@ class NeuralNetwork(object):
         for i in range(len(self.vars) - 1, -1, -1):
             if fully_connect(i):
                 a = self.vars[i]
-                upstream_error, w_update, b_update = self.backpropagation_fully_connected(upstream_error, a,
-                                                                                          self.learning_rate,
-                                                                                          '{}_layer{}'.format(
-                                                                                              self.scope, i))
+                upstream_error, w_update, b_update = \
+                    self.backpropagation_fully_connected(upstream_error, a, '{}_layer{}'.format(self.scope, i))
                 self.step.append((w_update, b_update))
             elif activate(i):
                 a = self.vars[i]
-                upstream_error = self.backpropagation_activate(upstream_error,a,'{}_layer{}'.format(
-                                                                                              self.scope, i))
+                upstream_error = \
+                    self.backpropagation_activate(upstream_error, a, '{}_layer{}'.format(self.scope, i))
             elif normalize(i):
                 a = self.vars[i]
-                upstream_error, gamma_update, beta_update = self.backprogation_normalization(upstream_error, a,
-                                                                                             self.sizes[i],
-                                                                                             '{}_layer{}'.format(
-                                                                                                 self.scope, i))
+                upstream_error, gamma_update, beta_update = \
+                    self.backprogation_normalization(upstream_error, a, self.sizes[i],
+                                                     '{}_layer{}'.format(self.scope, i))
+
                 self.step.append((beta_update, gamma_update))
                 upstream_error = self.backpropagation_activate(upstream_error, a, '{}_layer{}'.format(self.scope, i))
+            else:
+                raise Exception('{} is not recognized layer type, also how did you reach this code???'.format(self.types[i]))
+
         self.acct_mat = tf.equal(tf.argmax(output, 1), tf.argmax(self.labels, 1))
         self.acct_res = tf.reduce_sum(tf.cast(self.acct_mat, tf.float32))
 
@@ -78,30 +84,34 @@ class NeuralNetwork(object):
             tf.summary.histogram("weights:", weights)
             tf.summary.histogram("biases:", biases)
 
-            z = tf.add(tf.matmul(input_act, weights), biases)
-            return z
+            output_act = tf.add(tf.matmul(input_act, weights), biases)
+            return output_act
 
     def activate_layer(self, input_act, act_func, scope):
         with tf.variable_scope(scope):
-            a = act_func(input_act)
-            return a
+            output_act = act_func(input_act)
+            return output_act
 
-    def backpropagation_fully_connected(self, upstream_error, layer_input, learning_rate, scope):
+    def backpropagation_fully_connected(self, upstream_error, layer_input, scope):
         with tf.variable_scope(scope, reuse=True):
             weights = tf.get_variable("weights")
             biases = tf.get_variable("biases")
-            db = upstream_error
-            dw = tf.matmul(tf.transpose(layer_input), upstream_error)
-            dal = tf.matmul(upstream_error, tf.transpose(weights))  # da lower
-            weights_update = tf.assign(weights, tf.subtract(weights, tf.scalar_mul(learning_rate, dw)))
-            biases_update = tf.assign(biases,
-                                      tf.subtract(biases, tf.scalar_mul(learning_rate, tf.reduce_mean(db, axis=[0]))))
-            return dal, weights_update, biases_update
+            roc_cost_over_biases = upstream_error
+            roc_cost_over_weights = tf.matmul(tf.transpose(layer_input), upstream_error)
+            output_error = tf.matmul(upstream_error, tf.transpose(weights))  # da lower
+
+            weights_step = tf.scalar_mul(self.learning_rate, roc_cost_over_weights)
+            weights_update = tf.assign(weights, tf.subtract(weights, weights_step))
+
+            biases_step = tf.scalar_mul(self.learning_rate, tf.reduce_mean(roc_cost_over_biases, axis=[0]))
+            biases_update = tf.assign(biases, tf.subtract(biases, biases_step))
+
+            return output_error, weights_update, biases_update
 
     def backpropagation_activate(self, upstream_error, layer_input, scope):
         with tf.variable_scope(scope, reuse=True):
-            dz = tf.multiply(upstream_error, sigmoid_prime(layer_input))
-            return dz
+            output_error = tf.multiply(upstream_error, sigmoid_prime(layer_input))
+            return output_error
 
     def backprogation_normalization(self, upstream_error, layer_input, layer_output_dim, scope):
         with tf.variable_scope(scope, reuse=True):
@@ -120,13 +130,13 @@ class NeuralNetwork(object):
             dmu = tf.add(tf.reduce_sum(tf.matmul(dz_norm, -std_inv), 0),
                          tf.matmul(dvar, tf.reduce_mean(tf.scalar_mul(-2., z_mu), 0)))
 
-            dz = tf.add(tf.add(tf.matmul(dz_norm, std_inv), tf.matmul(tf.scalar_mul(2. / N, dvar), z_mu)),
+            output_error = tf.add(tf.add(tf.matmul(dz_norm, std_inv), tf.matmul(tf.scalar_mul(2. / N, dvar), z_mu)),
                         tf.scalar_mul(1. / N, dmu))
 
             dgamma = tf.reduce_sum(tf.matmul(upstream_error, z_normalized), 0)
             dbeta = tf.reduce_sum(upstream_error, 0)
 
-            return dz, \
+            return output_error, \
                    tf.assign(gamma, tf.subtract(gamma, tf.multiply(self.learning_rate, dgamma))), \
                    tf.assign(beta, tf.subtract(dbeta, tf.multiply(self.learning_rate, dbeta)))
 
@@ -143,9 +153,9 @@ class NeuralNetwork(object):
             return input_act_normalized
 
     def train(self, batch_size=10, batch_num=100000):
-        #TODO generlize it to other datasets using tf.data for example
+        # TODO generlize it to other datasets using tf.data for example
         with tf.Session() as sess:
-            writer = tf.summary.FileWriter("logs/miron", sess.graph)
+            writer = tf.summary.FileWriter("logs/", sess.graph)
             sess.run(tf.global_variables_initializer())
             for i in range(batch_num):
                 batch_xs, batch_ys = mnist.train.next_batch(batch_size)
@@ -160,16 +170,17 @@ class NeuralNetwork(object):
             writer.close()
 
     def infer(self, x):
-        #TODO restore model
+        # TODO restore model
         with tf.Session() as sess:
-            res = sess.run(self.activations[-1], feed_dict={self.features: x})
+            res = sess.run(self.vars[-1], feed_dict={self.features: x})
         return res
 
     def test(self, x, y):
-        #TODO restore model
+        # TODO restore model
         with tf.Session() as sess:
             res = sess.run(self.acct_res, feed_dict={self.features: x, self.labels: y})
         return res
+
 
 if __name__ == '__main__':
     NN = NeuralNetwork([("-", 784), ("f", 50), ("a", 50), ("f", 10), ("a", 10)])

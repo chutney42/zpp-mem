@@ -23,6 +23,6 @@ class FANeuralNetwork(NeuralNetwork):
             return output_error, weights, biases
 
 if __name__ == '__main__':
-    FA = FANeuralNetwork([784, 100, 50, 30, 10], scope="FA")
+    FA = FANeuralNetwork([("-", 784), ("f", 50), ("a", 50), ("f", 10), ("a", 10)], scope="FA")
     FA.build()
     FA.train()
