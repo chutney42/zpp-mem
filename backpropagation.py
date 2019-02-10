@@ -95,11 +95,12 @@ if __name__ == '__main__':
         with open(file_name, 'w+') as file:
             file.write(str(0))
 
-    #NN = NeuralNetwork([784, 50, 30, 10], scope='BP')
     NN = NeuralNetwork(784,
                        [FullyConnected(50),
+                        BatchNormalization(),
                         Sigmoid(),
                         FullyConnected(30),
+                        BatchNormalization(),
                         Sigmoid(),
                         FullyConnected(10),
                         Sigmoid()],
