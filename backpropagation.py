@@ -1,15 +1,14 @@
 import os
-
-os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'  # hacked by Adam
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+os.environ['KMP_DUPLICATE_LIB_OK']='True' # hacked by Adam
+os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 import tensorflow as tf
 import numpy as np
 from utils import *
 
 from tensorflow.examples.tutorials.mnist import input_data
-
 mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
 
+file_name = "run_auto_increment"
 
 class NeuralNetwork(object):
     def __init__(self, layers, learning_rate=0.5, scope="main"):
@@ -22,6 +21,14 @@ class NeuralNetwork(object):
         self.features = tf.placeholder(tf.float32, [None, self.sizes[0]])
         self.vars = [self.features]
         self.step = []
+
+        with open(file_name) as file:
+            self.run_number = int(file.read())
+
+        self.run_number += 1
+
+        with open(file_name, 'w') as file:
+            file.write(str(self.run_number))
 
     def build(self):
         def normalize(i):
@@ -153,37 +160,46 @@ class NeuralNetwork(object):
             return input_act_normalized
 
     def train(self, batch_size=10, batch_num=100000):
-        # TODO generlize it to other datasets using tf.data for example
+        #TODO generlize it to other datasets using tf.data for example
         with tf.Session() as sess:
-            writer = tf.summary.FileWriter("logs/", sess.graph)
+            writer = tf.summary.FileWriter("./demo/{}_{}".format(self.scope, self.run_number), sess.graph)
             sess.run(tf.global_variables_initializer())
             for i in range(batch_num):
                 batch_xs, batch_ys = mnist.train.next_batch(batch_size)
                 sess.run(self.step, feed_dict={self.features: batch_xs, self.labels: batch_ys})
                 if i % 1000 == 0:
-                    res = sess.run(self.acct_res, feed_dict={self.features: mnist.test.images[:1000], self.labels:
-                        mnist.test.labels[:1000]})
+                    merged = tf.summary.merge_all()
+                    run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+                    run_metadata = tf.RunMetadata()
+                    summary, res = sess.run([merged, self.acct_res], options=run_options, run_metadata=run_metadata,
+                        feed_dict={self.features: mnist.test.images[:1000], self.labels: mnist.test.labels[:1000]})
+                    writer.add_summary(summary, i)
+                    writer.add_run_metadata(run_metadata, 'step%d' % i)
                     print("{}%".format(res / 10))
             res = sess.run(self.acct_res, feed_dict={self.features: mnist.test.images, self.labels: mnist.test.labels})
             print("{}%".format(res / len(mnist.test.labels) * 100))
-            # TODO save model
             writer.close()
+            #TODO save model
 
     def infer(self, x):
-        # TODO restore model
+        #TODO restore model
         with tf.Session() as sess:
-            res = sess.run(self.vars[-1], feed_dict={self.features: x})
+            res = sess.run(self.activations[-1], feed_dict={self.features: x})
         return res
 
     def test(self, x, y):
-        # TODO restore model
+        #TODO restore model
         with tf.Session() as sess:
             res = sess.run(self.acct_res, feed_dict={self.features: x, self.labels: y})
         return res
 
-
 if __name__ == '__main__':
+    if not os.path.isfile(file_name):
+        with open(file_name, 'w+') as file:
+            file.write(str(0))
     NN = NeuralNetwork([("-", 784), ("f", 50), ("a", 50), ("f", 10), ("a", 10)])
     # NN = NeuralNetwork([("-", 784), ("f", 50), ("n", 50),("a", 50), ("f", 10), ("a", 10)])
+
+    NN = NeuralNetwork([784, 50, 30, 10], scope='BP')
     NN.build()
     NN.train()
