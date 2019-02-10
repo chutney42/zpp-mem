@@ -16,15 +16,18 @@ def sigmoid_prime(x):
 
 
 class NeuralNetwork(object):
-    def __init__(self, sizes2, eta=0.5, scope_name="main_scope"):
-        self.num_layers = len(sizes2)
-        self.types = [a[0] for a in sizes2]
-        self.sizes = [a[1] for a in sizes2]
-        self.y = tf.placeholder(tf.float32, [None, self.sizes[-1]])
-        self.eta = tf.constant(eta)
-        self.x = tf.placeholder(tf.float32, [None, self.sizes[0]])
-        self.vars = [self.x]
+    def __init__(self, sizes, learning_rate=0.5, scope="main"):
+        self.scope = scope
+        self.num_layers = len(sizes)
+        self.types = [a[0] for a in sizes]
+        self.sizes = [a[1] for a in sizes]
+        self.labels = tf.placeholder(tf.float32, [None, self.sizes[-1]])
+        self.learning_rate = tf.constant(learning_rate)
+        self.features = tf.placeholder(tf.float32, [None, self.sizes[0]])
+        self.vars = [self.features]
+        self.step = []
 
+    def build(self):
         def normalize(i):
             return self.types[i] == "n"
 
@@ -34,118 +37,117 @@ class NeuralNetwork(object):
         def fully_connect(i):
             return self.types[i] == "f"
 
-        a = self.x
+        a = self.features
         # FORWARD PASS
         for i in range(1, self.num_layers):
             if fully_connect(i):
                 self.vars.append(a)
-                a = self.fully_connected_layer(a, self.sizes[i], '{}_layer{}'.format(scope_name, i))
-            elif normalize(i):
-                a_prev = a
-                a, mean, var = self.normalization_layer(a, self.sizes[i], '{}_layer{}'.format(scope_name, i))
-                self.vars.append((a_prev, mean, var))
+                a = self.fully_connected_layer(a, self.sizes[i], '{}_layer{}'.format(self.scope, i))
             elif activate(i):
-                self.vars.append((a, 13))
-                a = self.activate_layer(a, tf.sigmoid, '{}_layer{}'.format(scope_name, i))
+                self.vars.append(a)
+                a = self.activate_layer(a, tf.sigmoid, '{}_layer{}'.format(self.scope, i))
+            elif normalize(i):
+                self.vars.append(a)
+                a = self.normalization_layer(a, self.sizes[i], '{}_layer{}'.format(self.scope, i))
+
         output = a
-        da = tf.subtract(output, self.y)
-        self.step = []
+        upstream_error = tf.subtract(output, self.labels)
 
         # BACKWARD PASS
         for i in range(len(self.vars) - 1, -1, -1):
-            if normalize(i):
-                a, mean, var = self.vars[i]
-                da, gamma_update, beta_update = self.backprogation_normalization(da, a, self.sizes[i], eta, mean, var,
-                                                                                 '{}_layer{}'.format(scope_name, i))
-                self.step.append((beta_update, gamma_update))
-
-            elif fully_connect(i):
+            if fully_connect(i):
                 a = self.vars[i]
-                da, w_update, b_update = self.backpropagation_fully_connected(da, a, eta,
-                                                                              '{}_layer{}'.format(scope_name, i))
+                upstream_error, w_update, b_update = self.backpropagation_fully_connected(upstream_error, a,
+                                                                                          self.learning_rate,
+                                                                                          '{}_layer{}'.format(
+                                                                                              self.scope, i))
                 self.step.append((w_update, b_update))
-
             elif activate(i):
-                a, _ = self.vars[i]
-
-                da = self.backpropagation_activate(da, a, '{}_layer{}'.format(scope_name, i))
-        self.acct_mat = tf.equal(tf.argmax(output, 1), tf.argmax(self.y, 1))
+                a = self.vars[i]
+                upstream_error = self.backpropagation_activate(upstream_error,a,'{}_layer{}'.format(
+                                                                                              self.scope, i))
+            elif normalize(i):
+                a = self.vars[i]
+                upstream_error, gamma_update, beta_update = self.backprogation_normalization(upstream_error, a,
+                                                                                             self.sizes[i],
+                                                                                             '{}_layer{}'.format(
+                                                                                                 self.scope, i))
+                self.step.append((beta_update, gamma_update))
+                upstream_error = self.backpropagation_activate(upstream_error, a, '{}_layer{}'.format(self.scope, i))
+        self.acct_mat = tf.equal(tf.argmax(output, 1), tf.argmax(self.labels, 1))
         self.acct_res = tf.reduce_sum(tf.cast(self.acct_mat, tf.float32))
 
-    def fully_connected_layer(self, x, y_dim, scope):
+    def fully_connected_layer(self, input_act, output_dim, scope):
         with tf.variable_scope(scope):
-            w = tf.get_variable("weights", [x.shape[1], y_dim], initializer=tf.random_normal_initializer())
+            weights = tf.get_variable("weights", [input_act.shape[1], output_dim],
+                                      initializer=tf.random_normal_initializer())
+            biases = tf.get_variable("biases", [output_dim], initializer=tf.constant_initializer())
+            tf.summary.histogram("weights:", weights)
+            tf.summary.histogram("biases:", biases)
 
-            b = tf.get_variable("biases", [y_dim], initializer=tf.constant_initializer())
-            tf.summary.histogram("w:", w)
-            tf.summary.image("w_image", tf.reshape(w, (1, w.shape[0], w.shape[1], 1)))
-            tf.summary.histogram("b:", b)
-
-            z = tf.add(tf.matmul(x, w), b)
+            z = tf.add(tf.matmul(input_act, weights), biases)
             return z
 
-    def activate_layer(self, z, act_func, scope):
+    def activate_layer(self, input_act, act_func, scope):
         with tf.variable_scope(scope):
-            a = act_func(z)
+            a = act_func(input_act)
             return a
 
-    def backpropagation_fully_connected(self, da, a, eta, scope):
+    def backpropagation_fully_connected(self, upstream_error, layer_input, learning_rate, scope):
         with tf.variable_scope(scope, reuse=True):
-            w = tf.get_variable("weights")
-            b = tf.get_variable("biases")
-            db = da
-            dw = tf.matmul(tf.transpose(a), da)
-            dal = tf.matmul(da, tf.transpose(w))  # da lower
-            return dal, \
-                   tf.assign(w, tf.subtract(w, tf.scalar_mul(eta, dw))), \
-                   tf.assign(b, tf.subtract(b, tf.scalar_mul(eta, tf.reduce_mean(db, axis=[0]))))
+            weights = tf.get_variable("weights")
+            biases = tf.get_variable("biases")
+            db = upstream_error
+            dw = tf.matmul(tf.transpose(layer_input), upstream_error)
+            dal = tf.matmul(upstream_error, tf.transpose(weights))  # da lower
+            weights_update = tf.assign(weights, tf.subtract(weights, tf.scalar_mul(learning_rate, dw)))
+            biases_update = tf.assign(biases,
+                                      tf.subtract(biases, tf.scalar_mul(learning_rate, tf.reduce_mean(db, axis=[0]))))
+            return dal, weights_update, biases_update
 
-    def backpropagation_activate(self, da, z, scope):
+    def backpropagation_activate(self, upstream_error, layer_input, scope):
         with tf.variable_scope(scope, reuse=True):
-            dz = tf.multiply(da, sigmoid_prime(z))
+            dz = tf.multiply(upstream_error, sigmoid_prime(layer_input))
             return dz
 
-    def backprogation_normalization(self, da, z, y_dim, eta, batch_mean, batch_var, scope):
+    def backprogation_normalization(self, upstream_error, layer_input, layer_output_dim, scope):
         with tf.variable_scope(scope, reuse=True):
             epsilon = 0.001  # In case batch_var=0, division by zero is not cool
             gamma = tf.get_variable("gamma")
             beta = tf.get_variable("beta")
-            N = y_dim
+            N = layer_output_dim
+            batch_mean, batch_var = tf.nn.moments(layer_input, [0])
 
-            z_normalized = (z - batch_mean) / tf.sqrt(batch_var + epsilon)
+            z_normalized = (layer_input - batch_mean) / tf.sqrt(batch_var + epsilon)
 
-            z_mu = z - batch_mean
+            z_mu = layer_input - batch_mean
             std_inv = 1 / tf.sqrt(tf.add(batch_var, epsilon))
-            dz_norm = da * gamma
-            dvar = tf.matmul(tf.scalar_mul(-.5, tf.reduce_sum(tf.matmul(dz_norm, z_mu), 0)),   tf.pow(std_inv, 3))
+            dz_norm = upstream_error * gamma
+            dvar = tf.matmul(tf.scalar_mul(-.5, tf.reduce_sum(tf.matmul(dz_norm, z_mu), 0)), tf.pow(std_inv, 3))
             dmu = tf.add(tf.reduce_sum(tf.matmul(dz_norm, -std_inv), 0),
                          tf.matmul(dvar, tf.reduce_mean(tf.scalar_mul(-2., z_mu), 0)))
 
             dz = tf.add(tf.add(tf.matmul(dz_norm, std_inv), tf.matmul(tf.scalar_mul(2. / N, dvar), z_mu)),
                         tf.scalar_mul(1. / N, dmu))
 
-            dgamma = tf.reduce_sum(tf.matmul(da, z_normalized), 0)
-            dbeta = tf.reduce_sum(da, 0)
+            dgamma = tf.reduce_sum(tf.matmul(upstream_error, z_normalized), 0)
+            dbeta = tf.reduce_sum(upstream_error, 0)
 
             return dz, \
-                   tf.assign(gamma, tf.subtract(gamma, tf.multiply(eta, dgamma))), \
-                   tf.assign(beta, tf.subtract(dbeta, tf.multiply(eta, dbeta)))
+                   tf.assign(gamma, tf.subtract(gamma, tf.multiply(self.learning_rate, dgamma))), \
+                   tf.assign(beta, tf.subtract(dbeta, tf.multiply(self.learning_rate, dbeta)))
 
-    def normalization_layer(self, x, y_dim, scope):
+    def normalization_layer(self, input_act, y_dim, scope):
         with tf.variable_scope(scope):
             epsilon = 0.001  # In case batch_var=0, division by zero is not cool
             gamma = tf.get_variable("gamma", [y_dim], initializer=tf.ones_initializer())
             beta = tf.get_variable("beta", [y_dim], initializer=tf.ones_initializer())
-            z = x
 
-            batch_mean, batch_var = tf.nn.moments(z, [0])
-            z_normalized = (z - batch_mean) / tf.sqrt(batch_var + epsilon)
+            batch_mean, batch_var = tf.nn.moments(input_act, [0])
+            input_act_normalized = (input_act - batch_mean) / tf.sqrt(batch_var + epsilon)
 
-            z_normalized = gamma * z_normalized + beta
-            return z_normalized, batch_mean, batch_var
-
-    def load_data(self):
-        pass
+            input_act_normalized = gamma * input_act_normalized + beta
+            return input_act_normalized
 
     def train(self, batch_size=10, batch_num=100000):
         with tf.Session() as sess:
@@ -153,29 +155,31 @@ class NeuralNetwork(object):
             sess.run(tf.global_variables_initializer())
             for i in range(batch_num):
                 batch_xs, batch_ys = mnist.train.next_batch(batch_size)
-                sess.run(self.step, feed_dict={self.x: batch_xs, self.y: batch_ys})
+                sess.run(self.step, feed_dict={self.features: batch_xs, self.labels: batch_ys})
                 if i % 1000 == 0:
-                    merged = tf.summary.merge_all()
-                    summary, res = sess.run([merged, self.acct_res], feed_dict={self.x: mnist.test.images[:1000],
-                    writer.add_summary(summary, i)
+                    res = sess.run(self.acct_res, feed_dict={self.features: mnist.test.images[:1000], self.labels:
+                        mnist.test.labels[:1000]})
+                    print("{}%".format(res / 10))
+            res = sess.run(self.acct_res, feed_dict={self.features: mnist.test.images, self.labels: mnist.test.labels})
+            print("{}%".format(res / len(mnist.test.labels) * 100))
             # TODO save model
             writer.close()
 
     def infer(self, x):
         # TODO restore model
         with tf.Session() as sess:
-            res = sess.run(self.acts[-1], feed_dict={self.x: x})
+            res = sess.run(self.activations[-1], feed_dict={self.features: x})
         return res
 
     def test(self, x, y):
         # TODO restore model
         with tf.Session() as sess:
-            res = sess.run(self.acct_res, feed_dict={self.x: x, self.y: y})
+            res = sess.run(self.acct_res, feed_dict={self.features: x, self.labels: y})
         return res
 
 
 if __name__ == '__main__':
-    NN = NeuralNetwork([("-", 784), ("f", 50), ("a", 50),("a",50), ("a", 50), ("f", 10), ("a", 10)])
+    NN = NeuralNetwork([("-", 784), ("f", 50), ("a", 50), ("a", 50), ("f", 10), ("a", 10)])
     # NN = NeuralNetwork([("-", 784), ("f", 50), ("n", 50),("a", 50), ("f", 10), ("a", 10)])
-    NN.load_data()
+    NN.build()
     NN.train()
