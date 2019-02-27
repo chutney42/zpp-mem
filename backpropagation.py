@@ -1,14 +1,15 @@
 import os
-os.environ['KMP_DUPLICATE_LIB_OK']='True' # hacked by Adam
-os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
+
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'  # hacked by Adam
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import tensorflow as tf
 import numpy as np
 from utils import *
 from layer import *
 from loader import *
 
-
 file_name = "run_auto_increment"
+
 
 class NeuralNetwork(object):
     def __init__(self, input_dim, sequence, output_dim, learning_rate=0.1, scope="main"):
@@ -57,7 +58,7 @@ class NeuralNetwork(object):
     def train(self, training_set, validation_set, batch_size=10, epoch=2, eval_period=1000):
         training_set = training_set.shuffle(200).batch(batch_size)
         iterator = tf.data.Iterator.from_structure(training_set.output_types,
-                                                     training_set.output_shapes)
+                                                   training_set.output_shapes)
         train_init = iterator.make_initializer(training_set)
         next_batch = iterator.get_next()
         with tf.Session() as sess:
@@ -72,17 +73,9 @@ class NeuralNetwork(object):
                         sess.run(self.step, feed_dict={self.features: batch_xs, self.labels: batch_ys})
 
                         if eval_period > 0 and counter % eval_period is 0:
-                            merged = tf.summary.merge_all()
-                            run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
-                            run_metadata = tf.RunMetadata()
-                            summary, res = sess.run([merged, self.acct_res], options=run_options,
-                                                    run_metadata=run_metadata,
-                                                    feed_dict={self.features: mnist.test.images[:1000],
-                                                               self.labels: mnist.test.labels[:1000]})
-                            writer.add_summary(summary, i)
-                            writer.add_run_metadata(run_metadata, 'step%d' % i)
-                            print("{}%".format(res / 10))
-                            print("iter: {}, acc: {}%".format(counter, self.validate(validation_set.take(1000), sess)))
+                            print("iter: {}, acc: {}%".format(counter,
+                                                              self.validate(validation_set.take(1000), sess, writer,
+                                                                            counter)))
 
                         counter += 1
                     except tf.errors.OutOfRangeError:
@@ -95,18 +88,30 @@ class NeuralNetwork(object):
             writer.close()
             # TODO save model
 
-    def validate(self, validation_set, sess, batch_size=10):
+    def validate(self, validation_set, sess, writer=None, step=0):
         total_res = 0
         counter = 0
-        next_batch = validation_set.batch(batch_size).make_one_shot_iterator().get_next()
+        # hacky way to have only one batch
+        next_batch = validation_set.batch(10000000).make_one_shot_iterator().get_next()
         while True:
             try:
                 batch_xs, batch_ys = sess.run(next_batch)
-                res = sess.run(self.acct_res, feed_dict={self.features: batch_xs, self.labels: batch_ys})
+                if writer is None:
+                    res = sess.run(self.acct_res, feed_dict={self.features: batch_xs, self.labels: batch_ys})
+                else:
+                    merged = tf.summary.merge_all()
+                    run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+                    run_metadata = tf.RunMetadata()
+                    summary, res = sess.run([merged, self.acct_res], options=run_options, run_metadata=run_metadata,
+                                            feed_dict={self.features: batch_xs, self.labels: batch_ys})
+                    writer.add_summary(summary, step)
+                    writer.add_run_metadata(run_metadata, 'step%d' % step)
+
                 total_res += res
-                counter += batch_size
+                counter += len(batch_xs)
             except tf.errors.OutOfRangeError:
                 break
+
         return total_res / counter * 100
 
     def infer(self, x):
@@ -146,7 +151,7 @@ if __name__ == '__main__':
                         FullyConnected(10),
                         Sigmoid()],
                        10,
+                       0.1,
                        'BP')
     NN.build()
     NN.train(training, test)
-
