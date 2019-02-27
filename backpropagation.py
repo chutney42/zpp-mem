@@ -5,8 +5,8 @@ import tensorflow as tf
 import numpy as np
 from utils import *
 from layer import *
-from tensorflow.examples.tutorials.mnist import input_data
-mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
+from loader import *
+
 
 file_name = "run_auto_increment"
 
@@ -19,6 +19,8 @@ class NeuralNetwork(object):
         self.features = tf.placeholder(tf.float32, [None, input_dim])
         self.labels = tf.placeholder(tf.float32, [None, output_dim])
 
+        self.result = None
+
         with open(file_name) as file:
             self.run_number = int(file.read())
 
@@ -28,9 +30,9 @@ class NeuralNetwork(object):
             file.write(str(self.run_number))
 
     def build(self):
-        a = self.build_forward()
-        self.build_test(a)
-        self.build_backward(a)
+        self.result = self.build_forward()
+        self.build_test(self.result)
+        self.build_backward(self.result)
 
     def build_forward(self):
         a = self.features
@@ -52,58 +54,99 @@ class NeuralNetwork(object):
             if (layer.trainable):
                 self.step.append(layer.step)
 
-    def load_data(self):
-        #TODO Proponowałbym tu sprawne uzycie tf.data oraz jako osobny moduł parsowanie mnista.
-        pass
-
-    def train(self, batch_size=10, batch_num=10000):
-        #TODO generlize it to other datasets using tf.data for example
+    def train(self, training_set, validation_set, batch_size=10, epoch=2, eval_period=1000):
+        training_set = training_set.shuffle(200).batch(batch_size)
+        iterator = tf.data.Iterator.from_structure(training_set.output_types,
+                                                     training_set.output_shapes)
+        train_init = iterator.make_initializer(training_set)
+        next_batch = iterator.get_next()
         with tf.Session() as sess:
             writer = tf.summary.FileWriter("./demo/{}_{}".format(self.scope, self.run_number), sess.graph)
             sess.run(tf.global_variables_initializer())
-            for i in range(batch_num):
-                batch_xs, batch_ys = mnist.train.next_batch(batch_size)
-                sess.run(self.step, feed_dict={self.features: batch_xs, self.labels: batch_ys})
-                if i % 1000 == 0:
-                    merged = tf.summary.merge_all()
-                    run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
-                    run_metadata = tf.RunMetadata()
-                    summary, res = sess.run([merged, self.acct_res], options=run_options, run_metadata=run_metadata,
-                        feed_dict={self.features: mnist.test.images[:1000], self.labels: mnist.test.labels[:1000]})
-                    writer.add_summary(summary, i)
-                    writer.add_run_metadata(run_metadata, 'step%d' % i)
-                    print("{}%".format(res / 10))
-            res = sess.run(self.acct_res, feed_dict={self.features: mnist.test.images, self.labels: mnist.test.labels})
-            print("{}%".format(res / len(mnist.test.labels) * 100))
+            counter = 0
+            for e in range(epoch):
+                sess.run(train_init)
+                while True:
+                    try:
+                        batch_xs, batch_ys = sess.run(next_batch)
+                        sess.run(self.step, feed_dict={self.features: batch_xs, self.labels: batch_ys})
+
+                        if eval_period > 0 and counter % eval_period is 0:
+                            merged = tf.summary.merge_all()
+                            run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+                            run_metadata = tf.RunMetadata()
+                            summary, res = sess.run([merged, self.acct_res], options=run_options,
+                                                    run_metadata=run_metadata,
+                                                    feed_dict={self.features: mnist.test.images[:1000],
+                                                               self.labels: mnist.test.labels[:1000]})
+                            writer.add_summary(summary, i)
+                            writer.add_run_metadata(run_metadata, 'step%d' % i)
+                            print("{}%".format(res / 10))
+                            print("iter: {}, acc: {}%".format(counter, self.validate(validation_set.take(1000), sess)))
+
+                        counter += 1
+                    except tf.errors.OutOfRangeError:
+                        break
+                res = self.validate(validation_set, sess)
+                print("epoch {}:  {}%".format(e, res))
+
+            res = self.validate(validation_set, sess)
+            print("total {}%".format(res))
             writer.close()
-            #TODO save model
+            # TODO save model
+
+    def validate(self, validation_set, sess, batch_size=10):
+        total_res = 0
+        counter = 0
+        next_batch = validation_set.batch(batch_size).make_one_shot_iterator().get_next()
+        while True:
+            try:
+                batch_xs, batch_ys = sess.run(next_batch)
+                res = sess.run(self.acct_res, feed_dict={self.features: batch_xs, self.labels: batch_ys})
+                total_res += res
+                counter += batch_size
+            except tf.errors.OutOfRangeError:
+                break
+        return total_res / counter * 100
 
     def infer(self, x):
-        #TODO restore model
+        # TODO restore model
         with tf.Session() as sess:
-            res = sess.run(self.activations[-1], feed_dict={self.features: x})
+            res = sess.run(self.result, feed_dict={self.features: x})
         return res
 
-    def test(self, x, y):
-        #TODO restore model
+    def test(self, data_set, batch_size=10):
+        # TODO restore model
+        next_batch = data_set.batch(batch_size).make_one_shot_iterator().get_next()
+        total_res = 0
+        counter = 0
         with tf.Session() as sess:
-            res = sess.run(self.acct_res, feed_dict={self.features: x, self.labels: y})
-        return res
+            while True:
+                try:
+                    batch_xs, batch_ys = sess.run(next_batch)
+                    res = sess.run(self.acct_res, feed_dict={self.features: batch_xs, self.labels: batch_ys})
+                    total_res += res
+                    counter += batch_size
+                except tf.errors.OutOfRangeError:
+                    break
+        return total_res / counter * 100
+
 
 if __name__ == '__main__':
     if not os.path.isfile(file_name):
         with open(file_name, 'w+') as file:
             file.write(str(0))
 
-    #NN = NeuralNetwork([784, 50, 30, 10], scope='BP')
+    training, test = load_mnist()
     NN = NeuralNetwork(784,
-                       [FullyConnected(50),
+                       [FullyConnected(128),
                         Sigmoid(),
-                        FullyConnected(30),
+                        FullyConnected(64),
                         Sigmoid(),
                         FullyConnected(10),
                         Sigmoid()],
                        10,
                        'BP')
     NN.build()
-    NN.train()
+    NN.train(training, test)
+

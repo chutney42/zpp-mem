@@ -4,3 +4,5 @@ demo/*
 run_auto_increment
 MNIST_data/*
 __pycache__/*
+models/*
+.DS_Store
