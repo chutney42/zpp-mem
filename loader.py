@@ -1,7 +1,6 @@
-from tensorflow.keras.utils import to_categorical
 import tensorflow as tf
 import numpy as np
-from tensorflow.keras.utils import to_categorical
+
 
 
 def load_mnist():
