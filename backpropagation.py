@@ -1,7 +1,6 @@
 import os
-
-os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'  # hacked by Adam
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+os.environ['KMP_DUPLICATE_LIB_OK']='True' # hacked by Adam
+os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 import tensorflow as tf
 import numpy as np
 from utils import *
@@ -9,14 +8,26 @@ from layer import *
 from loader import *
 
 
+file_name = "run_auto_increment"
+
 class NeuralNetwork(object):
     def __init__(self, input_dim, sequence, output_dim, learning_rate=0.1, scope="main"):
         self.scope = scope
         self.sequence = sequence
         self.learning_rate = tf.constant(learning_rate)
+
         self.features = tf.placeholder(tf.float32, [None, input_dim])
         self.labels = tf.placeholder(tf.float32, [None, output_dim])
+
         self.result = None
+
+        with open(file_name) as file:
+            self.run_number = int(file.read())
+
+        self.run_number += 1
+
+        with open(file_name, 'w') as file:
+            file.write(str(self.run_number))
 
     def build(self):
         self.result = self.build_forward()
@@ -33,6 +44,7 @@ class NeuralNetwork(object):
     def build_test(self, a):
         self.acct_mat = tf.equal(tf.argmax(a, 1), tf.argmax(self.labels, 1))
         self.acct_res = tf.reduce_sum(tf.cast(self.acct_mat, tf.float32))
+        tf.summary.scalar("result", self.acct_res)
 
     def build_backward(self, output_vec):
         error = tf.subtract(output_vec, self.labels)
@@ -49,8 +61,7 @@ class NeuralNetwork(object):
         train_init = iterator.make_initializer(training_set)
         next_batch = iterator.get_next()
         with tf.Session() as sess:
-            writer = tf.summary.FileWriter("./demo/{}".format(self.scope))
-            writer.add_graph(sess.graph)
+            writer = tf.summary.FileWriter("./demo/{}_{}".format(self.scope, self.run_number), sess.graph)
             sess.run(tf.global_variables_initializer())
             counter = 0
             for e in range(epoch):
@@ -61,6 +72,16 @@ class NeuralNetwork(object):
                         sess.run(self.step, feed_dict={self.features: batch_xs, self.labels: batch_ys})
 
                         if eval_period > 0 and counter % eval_period is 0:
+                            merged = tf.summary.merge_all()
+                            run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+                            run_metadata = tf.RunMetadata()
+                            summary, res = sess.run([merged, self.acct_res], options=run_options,
+                                                    run_metadata=run_metadata,
+                                                    feed_dict={self.features: mnist.test.images[:1000],
+                                                               self.labels: mnist.test.labels[:1000]})
+                            writer.add_summary(summary, i)
+                            writer.add_run_metadata(run_metadata, 'step%d' % i)
+                            print("{}%".format(res / 10))
                             print("iter: {}, acc: {}%".format(counter, self.validate(validation_set.take(1000), sess)))
 
                         counter += 1
@@ -71,6 +92,7 @@ class NeuralNetwork(object):
 
             res = self.validate(validation_set, sess)
             print("total {}%".format(res))
+            writer.close()
             # TODO save model
 
     def validate(self, validation_set, sess, batch_size=10):
@@ -111,6 +133,9 @@ class NeuralNetwork(object):
 
 
 if __name__ == '__main__':
+    if not os.path.isfile(file_name):
+        with open(file_name, 'w+') as file:
+            file.write(str(0))
 
     training, test = load_mnist()
     NN = NeuralNetwork(784,
