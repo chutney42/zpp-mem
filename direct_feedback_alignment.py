@@ -48,6 +48,6 @@ class DFANeuralNetwork(NeuralNetwork):
             return a, weights, biases
 
 if __name__ == '__main__':
-    DFA = DFANeuralNetwork([784, 50, 30, 10], scope='DFA')
+    DFA = DFANeuralNetwork([("-", 784), ("f", 50), ("a", 50), ("f", 10), ("a", 10)], scope='DFA')
     DFA.build()
     DFA.train()

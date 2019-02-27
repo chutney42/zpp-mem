@@ -7,7 +7,7 @@ from backpropagation import NeuralNetwork
 from utils import *
 
 class FANeuralNetwork(NeuralNetwork):
-    def backpropagation(self, input_error, z, a, scope):
+    def backpropagation_fully_conneted(self, input_error, z, a, scope):
         with tf.variable_scope(scope, reuse=tf.AUTO_REUSE):
             weights = tf.get_variable("weights")
             random_weights = tf.get_variable("random_weights", shape=tf.transpose(weights).get_shape().as_list(),
@@ -23,6 +23,6 @@ class FANeuralNetwork(NeuralNetwork):
             return output_error, weights, biases
 
 if __name__ == '__main__':
-    FA = FANeuralNetwork([784, 100, 50, 30, 10], scope="FA")
+    FA = FANeuralNetwork([("-", 784), ("f", 50), ("a", 50), ("f", 10), ("a", 10)], scope="FA")
     FA.build()
     FA.train()

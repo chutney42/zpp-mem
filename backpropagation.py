@@ -116,7 +116,7 @@ class NeuralNetwork(object):
         return total_res / counter * 100
 
     def infer(self, x):
-        # TODO restore model
+        #TODO restore model
         with tf.Session() as sess:
             res = sess.run(self.result, feed_dict={self.features: x})
         return res
@@ -145,9 +145,11 @@ if __name__ == '__main__':
 
     training, test = load_mnist()
     NN = NeuralNetwork(784,
-                       [FullyConnected(128),
+                       [FullyConnected(50),
+                        BatchNormalization(),
                         Sigmoid(),
-                        FullyConnected(64),
+                        FullyConnected(30),
+                        BatchNormalization(),
                         Sigmoid(),
                         FullyConnected(10),
                         Sigmoid()],
