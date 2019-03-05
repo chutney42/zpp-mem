@@ -9,11 +9,12 @@ from layer import *
 from loader import *
 
 
-file_name = "run_auto_increment"
+incr_file_name = "run_auto_increment"
 
 
 class NeuralNetwork(object):
-    def __init__(self, input_dim, sequence, output_dim, learning_rate=0.1, scope="main"):
+    def __init__(self, input_dim, sequence, output_dim, learning_rate=0.1, scope="main", restore_model=False,
+                 save_model=False):
         self.scope = scope
         self.sequence = sequence
         self.learning_rate = tf.constant(learning_rate)
@@ -67,11 +68,19 @@ class NeuralNetwork(object):
                                                    training_set.output_shapes)
         train_init = iterator.make_initializer(training_set)
         next_batch = iterator.get_next()
+        saver = tf.train.Saver()
         with tf.Session() as sess:
-            writer = tf.summary.FileWriter("./demo/{}_{}".format(self.scope, self.run_number), sess.graph)
-            sess.run(tf.global_variables_initializer())
+            writer = tf.summary.FileWriter('./demo/{}_{}'.format(self.scope, self.run_number), sess.graph)
+            if self.restore_model:
+                saver.restore(sess, self.restored_model_path)
+                print("model restored from path {}".format(self.restored_model_path))
+            else:
+                sess.run(tf.global_variables_initializer())
+                print("fresh model")
             counter = 0
             for e in range(epoch):
+                res = self.validate(validation_set, sess)
+                print("start epoch: {}, accuracy: {}%".format(e, res))
                 sess.run(train_init)
                 while True:
                     try:
@@ -92,7 +101,9 @@ class NeuralNetwork(object):
             res = self.validate(validation_set, sess)
             print("total {}%".format(res))
             writer.close()
-            # TODO save model
+            if self.save_model:
+                saver.save(sess, self.saved_model_path)
+                print("model saved in path {}".format(self.saved_model_path))
 
     def validate(self, validation_set, sess, writer=None, step=0):
         total_res = 0
@@ -121,17 +132,19 @@ class NeuralNetwork(object):
         return total_res / counter * 100
 
     def infer(self, x):
-        #TODO restore model
+        saver = tf.train.Saver()
         with tf.Session() as sess:
+            saver.restore(sess, self.restored_model_path)
             res = sess.run(self.result, feed_dict={self.features: x})
         return res
 
     def test(self, data_set, batch_size=10):
-        # TODO restore model
         next_batch = data_set.batch(batch_size).make_one_shot_iterator().get_next()
         total_res = 0
         counter = 0
+        saver = tf.train.Saver()
         with tf.Session() as sess:
+            saver.restore(sess, self.restored_model_path)
             while True:
                 try:
                     batch_xs, batch_ys = sess.run(next_batch)
