@@ -59,13 +59,12 @@ class NeuralNetwork(object):
         self.step = []
         for i, layer in reversed(list(enumerate(self.sequence))):
             error = layer.build_backward(error)
-            if (layer.trainable):
+            if layer.trainable:
                 self.step.append(layer.step)
 
     def train(self, training_set, validation_set, batch_size=10, epoch=2, eval_period=1000):
         training_set = training_set.shuffle(200).batch(batch_size)
-        iterator = tf.data.Iterator.from_structure(training_set.output_types,
-                                                   training_set.output_shapes)
+        iterator = tf.data.Iterator.from_structure(training_set.output_types, training_set.output_shapes)
         train_init = iterator.make_initializer(training_set)
         next_batch = iterator.get_next()
         saver = tf.train.Saver()
@@ -88,18 +87,16 @@ class NeuralNetwork(object):
                         sess.run(self.step, feed_dict={self.features: batch_xs, self.labels: batch_ys})
 
                         if eval_period > 0 and counter % eval_period is 0:
-                            print("iter: {}, acc: {}%".format(counter,
-                                                              self.validate(validation_set.take(1000), sess, writer,
-                                                                            counter)))
-
+                            print("iteration: {}, accuracy: {}%".format(counter, self.validate(
+                                validation_set.take(1000), sess, writer, counter)))
                         counter += 1
                     except tf.errors.OutOfRangeError:
                         break
                 res = self.validate(validation_set, sess)
-                print("epoch {}:  {}%".format(e, res))
+                print("end epoch: {}, accuracy: {}%".format(e, res))
 
             res = self.validate(validation_set, sess)
-            print("total {}%".format(res))
+            print("total accuracy: {}%".format(res))
             writer.close()
             if self.save_model:
                 saver.save(sess, self.saved_model_path)
@@ -122,7 +119,7 @@ class NeuralNetwork(object):
                     summary, res = sess.run([merged, self.acct_res], options=run_options, run_metadata=run_metadata,
                                             feed_dict={self.features: batch_xs, self.labels: batch_ys})
                     writer.add_summary(summary, step)
-                    writer.add_run_metadata(run_metadata, 'step%d' % step)
+                    writer.add_run_metadata(run_metadata, "step_{}".format(step))
 
                 total_res += res
                 counter += len(batch_xs)
