@@ -47,5 +47,4 @@ if __name__ == '__main__':
                        10,
                        0.1,
                        'BP')
-    NN.build()
     NN.train(training, test)

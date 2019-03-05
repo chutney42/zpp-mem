@@ -25,5 +25,4 @@ class FANeuralNetwork(NeuralNetwork):
 
 if __name__ == '__main__':
     FA = FANeuralNetwork([("-", 784), ("f", 50), ("a", 50), ("f", 10), ("a", 10)], scope="FA")
-    FA.build()
     FA.train()

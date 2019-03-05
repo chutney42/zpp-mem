@@ -45,7 +45,7 @@ class DFANeuralNetwork(NeuralNetwork):
                 tf.reduce_mean(delta_biases, axis=[0]))))
             return a, weights, biases
 
+
 if __name__ == '__main__':
     DFA = DFANeuralNetwork([("-", 784), ("f", 50), ("a", 50), ("f", 10), ("a", 10)], scope='DFA')
-    DFA.build()
     DFA.train()

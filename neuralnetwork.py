@@ -12,21 +12,19 @@ class NeuralNetwork(object):
         self.scope = scope
         self.sequence = sequence
         self.learning_rate = tf.constant(learning_rate)
-
         self.features = tf.placeholder(tf.float32, [None, input_dim])
         self.labels = tf.placeholder(tf.float32, [None, output_dim])
-
         self.result = None
+        self.__init_run_number()
+        self.build()
 
+    def __init_run_number(self):
         if not os.path.isfile(file_name):
             with open(file_name, 'w+') as file:
                 file.write(str(0))
-
         with open(file_name) as file:
             self.run_number = int(file.read())
-
         self.run_number += 1
-
         with open(file_name, 'w') as file:
             file.write(str(self.run_number))
 
