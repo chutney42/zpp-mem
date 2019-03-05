@@ -6,6 +6,7 @@ import numpy as np
 from backpropagation import NeuralNetwork
 from utils import *
 
+
 class FANeuralNetwork(NeuralNetwork):
     def backpropagation_fully_conneted(self, input_error, z, a, scope):
         with tf.variable_scope(scope, reuse=tf.AUTO_REUSE):
@@ -21,6 +22,7 @@ class FANeuralNetwork(NeuralNetwork):
             biases = tf.assign(biases, tf.subtract(biases, tf.multiply(self.learning_rate, tf.reduce_mean(delta_biases,
                 axis=[0]))))
             return output_error, weights, biases
+
 
 if __name__ == '__main__':
     FA = FANeuralNetwork([("-", 784), ("f", 50), ("a", 50), ("f", 10), ("a", 10)], scope="FA")

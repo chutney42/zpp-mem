@@ -1,9 +1,5 @@
 import os
-
-os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'  # hacked by Adam
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import tensorflow as tf
-import numpy as np
 from utils import *
 from layer import *
 from loader import *
@@ -53,7 +49,7 @@ class NeuralNetwork(object):
         self.step = []
         for i, layer in reversed(list(enumerate(self.sequence))):
             error = layer.build_backward(error)
-            if (layer.trainable):
+            if layer.trainable:
                 self.step.append(layer.step)
 
     def train(self, training_set, validation_set, batch_size=10, epoch=2, eval_period=1000):

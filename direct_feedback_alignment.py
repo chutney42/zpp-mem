@@ -1,6 +1,4 @@
 import os
-os.environ['KMP_DUPLICATE_LIB_OK']='True' # hacked by Adam
-os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 import tensorflow as tf
 import numpy as np
 from backpropagation import NeuralNetwork
@@ -8,6 +6,7 @@ from utils import *
 
 from tensorflow.examples.tutorials.mnist import input_data
 mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
+
 
 class DFANeuralNetwork(NeuralNetwork):
     def build(self):
