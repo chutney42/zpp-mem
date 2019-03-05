@@ -1,7 +1,3 @@
-import os
-
-os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'  # hacked by Adam
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import tensorflow as tf
 import numpy as np
 from utils import *
@@ -11,13 +7,19 @@ class Layer(object):
     def __init__(self, scope="layer"):
         self.scope = scope
 
+    def build_forward(self, input_vec):
+        raise NotImplementedError("This method should be implemented in subclass")
+
+    def build_backward(self, error):
+        raise NotImplementedError("This method should be implemented in subclass")
+
 
 class FullyConnected(Layer):
     def __init__(self, output_dim, trainable=True, learning_rate=0.5, scope="fully_connected_layer"):
+        super().__init__(scope)
         self.output_dim = output_dim
         self.trainable = trainable
         self.learning_rate = learning_rate
-        self.scope = scope
 
     def build_forward(self, input_vec):
         with tf.variable_scope(self.scope):
@@ -46,10 +48,10 @@ class FullyConnected(Layer):
 
 class ActivationFunction(Layer):
     def __init__(self, func, func_prime, scope="activation_function_layer"):
+        super().__init__(scope)
         self.func = func
         self.func_prime = func_prime
         self.trainable = False
-        self.scope = scope
 
     def build_forward(self, input_vec):
         with tf.variable_scope(self.scope):
@@ -68,8 +70,8 @@ class Sigmoid(ActivationFunction):
 
 class BatchNormalization(Layer):
     def __init__(self, trainable=True, learning_rate=0.5, scope="batch_normalization_layer"):
+        super().__init__(scope)
         self.trainable = trainable
-        self.scope = scope
         self.epsilon = 0.0000001
         self.step = None
         self.learning_rate = learning_rate
