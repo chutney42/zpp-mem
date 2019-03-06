@@ -8,9 +8,7 @@ from utils import *
 from layer import *
 from loader import *
 
-
 file_name = "run_auto_increment"
-
 
 class NeuralNetwork(object):
     def __init__(self, input_dim, sequence, output_dim, learning_rate=0.1, scope="main"):
@@ -34,7 +32,7 @@ class NeuralNetwork(object):
     def build(self):
         self.result = self.build_forward()
         self.build_test(self.result)
-        self.build_backward(self.result)
+        self.build_optimize(self.result)
 
     def build_forward(self):
         a = self.features
@@ -48,12 +46,12 @@ class NeuralNetwork(object):
         self.acct_res = tf.reduce_sum(tf.cast(self.acct_mat, tf.float32))
         tf.summary.scalar("result", self.acct_res)
 
-    def build_backward(self, output_vec):
+    def build_optimize(self, output_vec):
         error = tf.subtract(output_vec, self.labels)
         self.step = []
         for i, layer in reversed(list(enumerate(self.sequence))):
-            error = layer.build_backward(error)
-            if (layer.trainable):
+            error = layer.build_optimize(error)
+            if layer.trainable:
                 self.step.append(layer.step)
 
     def train(self, training_set, validation_set, batch_size=10, epoch=2, eval_period=1000):

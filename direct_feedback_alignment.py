@@ -1,53 +1,37 @@
 import os
-os.environ['KMP_DUPLICATE_LIB_OK']='True' # hacked by Adam
-os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
+
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'  # hacked by Adam
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import tensorflow as tf
 import numpy as np
-from backpropagation import NeuralNetwork
 from utils import *
+from layer import *
+from loader import *
+from backpropagation import NeuralNetwork
 
-from tensorflow.examples.tutorials.mnist import input_data
-mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
+file_name = "run_auto_increment"
 
 class DFANeuralNetwork(NeuralNetwork):
-    def build(self):
-        a = self.features
-        for i in range(1, self.num_layers):
-            _, a = self.fully_connected_layer(a, self.sizes[i],
-                '{}_layer{}'.format(self.scope, i))
-
-        self.acct_mat = tf.equal(tf.argmax(a, 1), tf.argmax(self.labels, 1))
-        self.acct_res = tf.reduce_sum(tf.cast(self.acct_mat, tf.float32))
-
-        error = tf.subtract(a, self.labels)
-        a = self.features
+    def build_optimize(self, output_vec):
+        error = tf.subtract(output_vec, self.labels)
         self.step = []
-        for i in range(1, self.num_layers):
-            a, weights_update, biases_update = self.direct_feedback_alignment(
-                error, a, '{}_layer{}'.format(self.scope, i), i == self.num_layers - 1)
-            self.step.append((weights_update, biases_update))
-
-    def direct_feedback_alignment(self, output_error, input_act, scope, last_layer=False):
-        with tf.variable_scope(scope, reuse=tf.AUTO_REUSE):
-            weights = tf.get_variable("weights")
-            biases = tf.get_variable("biases")
-            z = tf.add(tf.matmul(input_act, weights), biases)
-            a = tf.sigmoid(z)
-            if not last_layer:
-                random_weights = tf.get_variable("random_weights", [output_error.shape[1], weights.shape[1]],
-                    initializer=tf.random_normal_initializer())
-                error_directed = tf.matmul(output_error, random_weights)
-            else:
-                error_directed = output_error
-            error = tf.multiply(error_directed, sigmoid_prime(z))
-            delta_biases = error
-            delta_weights = tf.matmul(tf.transpose(input_act), error)
-            weights = tf.assign(weights, tf.subtract(weights, tf.multiply(self.learning_rate, delta_weights)))
-            biases = tf.assign(biases, tf.subtract(biases, tf.multiply(self.learning_rate,
-                tf.reduce_mean(delta_biases, axis=[0]))))
-            return a, weights, biases
+        a = self.features
+        for i, layer in enumerate(self.sequence):
+            a = layer.build_optimize(a, error, i + 1 == len(self.sequence))
+            if layer.trainable:
+                self.step.append(layer.step)
 
 if __name__ == '__main__':
-    DFA = DFANeuralNetwork([("-", 784), ("f", 50), ("a", 50), ("f", 10), ("a", 10)], scope='DFA')
+    if not os.path.isfile(file_name):
+        with open(file_name, 'w+') as file:
+            file.write(str(0))
+
+    training, test = load_mnist()
+    DFA = DFANeuralNetwork(784,
+                           [DFABlock([DFAFullyConnected(50), BatchNormalization(), Sigmoid()]),
+                            DFABlock([DFAFullyConnected(30), BatchNormalization(), Sigmoid()]),
+                            DFABlock([DFAFullyConnected(10), BatchNormalization(), Sigmoid()])],
+                           10,
+                           'DFA')
     DFA.build()
-    DFA.train()
+    DFA.train(training, test)
