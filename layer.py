@@ -75,20 +75,23 @@ class BatchNormalization(Layer):
         self.learning_rate = learning_rate
         self.input_vec = None
 
-    def build_forward(self, input_vec):
+    def build_forward(self, input_vec, gather_stat = True):
         with tf.variable_scope(self.scope):
             self.input_vec = input_vec
             N = input_vec.get_shape()[1]
             gamma = tf.get_variable("gamma", [N], initializer=tf.ones_initializer())
             beta = tf.get_variable("beta", [N], initializer=tf.zeros_initializer())
-            tf.summary.histogram("input_not_normalized:", input_vec)
             batch_mean, batch_var = tf.nn.moments(input_vec, [0])
-            tf.summary.histogram("var:", batch_var)
-            tf.summary.histogram("mean:", batch_mean)
-            input_act_normalized = (input_vec - batch_mean) / tf.sqrt(batch_var + self.epsilon)
 
+            input_act_normalized = (input_vec - batch_mean) / tf.sqrt(batch_var + self.epsilon)
             input_act_normalized = gamma * input_act_normalized + beta
-            tf.summary.histogram("input_normalized:", input_act_normalized)
+
+            if gather_stat:
+                tf.summary.histogram("input_not_normalized:", input_vec)
+                tf.summary.histogram("var:", batch_var)
+                tf.summary.histogram("mean:", batch_mean)
+                tf.summary.histogram("input_normalized:", input_act_normalized)
+
             return input_act_normalized
 
     def build_backward(self, error):
