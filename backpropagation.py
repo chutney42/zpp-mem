@@ -1,4 +1,5 @@
 import os
+import time
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'  # hacked by Adam
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
@@ -173,7 +174,6 @@ if __name__ == '__main__':
                        [ConvolutedLayer(3, number_of_filters=3),
                         BatchNormalization(),
                         Sigmoid(),
-                        ConvolutedLayer(3, number_of_filters=3),
                         FullyConnected(30),
                         BatchNormalization(),
                         Sigmoid(),
@@ -183,4 +183,7 @@ if __name__ == '__main__':
                        0.1,
                        'BP')
     NN.build()
+    start_time = time.time()
+
     NN.train(training, test)
+    print("--- Training took %s seconds ---" % (time.time() - start_time))

@@ -38,27 +38,21 @@ class ConvolutedLayer(Layer):
 
     def build_forward(self, input_matrix):
         with tf.variable_scope(self.scope):
-            print("Convoluted forward")
             self.input_shape = tf.shape(input_matrix)
             self.input_matrix = input_matrix
             (width, length, depth) = input_matrix.shape[1], input_matrix.shape[2], input_matrix.shape[3]
             output_width = width - self.filter_dim + 1
             output_length = length - self.filter_dim + 1
             output_depth = self.number_of_filters
-            print([input_matrix.shape[1], self.filter_dim, self.filter_dim, depth,
-                   self.number_of_filters])
             filters = tf.get_variable("filters", [self.filter_dim, self.filter_dim, depth,
                                                   self.number_of_filters],
                                       initializer=tf.random_normal_initializer())
             output = tf.nn.conv2d(input_matrix, filters, strides=self.stride, padding=self.padding, name="Convolution")
-            print(output.shape)
             return output
 
     def build_backward(self, error_matrix):
         with tf.variable_scope(self.scope, reuse=True):
             filters = tf.get_variable("filters")
-            print("Convoluted backward")
-            print(error_matrix)
             input_matrix = self.input_matrix
 
             backprop_error = tf.nn.conv2d_backprop_input(self.input_shape, filters, error_matrix, self.stride,
@@ -67,7 +61,6 @@ class ConvolutedLayer(Layer):
             roc_cost_over_filter = tf.nn.conv2d_backprop_filter(input_matrix, tf.shape(filters), error_matrix,
                                                                 self.stride, self.padding)
             self.step = tf.assign(filters, filters - self.learning_rate * roc_cost_over_filter)
-            print(self.input_matrix)
             return backprop_error
 
 
@@ -92,8 +85,6 @@ class FullyConnected(Layer):
 
     def build_backward(self, error):
         with tf.variable_scope(self.scope, reuse=True):
-            print("Build backward")
-            print(error)
             weights = tf.get_variable("weights")
             biases = tf.get_variable("biases")
             roc_cost_over_biases = error
