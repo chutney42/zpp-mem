@@ -49,10 +49,7 @@ class NeuralNetwork(object):
         self.acct_mat = tf.equal(tf.argmax(a, 1), tf.argmax(self.labels, 1))
         self.acct_res = tf.reduce_sum(tf.cast(self.acct_mat, tf.float32))
         if self.gather_stats:
-            self.accuracy, self.update_acc = tf.metrics.accuracy(tf.argmax(self.labels, 1), tf.argmax(a,1), name="my_metric")
-            tf.summary.scalar("result", self.accuracy)
-            running_vars = tf.get_collection(tf.GraphKeys.LOCAL_VARIABLES, scope="my_metric")
-            self.running_vars_initializer = tf.variables_initializer(var_list=running_vars)
+            tf.summary.scalar("result", self.acct_res)
 
     def build_backward(self, output_vec):
         error = tf.subtract(output_vec, self.labels)
@@ -64,10 +61,12 @@ class NeuralNetwork(object):
 
     def train(self, training_set, validation_set, batch_size=20, epoch=2, eval_period=1000, stat_period=100):
         training_set = training_set.shuffle(200).batch(batch_size)
-        iterator = tf.data.Iterator.from_string_handle(self.handle, training_set.output_types, training_set.output_shapes)
+        iterator = tf.data.Iterator.from_string_handle(self.handle, training_set.output_types,
+                                                       training_set.output_shapes)
 
         training_iterator = training_set.make_initializable_iterator()
-        validation_iterator = validation_set.batch(1000).make_initializable_iterator()
+        # hacky way to have only one batch
+        validation_iterator = validation_set.batch(100000).make_initializable_iterator()
 
         next_batch = iterator.get_next()
 
@@ -82,9 +81,8 @@ class NeuralNetwork(object):
             sess.run(tf.global_variables_initializer())
             merged = tf.summary.merge_all()
             counter = 0
+            print(f"Start training for epochs={epoch} with batch_size={batch_size}")
             for e in range(epoch):
-                sess.run(self.running_vars_initializer)
-
                 sess.run(training_iterator.initializer)
                 while True:
                     try:
@@ -94,16 +92,18 @@ class NeuralNetwork(object):
                             run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
                             run_metadata = tf.RunMetadata()
                             summary, _ = sess.run([merged, self.step], options=run_options, run_metadata=run_metadata,
-                                                    feed_dict={self.features: batch_xs, self.labels: batch_ys})
+                                                  feed_dict={self.features: batch_xs, self.labels: batch_ys})
                             writer.add_run_metadata(run_metadata, 'step_%d' % counter)
                         else:
-                            summary, _ = sess.run([merged, self.step], feed_dict={self.features: batch_xs, self.labels: batch_ys})
+                            summary, _ = sess.run([merged, self.step],
+                                                  feed_dict={self.features: batch_xs, self.labels: batch_ys})
 
                         writer.add_summary(summary, counter)
 
                         if eval_period > 0 and counter % eval_period is 0:
-                            print("iter: {}, acc: {}%".format(counter, self.validate(next_batch, validation_iterator, validation_handle, sess, val_writer,
-                                                                                     counter)))
+                            print("iter: {}, acc: {}%".format(counter, self.validate(next_batch, validation_iterator,
+                                                                                     validation_handle, sess,
+                                                                                     val_writer, counter)))
 
                         counter += 1
                     except tf.errors.OutOfRangeError:
@@ -117,31 +117,28 @@ class NeuralNetwork(object):
             val_writer.close()
             # TODO save model
 
-    def validate(self, get_next_op,validation_iterator,  validation_handle, sess, writer=None, step=0):
+    def validate(self, get_next_op, validation_iterator, validation_handle, sess, writer=None, step=0):
         total_res = 0
         counter = 0
-        # hacky way to have only one batch
 
-        sess.run(validation_iterator.initializer)
-        sess.run(self.running_vars_initializer)
         merged = tf.summary.merge_all()
-
+        sess.run(validation_iterator.initializer)
         while True:
             try:
                 batch_xs, batch_ys = sess.run(get_next_op, feed_dict={self.handle: validation_handle})
 
                 if writer is None:
-                     sess.run(self.update_acc , feed_dict={self.features: batch_xs, self.labels: batch_ys})
+                    res = sess.run(self.acct_res, feed_dict={self.features: batch_xs, self.labels: batch_ys})
                 else:
-                     sess.run(self.update_acc, feed_dict={self.features: batch_xs, self.labels: batch_ys})
-
+                    summary, res = sess.run([merged, self.acct_res],
+                                            feed_dict={self.features: batch_xs, self.labels: batch_ys})
+                    writer.add_summary(summary, step)
+                total_res += res
+                counter += len(batch_xs)
             except tf.errors.OutOfRangeError:
-                score = sess.run( self.accuracy)
-                print(f"val: {score}")
-                writer.add_summary(score, step)
                 break
 
-        return score
+        return total_res / counter * 100
 
     def infer(self, x):
         # TODO restore model
