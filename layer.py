@@ -9,7 +9,66 @@ from utils import *
 
 class Layer(object):
     def __init__(self, scope="layer"):
+        self.trainable = True
+        self.input_shape = None
         self.scope = scope
+
+    def save_shape(self, input_vec):
+        self.input_shape = tf.shape(input_vec)
+
+    def restore_shape(self, input_vec):
+        return tf.reshape(input_vec, self.input_shape)
+
+    def flatten_input(self, input_vec):
+        return tf.layers.Flatten()(input_vec)
+
+
+class ConvolutedLayer(Layer):
+    def __init__(self, filter_dim, stride=[1, 1, 1, 1], number_of_filters=1, padding="SAME",
+                 trainable=True, learning_rate=0.5,
+                 scope="convoluted_layer"):
+        self.needsMatrix = True
+        self.stride = stride
+        self.filter_dim = filter_dim
+        self.number_of_filters = number_of_filters
+        self.trainable = trainable
+        self.learning_rate = learning_rate
+        self.scope = scope
+        self.padding = padding
+
+    def build_forward(self, input_matrix):
+        with tf.variable_scope(self.scope):
+            print("Convoluted forward")
+            self.input_shape = tf.shape(input_matrix)
+            self.input_matrix = input_matrix
+            (width, length, depth) = input_matrix.shape[1], input_matrix.shape[2], input_matrix.shape[3]
+            output_width = width - self.filter_dim + 1
+            output_length = length - self.filter_dim + 1
+            output_depth = self.number_of_filters
+            print([input_matrix.shape[1], self.filter_dim, self.filter_dim, depth,
+                   self.number_of_filters])
+            filters = tf.get_variable("filters", [self.filter_dim, self.filter_dim, depth,
+                                                  self.number_of_filters],
+                                      initializer=tf.random_normal_initializer())
+            output = tf.nn.conv2d(input_matrix, filters, strides=self.stride, padding=self.padding, name="Convolution")
+            print(output.shape)
+            return output
+
+    def build_backward(self, error_matrix):
+        with tf.variable_scope(self.scope, reuse=True):
+            filters = tf.get_variable("filters")
+            print("Convoluted backward")
+            print(error_matrix)
+            input_matrix = self.input_matrix
+
+            backprop_error = tf.nn.conv2d_backprop_input(self.input_shape, filters, error_matrix, self.stride,
+                                                         self.padding)
+
+            roc_cost_over_filter = tf.nn.conv2d_backprop_filter(input_matrix, tf.shape(filters), error_matrix,
+                                                                self.stride, self.padding)
+            self.step = tf.assign(filters, filters - self.learning_rate * roc_cost_over_filter)
+            print(self.input_matrix)
+            return backprop_error
 
 
 class FullyConnected(Layer):
@@ -21,16 +80,20 @@ class FullyConnected(Layer):
 
     def build_forward(self, input_vec):
         with tf.variable_scope(self.scope):
+            self.save_shape(input_vec)
+            input_vec = self.flatten_input(input_vec)
+            self.input_vec = input_vec
             weights = tf.get_variable("weights", [input_vec.shape[1], self.output_dim],
                                       initializer=tf.random_normal_initializer())
             biases = tf.get_variable("biases", [self.output_dim],
                                      initializer=tf.constant_initializer())
             z = tf.add(tf.matmul(input_vec, weights), biases)
-            self.input_vec = input_vec
             return z
 
     def build_backward(self, error):
         with tf.variable_scope(self.scope, reuse=True):
+            print("Build backward")
+            print(error)
             weights = tf.get_variable("weights")
             biases = tf.get_variable("biases")
             roc_cost_over_biases = error
@@ -41,7 +104,7 @@ class FullyConnected(Layer):
                                tf.subtract(biases, tf.multiply(self.learning_rate, tf.reduce_mean(roc_cost_over_biases,
                                                                                                   axis=[0]))))
             self.step = (weights, biases)
-            return bp_error
+            return self.restore_shape(bp_error)
 
 
 class ActivationFunction(Layer):
@@ -77,6 +140,8 @@ class BatchNormalization(Layer):
 
     def build_forward(self, input_vec, gather_stats=True):
         with tf.variable_scope(self.scope):
+            self.save_shape(input_vec)
+            input_vec = self.flatten_input(input_vec)
             self.input_vec = input_vec
             N = input_vec.get_shape()[1]
             gamma = tf.get_variable("gamma", [N], initializer=tf.ones_initializer())
@@ -92,11 +157,13 @@ class BatchNormalization(Layer):
                 tf.summary.histogram("mean", batch_mean)
                 tf.summary.histogram("input_normalized", input_act_normalized)
 
-            return input_act_normalized
+            return self.restore_shape(input_act_normalized)
 
     def build_backward(self, error):
         with tf.variable_scope(self.scope, reuse=True):
             input_vec = self.input_vec
+            error = self.flatten_input(error)
+
             N = int(input_vec.get_shape()[1])
             gamma = tf.get_variable("gamma")
             beta = tf.get_variable("beta")
@@ -118,4 +185,4 @@ class BatchNormalization(Layer):
             update_beta = tf.assign(beta, tf.subtract(beta, tf.multiply(dbeta, self.learning_rate)))
             update_gamma = tf.assign(gamma, tf.subtract(gamma, tf.multiply(dgamma, self.learning_rate)))
             self.step = (update_beta, update_gamma)
-            return output_error
+            return self.restore_shape(output_error)

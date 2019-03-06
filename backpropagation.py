@@ -12,12 +12,12 @@ file_name = "run_auto_increment"
 
 
 class NeuralNetwork(object):
-    def __init__(self, input_dim, sequence, output_dim, learning_rate=0.1, scope="main", gather_stats=True):
+    def __init__(self, input_shape, sequence, output_dim, learning_rate=0.1, scope="main", gather_stats=True):
         self.scope = scope
         self.sequence = sequence
         self.learning_rate = tf.constant(learning_rate)
 
-        self.features = tf.placeholder(tf.float32, [None, input_dim])
+        self.features = tf.placeholder(tf.float32, [None]+input_shape)
         self.labels = tf.placeholder(tf.float32, [None, output_dim])
 
         self.result = None
@@ -169,10 +169,11 @@ if __name__ == '__main__':
             file.write(str(0))
 
     training, test = load_mnist()
-    NN = NeuralNetwork(784,
-                       [FullyConnected(50),
+    NN = NeuralNetwork([28, 28, 1],
+                       [ConvolutedLayer(3, number_of_filters=3),
                         BatchNormalization(),
                         Sigmoid(),
+                        ConvolutedLayer(3, number_of_filters=3),
                         FullyConnected(30),
                         BatchNormalization(),
                         Sigmoid(),
