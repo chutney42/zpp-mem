@@ -171,7 +171,7 @@ if __name__ == '__main__':
 
     training, test = load_mnist()
     NN = NeuralNetwork([28, 28, 1],
-                       [ConvolutedLayer(3, number_of_filters=3),
+                       [ConvolutionalLayer(3, number_of_filters=3),
                         BatchNormalization(),
                         Sigmoid(),
                         FullyConnected(30),

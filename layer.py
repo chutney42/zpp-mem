@@ -12,6 +12,7 @@ class Layer(object):
         self.trainable = True
         self.input_shape = None
         self.scope = scope
+        self.learning_rate = None
 
     def save_shape(self, input_vec):
         self.input_shape = tf.shape(input_vec)
@@ -23,11 +24,10 @@ class Layer(object):
         return tf.layers.Flatten()(input_vec)
 
 
-class ConvolutedLayer(Layer):
+class ConvolutionalLayer(Layer):
     def __init__(self, filter_dim, stride=[1, 1, 1, 1], number_of_filters=1, padding="SAME",
                  trainable=True, learning_rate=0.5,
                  scope="convoluted_layer"):
-        self.needsMatrix = True
         self.stride = stride
         self.filter_dim = filter_dim
         self.number_of_filters = number_of_filters
@@ -41,11 +41,9 @@ class ConvolutedLayer(Layer):
             self.input_shape = tf.shape(input_matrix)
             self.input_matrix = input_matrix
             (width, length, depth) = input_matrix.shape[1], input_matrix.shape[2], input_matrix.shape[3]
-            output_width = width - self.filter_dim + 1
-            output_length = length - self.filter_dim + 1
-            output_depth = self.number_of_filters
-            filters = tf.get_variable("filters", [self.filter_dim, self.filter_dim, depth,
-                                                  self.number_of_filters],
+            filter_shape = [self.filter_dim, self.filter_dim, depth,
+                            self.number_of_filters]
+            filters = tf.get_variable("filters", filter_shape,
                                       initializer=tf.random_normal_initializer())
             output = tf.nn.conv2d(input_matrix, filters, strides=self.stride, padding=self.padding, name="Convolution")
             return output
