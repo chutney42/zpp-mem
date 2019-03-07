@@ -76,44 +76,45 @@ class NeuralNetwork(object):
                         writer.add_summary(summary, counter)
 
                         if eval_period > 0 and counter % eval_period is 0:
-                            print("iter: {}, acc: {}%".format(counter, self.validate(next_batch, validation_iterator,
+                            print("iter: {}, acc: {}%".format(counter, self.__validate(next_batch, validation_iterator,
                                                                                      validation_handle, sess,
                                                                                      val_writer, counter)))
 
                         counter += 1
                     except tf.errors.OutOfRangeError:
                         break
-                res = self.validate(next_batch, validation_iterator, validation_handle, sess)
+                res = self.__validate(next_batch, validation_iterator, validation_handle, sess)
                 print("epoch {}:  {}%".format(e, res))
 
-            res = self.validate(next_batch, validation_iterator, validation_handle, sess)
+            res = self.__validate(next_batch, validation_iterator, validation_handle, sess)
             print("total {}%".format(res))
             writer.close()
             val_writer.close()
             # TODO save model
 
-    def validate(self, get_next_op, validation_iterator, validation_handle, sess, writer=None, step=0):
+    def __validate(self, get_next_op, validation_iterator, validation_handle, sess, writer=None, step=0):
         total_res = 0
         counter = 0
-
         merged = tf.summary.merge_all()
         sess.run(validation_iterator.initializer)
         while True:
             try:
                 batch_xs, batch_ys = sess.run(get_next_op, feed_dict={self.handle: validation_handle})
-
-                if writer is None:
-                    res = sess.run(self.acct_res, feed_dict={self.features: batch_xs, self.labels: batch_ys})
-                else:
-                    summary, res = sess.run([merged, self.acct_res],
-                                            feed_dict={self.features: batch_xs, self.labels: batch_ys})
-                    writer.add_summary(summary, step)
-                total_res += res
+                feed_dict = {self.features: batch_xs, self.labels: batch_ys}
+                total_res += self.__validate_single_batch(sess, feed_dict, merged, writer, step)
                 counter += len(batch_xs)
             except tf.errors.OutOfRangeError:
                 break
 
         return total_res / counter * 100
+
+    def __validate_single_batch(self, sess, feed_dict, merged, writer=None, step=0):
+        if writer is None:
+            res = sess.run(self.acct_res, feed_dict=feed_dict)
+        else:
+            summary, res = sess.run([merged, self.acct_res], feed_dict=feed_dict)
+            writer.add_summary(summary, step)
+        return res
 
     def infer(self, x):
         # TODO restore model
