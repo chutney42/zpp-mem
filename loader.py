@@ -2,7 +2,6 @@ import tensorflow as tf
 import numpy as np
 
 
-
 def load_mnist():
     training, test = tf.keras.datasets.mnist.load_data()
 
