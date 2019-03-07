@@ -20,6 +20,7 @@ class NeuralNetwork(object):
         self.handle = tf.placeholder(tf.string, shape=[])
         self.__init_run_number()
         self.build()
+        self.merged_summary = tf.summary.merge_all()
 
     def __init_run_number(self):
         if not os.path.isfile(file_name):
@@ -34,92 +35,105 @@ class NeuralNetwork(object):
     def build(self):
         raise NotImplementedError("This method should be implemented in subclass")
 
-    def train(self, training_set, validation_set, batch_size=20, epoch=2, eval_period=1000, stat_period=100):
+    def train(self, training_set, validation_set, batch_size=20, epochs=2, eval_period=1000, stat_period=100):
         training_set = training_set.shuffle(200).batch(batch_size)
-        iterator = tf.data.Iterator.from_string_handle(self.handle, training_set.output_types,
-                                                       training_set.output_shapes)
-
-        training_iterator = training_set.make_initializable_iterator()
+        training_it = training_set.make_initializable_iterator()
         # hacky way to have only one batch
-        validation_iterator = validation_set.batch(100000).make_initializable_iterator()
+        validation_it = validation_set.batch(100000).make_initializable_iterator()
 
-        next_batch = iterator.get_next()
+        batch = tf.data.Iterator\
+            .from_string_handle(self.handle, training_set.output_types, training_set.output_shapes)\
+            .get_next()
+        with tf.Session() as self.sess:
+            self.__train_all_epochs(training_it, validation_it, batch, batch_size, epochs, eval_period, stat_period)
 
-        with tf.Session() as sess:
+    def __train_all_epochs(self, training_it, validation_it, batch, batch_size, epochs, eval_period, stat_period):
+        writer, val_writer = self.__init_writers()
+        training_handle, validation_handle = self.__init_handlers(training_it, validation_it)
+        self.sess.run(tf.global_variables_initializer())
+        self.counter = 0
+        self.epoch = 0
+        print(f"Start training for epochs={epochs} with batch_size={batch_size}")
+        for _ in range(epochs):
+            self.__train_single_epoch(training_it, validation_it, training_handle, validation_handle, batch, writer,
+                                      val_writer, eval_period, stat_period)
+            res = self.__validate(batch, validation_it, validation_handle)
+            print("epoch {}:  {}%".format(self.epoch, res))
 
-            writer = tf.summary.FileWriter("./demo/{}_{}".format(self.scope, self.run_number), sess.graph)
-            val_writer = tf.summary.FileWriter("./demo/val_{}_{}".format(self.scope, self.run_number), sess.graph)
+        res = self.__validate(batch, validation_it, validation_handle)
+        print("total {}%".format(res))
+        self.__close_writers(writer, val_writer)
+        # TODO save model
 
-            training_handle = sess.run(training_iterator.string_handle())
-            validation_handle = sess.run(validation_iterator.string_handle())
+    def __init_writers(self):
+        writer = tf.summary.FileWriter("./demo/{}_{}".format(self.scope, self.run_number), self.sess.graph)
+        val_writer = tf.summary.FileWriter("./demo/val_{}_{}".format(self.scope, self.run_number), self.sess.graph)
+        return writer, val_writer
 
-            sess.run(tf.global_variables_initializer())
-            merged = tf.summary.merge_all()
-            counter = 0
-            print(f"Start training for epochs={epoch} with batch_size={batch_size}")
-            for e in range(epoch):
-                sess.run(training_iterator.initializer)
-                while True:
-                    try:
-                        batch_xs, batch_ys = sess.run(next_batch, feed_dict={self.handle: training_handle})
+    def __close_writers(self, writer, val_writer):
+        writer.close()
+        val_writer.close()
 
-                        if self.gather_stats and counter % stat_period is 0:
-                            run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
-                            run_metadata = tf.RunMetadata()
-                            summary, _ = sess.run([merged, self.step], options=run_options, run_metadata=run_metadata,
-                                                  feed_dict={self.features: batch_xs, self.labels: batch_ys})
-                            writer.add_run_metadata(run_metadata, 'step_%d' % counter)
-                        else:
-                            summary, _ = sess.run([merged, self.step],
-                                                  feed_dict={self.features: batch_xs, self.labels: batch_ys})
+    def __init_handlers(self, training_it, validation_it):
+        training_handle = self.sess.run(training_it.string_handle())
+        validation_handle = self.sess.run(validation_it.string_handle())
+        return training_handle, validation_handle
 
-                        writer.add_summary(summary, counter)
+    def __train_single_epoch(self, training_it, validation_it, training_handle, validation_handle, batch, writer,
+                             val_writer, eval_period, stat_period):
+        self.sess.run(training_it.initializer)
+        while True:
+            try:
+                batch_xs, batch_ys = self.sess.run(batch, {self.handle: training_handle})
+                feed_dict = {self.features: batch_xs, self.labels: batch_ys}
 
-                        if eval_period > 0 and counter % eval_period is 0:
-                            print("iter: {}, acc: {}%".format(counter, self.__validate(next_batch, validation_iterator,
-                                                                                     validation_handle, sess,
-                                                                                     val_writer, counter)))
+                if self.gather_stats and self.counter % stat_period is 0:
+                    run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+                    run_metadata = tf.RunMetadata()
+                    summary, _ = self.sess.run([self.merged_summary, self.step], feed_dict, run_options, run_metadata)
+                    writer.add_run_metadata(run_metadata, 'step_%d' % self.counter)
+                else:
+                    summary, _ = self.sess.run([self.merged_summary, self.step], feed_dict)
 
-                        counter += 1
-                    except tf.errors.OutOfRangeError:
-                        break
-                res = self.__validate(next_batch, validation_iterator, validation_handle, sess)
-                print("epoch {}:  {}%".format(e, res))
+                writer.add_summary(summary, self.counter)
 
-            res = self.__validate(next_batch, validation_iterator, validation_handle, sess)
-            print("total {}%".format(res))
-            writer.close()
-            val_writer.close()
-            # TODO save model
+                if self.counter % eval_period is 0:
+                    res = self.__validate(batch, validation_it, validation_handle, val_writer)
+                    print("iter: {}, acc: {}%".format(self.counter, res))
 
-    def __validate(self, get_next_op, validation_iterator, validation_handle, sess, writer=None, step=0):
+                self.counter += 1
+            except tf.errors.OutOfRangeError:
+                break
+        self.epoch += 1
+
+    def __validate(self, get_next_op, validation_iterator, validation_handle, writer=None):
         total_res = 0
         counter = 0
         merged = tf.summary.merge_all()
-        sess.run(validation_iterator.initializer)
+        self.sess.run(validation_iterator.initializer)
         while True:
             try:
-                batch_xs, batch_ys = sess.run(get_next_op, feed_dict={self.handle: validation_handle})
+                batch_xs, batch_ys = self.sess.run(get_next_op, {self.handle: validation_handle})
                 feed_dict = {self.features: batch_xs, self.labels: batch_ys}
-                total_res += self.__validate_single_batch(sess, feed_dict, merged, writer, step)
+                total_res += self.__validate_single_batch(feed_dict, merged, writer)
                 counter += len(batch_xs)
             except tf.errors.OutOfRangeError:
                 break
 
         return total_res / counter * 100
 
-    def __validate_single_batch(self, sess, feed_dict, merged, writer=None, step=0):
+    def __validate_single_batch(self, feed_dict, merged, writer=None):
         if writer is None:
-            res = sess.run(self.acct_res, feed_dict=feed_dict)
+            res = self.sess.run(self.acct_res, feed_dict)
         else:
-            summary, res = sess.run([merged, self.acct_res], feed_dict=feed_dict)
-            writer.add_summary(summary, step)
+            summary, res = self.sess.run([merged, self.acct_res], feed_dict)
+            writer.add_summary(summary, self.counter)
         return res
 
     def infer(self, x):
         # TODO restore model
         with tf.Session() as sess:
-            res = sess.run(self.result, feed_dict={self.features: x})
+            res = sess.run(self.result, {self.features: x})
         return res
 
     def test(self, data_set, batch_size=10):
@@ -131,7 +145,7 @@ class NeuralNetwork(object):
             while True:
                 try:
                     batch_xs, batch_ys = sess.run(next_batch)
-                    res = sess.run(self.acct_res, feed_dict={self.features: batch_xs, self.labels: batch_ys})
+                    res = sess.run(self.acct_res, {self.features: batch_xs, self.labels: batch_ys})
                     total_res += res
                     counter += batch_size
                 except tf.errors.OutOfRangeError:

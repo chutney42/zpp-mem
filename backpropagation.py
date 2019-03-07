@@ -36,15 +36,15 @@ class BPNeuralNetwork(NeuralNetwork):
 if __name__ == '__main__':
     training, test = load_mnist()
     NN = BPNeuralNetwork(784,
-                       [FullyConnected(50),
-                        BatchNormalization(),
-                        Sigmoid(),
-                        FullyConnected(30),
-                        BatchNormalization(),
-                        Sigmoid(),
-                        FullyConnected(10),
-                        Sigmoid()],
-                       10,
-                       0.1,
-                       'BP')
+                         [FullyConnected(50),
+                          BatchNormalization(),
+                          Sigmoid(),
+                          FullyConnected(30),
+                          BatchNormalization(),
+                          Sigmoid(),
+                          FullyConnected(10),
+                          Sigmoid()],
+                         10,
+                         0.1,
+                         'BP')
     NN.train(training, test)
