@@ -14,7 +14,7 @@ class BPNeuralNetwork(NeuralNetwork):
     def __build_forward(self):
         a = self.features
         for i, layer in enumerate(self.sequence):
-            layer.scope = '{}_{}_{}'.format(self.scope, layer.scope, i)
+            layer.scope = f"{self.scope}_{layer.scope}_{i}"
             a = layer.build_forward(a)
         return a
 

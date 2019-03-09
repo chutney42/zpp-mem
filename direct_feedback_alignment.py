@@ -10,8 +10,7 @@ class DFANeuralNetwork(NeuralNetwork):
     def build(self):
         a = self.features
         for i in range(1, self.num_layers):
-            _, a = self.fully_connected_layer(a, self.sizes[i],
-                '{}_layer{}'.format(self.scope, i))
+            _, a = self.fully_connected_layer(a, self.sizes[i], f"{self.scope}_layer{i}")
 
         self.acct_mat = tf.equal(tf.argmax(a, 1), tf.argmax(self.labels, 1))
         self.acct_res = tf.reduce_sum(tf.cast(self.acct_mat, tf.float32))
@@ -21,7 +20,7 @@ class DFANeuralNetwork(NeuralNetwork):
         self.step = []
         for i in range(1, self.num_layers):
             a, weights_update, biases_update = self.direct_feedback_alignment(
-                error, a, '{}_layer{}'.format(self.scope, i), i == self.num_layers - 1)
+                error, a, f"{self.scope}_layer{i}", i == self.num_layers - 1)
             self.step.append((weights_update, biases_update))
 
     def direct_feedback_alignment(self, output_error, input_act, scope, last_layer=False):
