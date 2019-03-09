@@ -1,10 +1,7 @@
-import os
-os.environ['KMP_DUPLICATE_LIB_OK']='True' # hacked by Adam
-os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 import tensorflow as tf
-import numpy as np
-from backpropagation import NeuralNetwork
+from neuralnetwork import NeuralNetwork
 from utils import *
+
 
 class FANeuralNetwork(NeuralNetwork):
     def backpropagation_fully_conneted(self, input_error, z, a, scope):
@@ -22,7 +19,7 @@ class FANeuralNetwork(NeuralNetwork):
                 axis=[0]))))
             return output_error, weights, biases
 
+
 if __name__ == '__main__':
     FA = FANeuralNetwork([("-", 784), ("f", 50), ("a", 50), ("f", 10), ("a", 10)], scope="FA")
-    FA.build()
     FA.train()
