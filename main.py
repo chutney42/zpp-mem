@@ -6,7 +6,7 @@ from loader import load
 
 
 def load_dataset(options):
-    dataset = options['datasets']
+    dataset = options['dataset']
     if dataset is None:
         raise RuntimeError("need dataset")
     return load(dataset['name'])
@@ -37,18 +37,25 @@ def define_network(options):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-opt', type=str, required=True, help='Path to option JSON file.')
-    opt = parse(parser.parse_args().opt)
-    print(opt['aalal'])
+    parser.add_argument('-opt', type=str, required=False, help='Path to option JSON file.')
 
-    training, test = load_dataset(opt)
-    batch_size = opt['datasets']['batch_size']
-    epochs = opt['datasets']['epochs']
-    eval_period = opt['periods']['eval_period']
-    stat_period = opt['periods']['stat_period']
+    if parser.parse_args().opt is None:
+        #opt_path = "./options/backpropagation.json"
+        #opt_path = "./options/direct_feedback_alignment.json"
+        opt_path = "./options/feedback_alignment.json"
+    else:
+        opt_path = parser.parse_args().opt
 
-    NN = define_network(opt)
-    if opt['is_train']:
+    options = parse(opt_path)
+
+    training, test = load_dataset(options)
+    batch_size = options['dataset']['batch_size']
+    epochs = options['dataset']['epochs']
+    eval_period = options['periods']['eval_period']
+    stat_period = options['periods']['stat_period']
+
+    NN = define_network(options)
+    if options['is_train']:
         NN.train(training, test, batch_size=batch_size, epochs=epochs, eval_period=eval_period,
                  stat_period=stat_period)
     else:

@@ -1,5 +1,5 @@
 {
-  "type": "BP",
+  "type": "DFA",
   "is_train": true,
   "dataset": {
     "name": "mnist",

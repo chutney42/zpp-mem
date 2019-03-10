@@ -10,6 +10,7 @@ file_name = "run_auto_increment"
 class NeuralNetwork(object):
     def __init__(self, input_dim, sequence, output_dim, learning_rate=0.1, scope="main", gather_stats=True,
                  restore_model=False, save_model=False, restore_model_path=None, save_model_path=None):
+        print(f"Create {scope} model with learning_rate={learning_rate}")
         self.scope = scope
         self.sequence = sequence
         for i, block in enumerate(self.sequence):
