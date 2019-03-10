@@ -32,7 +32,7 @@ def define_network(options):
                    scope=options['type'],
                    gather_stats=options['training_parameters']['gather_stats'],
                    restore_model=options['model_handling']['restore'],
-                   save_model=options['model_handling']['should_save'])
+                   save_model=options['model_handling']['save'])
 
 
 if __name__ == '__main__':
