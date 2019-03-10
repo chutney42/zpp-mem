@@ -1,5 +1,9 @@
 import tensorflow as tf
-import numpy as np
+
+
+def load(dataset_name):
+    if dataset_name == 'mnist':
+        return load_mnist()
 
 
 def load_mnist():
@@ -15,9 +19,3 @@ def load_mnist():
     test_data_set = tf.data.Dataset.from_tensor_slices(test).map(transform)
 
     return train_data_set, test_data_set
-
-
-def shuffle(features, labels):
-    tmp = list(zip(features, labels))
-    np.random.shuffle(tmp)
-    return list(zip(*tmp))

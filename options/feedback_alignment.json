@@ -1,0 +1,21 @@
+{
+  "type": "FA",
+  "is_train": true,
+  "dataset": {
+    "name": "mnist",
+    "batch_size": 20,
+    "epochs": 2
+  },
+  "model_handling": {
+    "restore": false,
+    "save": false
+  },
+  "training_parameters": {
+    "learning_rate": 1e-1,
+    "gather_stats": false
+  },
+  "periods": {
+    "eval_period": 1e3,
+    "stat_period": 1e2
+  }
+}

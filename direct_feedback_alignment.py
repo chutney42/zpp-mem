@@ -1,4 +1,3 @@
-import tensorflow as tf
 from layer import *
 from loader import *
 from neuralnetwork import NeuralNetwork
@@ -34,15 +33,3 @@ class DirectFeedbackAlignment(NeuralNetwork):
                     self.step.append(layer.step)
             block.head.build_update(error)
             self.step.append(block.head.step)
-
-
-if __name__ == '__main__':
-    training, test = load_mnist()
-    NN = DirectFeedbackAlignment(784,
-                                 [Block([FullyConnected(50), BatchNormalization(), Sigmoid()]),
-                                  Block([FullyConnected(30), BatchNormalization(), Sigmoid()]),
-                                  Block([FullyConnected(10), Sigmoid()])],
-                                 10,
-                                 0.1,
-                                 'DFA')
-    NN.train(training, test)
