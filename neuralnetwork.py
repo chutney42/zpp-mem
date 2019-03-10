@@ -13,6 +13,9 @@ class NeuralNetwork(object):
                  restore_model=False, save_model=False, restore_model_path=None, save_model_path=None):
         self.scope = scope
         self.sequence = sequence
+        for i, block in enumerate(self.sequence):
+            for j, layer in enumerate(block):
+                layer.scope = f"{self.scope}_{layer.scope}_{i}_{j}"
         self.learning_rate = tf.constant(learning_rate)
         self.features = tf.placeholder(tf.float32, [None, input_dim])
         self.labels = tf.placeholder(tf.float32, [None, output_dim])

@@ -1,5 +1,6 @@
-import numpy as np
 import tensorflow as tf
 
-def sigmoid_prime(x):
-    return tf.multiply(tf.sigmoid(x), (tf.constant(1.0) - tf.sigmoid(x)))
+def sigmoid_prime(x, name=None):
+    with tf.name_scope(name or "sigmoid_prime"):
+        res = tf.multiply(tf.sigmoid(x), (tf.constant(1.0) - tf.sigmoid(x)))
+        return res

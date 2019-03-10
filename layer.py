@@ -1,10 +1,28 @@
 import tensorflow as tf
-from utils import *
+from utils import sigmoid_prime
+from propagate import *
 
+class Block(object):
+    def __init__(self, sequence):
+        if not all(isinstance(item, Layer) for item in sequence):
+            raise TypeError("All elements of sequence must be instances of Layer")
+        if not isinstance(sequence[0], WeightLayer):
+            raise TypeError("The first element of sequence must be an instance of WeightLayer")
+        self.head = sequence[0]
+        self.tail = sequence[1:]
+
+    def __iter__(self):
+        yield self.head
+        for sublayer in self.tail:
+            yield sublayer
 
 class Layer(object):
-    def __init__(self, scope="layer"):
+    def __init__(self, trainable, scope="layer"):
+        self.trainable = trainable
+        if trainable:
+            self.step = None
         self.scope = scope
+        self.input_vec = None
 
     def build_forward(self, input_vec, gather_stats=True):
         raise NotImplementedError("This method should be implemented in subclass")
@@ -13,47 +31,69 @@ class Layer(object):
         raise NotImplementedError("This method should be implemented in subclass")
 
 
-class FullyConnected(Layer):
-    def __init__(self, output_dim, trainable=True, learning_rate=0.5, scope="fully_connected_layer"):
-        super().__init__(scope)
+class WeightLayer(Layer):
+    def __init__(self, propagate=backpropagation, learnig_rate=0.5, scope="weight_layer"):
+        super().__init__(True, scope)
+        self.propagate = propagate
+        self.learning_rate = 0.5
+
+    def build_propagate(self, error, gather_stats=True):
+        raise NotImplementedError("This method should be implemented in subclass")
+
+    def build_update(self, error, input_vec=None, gather_stats=True):
+        raise NotImplementedError("This method should be implemented in subclass")
+
+    def build_backward(self, error, input_vec=None, gather_stats=True):
+        perror = self.build_propagate(error, gather_stats)
+        self.build_update(error, input_vec, gather_stats)
+        return perror
+
+
+class FullyConnected(WeightLayer):
+    def __init__(self, output_dim, propagate=backpropagation, learning_rate=0.5, scope="fully_connected_layer"):
+        super().__init__(propagate, learning_rate, scope)
         self.output_dim = output_dim
-        self.trainable = trainable
-        self.learning_rate = learning_rate
 
     def build_forward(self, input_vec, gather_stats=True):
-        with tf.variable_scope(self.scope):
+        with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
             weights = tf.get_variable("weights", [input_vec.shape[1], self.output_dim],
-                                      initializer=tf.random_normal_initializer())
+                initializer=tf.random_normal_initializer())
             biases = tf.get_variable("biases", [self.output_dim],
-                                     initializer=tf.constant_initializer())
+                initializer=tf.constant_initializer())
             z = tf.add(tf.matmul(input_vec, weights), biases)
             self.input_vec = input_vec
             return z
 
-    def build_backward(self, error, gather_stats=True):
-        with tf.variable_scope(self.scope, reuse=True):
+    def build_propagate(self, error, gather_stats=True):
+        with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
+            weights = tf.get_variable("weights")
+            perror = self.propagate(error, weights)
+            return perror
+
+    def build_update(self, error, input_vec=None, gather_stats=True):
+        if not input_vec:
+            input_vec = self.input_vec
+        self.input_vec = None
+        with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
             weights = tf.get_variable("weights")
             biases = tf.get_variable("biases")
-            roc_cost_over_biases = error
-            roc_cost_over_weights = tf.matmul(tf.transpose(self.input_vec), error)
-            bp_error = tf.matmul(error, tf.transpose(weights))
-            weights = tf.assign(weights, tf.subtract(weights, tf.multiply(self.learning_rate, roc_cost_over_weights)))
-            biases = tf.assign(biases,
-                               tf.subtract(biases, tf.multiply(self.learning_rate, tf.reduce_mean(roc_cost_over_biases,
-                                                                                                  axis=[0]))))
+            delta_biases = error
+            delta_weights = tf.matmul(tf.transpose(input_vec), error)
+            weights = tf.assign(weights, tf.subtract(weights, tf.multiply(self.learning_rate, delta_weights)))
+            biases = tf.assign(biases, tf.subtract(biases, tf.multiply(self.learning_rate, tf.reduce_mean(delta_biases,
+                axis=[0]))))
             self.step = (weights, biases)
-            return bp_error
+            return
 
 
 class ActivationFunction(Layer):
     def __init__(self, func, func_prime, scope="activation_function_layer"):
-        super().__init__(scope)
+        super().__init__(False, scope)
         self.func = func
         self.func_prime = func_prime
-        self.trainable = False
 
     def build_forward(self, input_vec, gather_stats=True):
-        with tf.variable_scope(self.scope):
+        with tf.variable_scope(self.scope, tf.AUTO_REUSE):
             self.input_vec = input_vec
             return self.func(input_vec)
 
@@ -68,16 +108,13 @@ class Sigmoid(ActivationFunction):
 
 
 class BatchNormalization(Layer):
-    def __init__(self, trainable=True, learning_rate=0.5, scope="batch_normalization_layer"):
-        super().__init__(scope)
-        self.trainable = trainable
+    def __init__(self, learning_rate=0.5, scope="batch_normalization_layer"):
+        super().__init__(True, scope)
         self.epsilon = 0.0000001
-        self.step = None
         self.learning_rate = learning_rate
-        self.input_vec = None
 
     def build_forward(self, input_vec, gather_stats=True):
-        with tf.variable_scope(self.scope):
+        with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
             self.input_vec = input_vec
             N = input_vec.get_shape()[1]
             gamma = tf.get_variable("gamma", [N], initializer=tf.ones_initializer())
