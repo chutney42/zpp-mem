@@ -70,7 +70,6 @@ class NeuralNetwork(object):
         self.__build_test(self.result)
         self.build_backward(self.result)
 
-
     def train(self, training_set, validation_set, batch_size=20, epochs=2, eval_period=1000, stat_period=100):
         training_set = training_set.shuffle(200).batch(batch_size)
         training_it = training_set.make_initializable_iterator()
@@ -127,7 +126,7 @@ class NeuralNetwork(object):
     def __maybe_save_model(self):
         if self.save_model:
             saver = tf.train.Saver()
-            saver.save(self.sess, self.save_model_path)
+            saver.save(self.sess, self.save_model_path, write_meta_graph=False)
             print(f"model saved in path {self.save_model_path}")
 
     def __train_single_epoch(self, training_it, validation_it, training_handle, validation_handle, batch, writer,
