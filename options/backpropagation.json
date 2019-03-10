@@ -1,0 +1,22 @@
+{
+  "name": "example_bp",
+  "type": "BP",
+  "is_train": true,
+  "datasets": {
+    "name": "mnist",
+    "batch_size": 20,
+    "epochs": 2
+  },
+  "model_handling": {
+    "restore": false,
+    "save": true
+  },
+  "train_parameters": {
+    "learning_rate": 1e-4,
+    "gather_stats": false
+  },
+  "periods": {
+    "eval_period": 1e3,
+    "stat_period": 1e2
+  }
+}

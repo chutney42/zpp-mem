@@ -1,4 +1,4 @@
-import tensorflow as tf
+import tensorflow.r as tf
 from utils import *
 from layer import *
 from loader import *
@@ -34,6 +34,7 @@ class BPNeuralNetwork(NeuralNetwork):
 
 
 if __name__ == '__main__':
+    tf
     training, test = load_mnist()
     NN = BPNeuralNetwork(784,
                          [FullyConnected(50),
