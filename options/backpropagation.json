@@ -1,5 +1,4 @@
 {
-  "name": "example_bp",
   "type": "BP",
   "is_train": true,
   "datasets": {
@@ -9,10 +8,10 @@
   },
   "model_handling": {
     "restore": false,
-    "save": true
+    "save": false
   },
-  "train_parameters": {
-    "learning_rate": 1e-4,
+  "training_parameters": {
+    "learning_rate": 1e-1,
     "gather_stats": false
   },
   "periods": {

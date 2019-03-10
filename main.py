@@ -5,36 +5,34 @@ from options import parse
 from loader import load
 
 
-def load_data(opt):
-    dataset = opt['datasets']
+def load_dataset(options):
+    dataset = options['datasets']
     if dataset is None:
         raise RuntimeError("need dataset")
     return load(dataset['name'])
 
 
-def define_network(opt):
-    if opt['type'] is 'BP':
-        from backpropagation import BPNeuralNetwork as Network
-    elif opt['type'] is 'DFA':
-        from direct_feedback_alignment import DFANeuralNetwork as Network
-    elif opt['type'] is 'FA':
-        from feedback_alignment import FANeuralNetwork as Network
+def define_network(options):
+    model = options['type']
+    if model == 'BP':
+        from backpropagation import Backpropagation as Network
+    elif model == 'DFA':
+        from direct_feedback_alignment import DirectFeedbackAlignment as Network
+    elif model == 'FA':
+        from feedback_alignment import FeedbackAlignment as Network
+    else:
+        raise NotImplementedError(f"Model {model} is not recognized.")
 
     return Network(784,
-                   [FullyConnected(50),
-                    BatchNormalization(),
-                    Sigmoid(),
-                    FullyConnected(30),
-                    BatchNormalization(),
-                    Sigmoid(),
-                    FullyConnected(10),
-                    Sigmoid()],
+                   [Block([FullyConnected(50), BatchNormalization(), Sigmoid()]),
+                    Block([FullyConnected(30), BatchNormalization(), Sigmoid()]),
+                    Block([FullyConnected(10), Sigmoid()])],
                    10,
-                   learning_rate=opt['training_parameters']['learning_rate'],
-                   scope=opt['type'],
-                   gather_stats=opt['training_parameters']['gather_stats'],
-                   restore_model=opt['model_handling']['restore'],
-                   save_model=opt['model_handling']['should_save'])
+                   learning_rate=options['training_parameters']['learning_rate'],
+                   scope=options['type'],
+                   gather_stats=options['training_parameters']['gather_stats'],
+                   restore_model=options['model_handling']['restore'],
+                   save_model=options['model_handling']['should_save'])
 
 
 if __name__ == '__main__':
@@ -43,9 +41,9 @@ if __name__ == '__main__':
     opt = parse(parser.parse_args().opt)
     print(opt['aalal'])
 
-    training, test = load_data(opt)
+    training, test = load_dataset(opt)
     batch_size = opt['datasets']['batch_size']
-    epochs = opt['datasets']['epoch']
+    epochs = opt['datasets']['epochs']
     eval_period = opt['periods']['eval_period']
     stat_period = opt['periods']['stat_period']
 

@@ -2,7 +2,7 @@ import tensorflow as tf
 
 
 def load(dataset_name):
-    if dataset_name is 'mnist':
+    if dataset_name == 'mnist':
         return load_mnist()
 
 
@@ -15,7 +15,7 @@ def load_mnist():
         feature = tf.to_float(feature) / 255.0
         return feature, label
 
-    train_data_set = tf.data.Dataset.from_tensor_slices(training).map(transform).batch(1)
-    test_data_set = tf.data.Dataset.from_tensor_slices(test).map(transform).batch(1)
+    train_data_set = tf.data.Dataset.from_tensor_slices(training).map(transform)
+    test_data_set = tf.data.Dataset.from_tensor_slices(test).map(transform)
 
     return train_data_set, test_data_set
