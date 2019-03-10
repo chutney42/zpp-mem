@@ -24,7 +24,14 @@ class Layer(object):
         self.scope = scope
         self.input_vec = None
 
-    def build_forward(self, input_vec, gather_stats=True):
+    def restore_input(self):
+        if self.input_vec is None:
+            raise AttributeError("Cannot restore input_vec")
+        input_vec = self.input_vec
+        self.input_vec = None
+        return input_vec
+
+    def build_forward(self, input_vec, remember_input=True, gather_stats=True):
         raise NotImplementedError("This method should be implemented in subclass")
 
     def build_backward(self, error, gather_stats=True):
@@ -32,48 +39,50 @@ class Layer(object):
 
 
 class WeightLayer(Layer):
-    def __init__(self, propagate=backpropagation, learnig_rate=0.5, scope="weight_layer"):
+    def __init__(self, learning_rate=0.5, scope="weight_layer"):
         super().__init__(True, scope)
-        self.propagate = propagate
+        self.propagate_func = None
         self.learning_rate = 0.5
 
     def build_propagate(self, error, gather_stats=True):
         raise NotImplementedError("This method should be implemented in subclass")
 
-    def build_update(self, error, input_vec=None, gather_stats=True):
+    def build_update(self, error, gather_stats=True):
         raise NotImplementedError("This method should be implemented in subclass")
 
-    def build_backward(self, error, input_vec=None, gather_stats=True):
-        perror = self.build_propagate(error, gather_stats)
-        self.build_update(error, input_vec, gather_stats)
-        return perror
+    def build_backward(self, error, gather_stats=True):
+        if not self.propagate_func:
+            raise AttributeError("The propagate function should be specified")
+        propagated_error = self.build_propagate(error, gather_stats)
+        self.build_update(error, gather_stats)
+        return propagated_error
 
 
 class FullyConnected(WeightLayer):
-    def __init__(self, output_dim, propagate=backpropagation, learning_rate=0.5, scope="fully_connected_layer"):
-        super().__init__(propagate, learning_rate, scope)
+    def __init__(self, output_dim, learning_rate=0.5, scope="fully_connected_layer"):
+        super().__init__(learning_rate, scope)
         self.output_dim = output_dim
 
-    def build_forward(self, input_vec, gather_stats=True):
+    def build_forward(self, input_vec, remember_input=True, gather_stats=True):
+        if remember_input:
+            self.input_vec = input_vec
         with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
             weights = tf.get_variable("weights", [input_vec.shape[1], self.output_dim],
                 initializer=tf.random_normal_initializer())
             biases = tf.get_variable("biases", [self.output_dim],
                 initializer=tf.constant_initializer())
             z = tf.add(tf.matmul(input_vec, weights), biases)
-            self.input_vec = input_vec
             return z
 
     def build_propagate(self, error, gather_stats=True):
+        if not self.propagate_func:
+            raise AttributeError("The propagate function should be specified")
         with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
             weights = tf.get_variable("weights")
-            perror = self.propagate(error, weights)
-            return perror
+            return self.propagate_func(error, weights)
 
-    def build_update(self, error, input_vec=None, gather_stats=True):
-        if not input_vec:
-            input_vec = self.input_vec
-        self.input_vec = None
+    def build_update(self, error, gather_stats=True):
+        input_vec = self.restore_input()
         with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
             weights = tf.get_variable("weights")
             biases = tf.get_variable("biases")
@@ -92,14 +101,16 @@ class ActivationFunction(Layer):
         self.func = func
         self.func_prime = func_prime
 
-    def build_forward(self, input_vec, gather_stats=True):
-        with tf.variable_scope(self.scope, tf.AUTO_REUSE):
+    def build_forward(self, input_vec, remember_input=True, gather_stats=True):
+        if remember_input:
             self.input_vec = input_vec
+        with tf.variable_scope(self.scope, tf.AUTO_REUSE):
             return self.func(input_vec)
 
     def build_backward(self, error, gather_stats=True):
+        input_vec = self.restore_input()
         with tf.variable_scope(self.scope):
-            return tf.multiply(error, self.func_prime(self.input_vec))
+            return tf.multiply(error, self.func_prime(input_vec))
 
 
 class Sigmoid(ActivationFunction):
@@ -113,7 +124,9 @@ class BatchNormalization(Layer):
         self.epsilon = 0.0000001
         self.learning_rate = learning_rate
 
-    def build_forward(self, input_vec, gather_stats=True):
+    def build_forward(self, input_vec, remember_input=True, gather_stats=True):
+        if remember_input:
+            self.input_vec = input_vec
         with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
             self.input_vec = input_vec
             N = input_vec.get_shape()[1]
@@ -133,8 +146,8 @@ class BatchNormalization(Layer):
             return input_act_normalized
 
     def build_backward(self, error, gather_stats=True):
+        input_vec = self.restore_input()
         with tf.variable_scope(self.scope, reuse=True):
-            input_vec = self.input_vec
             N = int(input_vec.get_shape()[1])
             gamma = tf.get_variable("gamma")
             beta = tf.get_variable("beta")

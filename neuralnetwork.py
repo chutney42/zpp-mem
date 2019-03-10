@@ -3,7 +3,6 @@ import tensorflow as tf
 from utils import *
 from layer import *
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'  # hacked by Adam
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 file_name = "run_auto_increment"
 
@@ -24,6 +23,8 @@ class NeuralNetwork(object):
         self.handle = tf.placeholder(tf.string, shape=[])
         self.__init_run_number()
         self.__init_model_saving(restore_model, save_model, restore_model_path, save_model_path)
+        self.step = None
+        self.set_propagate_functions()
         self.build()
         self.merged_summary = tf.summary.merge_all()
 
@@ -49,8 +50,26 @@ class NeuralNetwork(object):
         else:
             self.save_model_path = f"./saved_model_{self.scope}_{self.run_number}/model.ckpt"
 
-    def build(self):
+    def set_propagate_functions(self):
         raise NotImplementedError("This method should be implemented in subclass")
+
+    def build_forward(self):
+        raise NotImplementedError("This method should be implemented in subclass")
+
+    def build_backward(self, output_vec):
+        raise NotImplementedError("This method should be implemented in subclass")
+
+    def __build_test(self, a):
+        self.acct_mat = tf.equal(tf.argmax(a, 1), tf.argmax(self.labels, 1))
+        self.acct_res = tf.reduce_sum(tf.cast(self.acct_mat, tf.float32))
+        if self.gather_stats:
+            tf.summary.scalar("result", self.acct_res)
+
+    def build(self):
+        self.result = self.build_forward()
+        self.__build_test(self.result)
+        self.build_backward(self.result)
+
 
     def train(self, training_set, validation_set, batch_size=20, epochs=2, eval_period=1000, stat_period=100):
         training_set = training_set.shuffle(200).batch(batch_size)
