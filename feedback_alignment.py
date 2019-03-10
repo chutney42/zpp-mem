@@ -8,6 +8,7 @@ class FeedbackAlignment(BackwardPropagation):
         for block in self.sequence:
             block.head.propagate_func = feedback_alignment
 
+
 if __name__ == '__main__':
     training, test = load_mnist()
     NN = FeedbackAlignment(784,

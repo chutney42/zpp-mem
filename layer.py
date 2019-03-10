@@ -2,6 +2,7 @@ import tensorflow as tf
 from utils import sigmoid_prime
 from propagate import *
 
+
 class Block(object):
     def __init__(self, sequence):
         if not all(isinstance(item, Layer) for item in sequence):
@@ -40,9 +41,9 @@ class Layer(object):
 
 class WeightLayer(Layer):
     def __init__(self, learning_rate=0.5, scope="weight_layer"):
-        super().__init__(True, scope)
+        super().__init__(trainable=True, scope=scope)
         self.propagate_func = None
-        self.learning_rate = 0.5
+        self.learning_rate = learning_rate
 
     def build_propagate(self, error, gather_stats=True):
         raise NotImplementedError("This method should be implemented in subclass")
@@ -71,8 +72,7 @@ class FullyConnected(WeightLayer):
                 initializer=tf.random_normal_initializer())
             biases = tf.get_variable("biases", [self.output_dim],
                 initializer=tf.constant_initializer())
-            z = tf.add(tf.matmul(input_vec, weights), biases)
-            return z
+            return tf.add(tf.matmul(input_vec, weights), biases)
 
     def build_propagate(self, error, gather_stats=True):
         if not self.propagate_func:
@@ -97,7 +97,7 @@ class FullyConnected(WeightLayer):
 
 class ActivationFunction(Layer):
     def __init__(self, func, func_prime, scope="activation_function_layer"):
-        super().__init__(False, scope)
+        super().__init__(trainable=False, scope=scope)
         self.func = func
         self.func_prime = func_prime
 
@@ -120,7 +120,7 @@ class Sigmoid(ActivationFunction):
 
 class BatchNormalization(Layer):
     def __init__(self, learning_rate=0.5, scope="batch_normalization_layer"):
-        super().__init__(True, scope)
+        super().__init__(trainable=True, scope=scope)
         self.epsilon = 0.0000001
         self.learning_rate = learning_rate
 

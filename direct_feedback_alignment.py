@@ -35,6 +35,7 @@ class DirectFeedbackAlignment(NeuralNetwork):
             block.head.build_update(error)
             self.step.append(block.head.step)
 
+
 if __name__ == '__main__':
     training, test = load_mnist()
     NN = DirectFeedbackAlignment(784,
