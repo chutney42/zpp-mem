@@ -67,6 +67,42 @@ class WeightLayer(Layer):
         self.build_update(error, gather_stats)
         return propagated_error
 
+class ConvolutionalLayer(Layer):
+    def __init__(self, filter_dim, stride=[1, 1, 1, 1], number_of_filters=1, padding="SAME",
+                 trainable=True, learning_rate=0.5,
+                 scope="convoluted_layer"):
+        self.stride = stride
+        self.filter_dim = filter_dim
+        self.number_of_filters = number_of_filters
+        self.trainable = trainable
+        self.learning_rate = learning_rate
+        self.scope = scope
+        self.padding = padding
+
+    def build_forward(self, input_matrix):
+        with tf.variable_scope(self.scope):
+            self.input_shape = tf.shape(input_matrix)
+            self.input_matrix = input_matrix
+            (width, length, depth) = input_matrix.shape[1], input_matrix.shape[2], input_matrix.shape[3]
+            filter_shape = [self.filter_dim, self.filter_dim, depth,
+                            self.number_of_filters]
+            filters = tf.get_variable("filters", filter_shape,
+                                      initializer=tf.random_normal_initializer())
+            output = tf.nn.conv2d(input_matrix, filters, strides=self.stride, padding=self.padding, name="Convolution")
+            return output
+
+    def build_backward(self, error_matrix):
+        with tf.variable_scope(self.scope, reuse=True):
+            filters = tf.get_variable("filters")
+            input_matrix = self.input_matrix
+
+            backprop_error = tf.nn.conv2d_backprop_input(self.input_shape, filters, error_matrix, self.stride,
+                                                         self.padding)
+
+            roc_cost_over_filter = tf.nn.conv2d_backprop_filter(input_matrix, tf.shape(filters), error_matrix,
+                                                                self.stride, self.padding)
+            self.step = tf.assign(filters, filters - self.learning_rate * roc_cost_over_filter)
+            return backprop_error
 
 class FullyConnected(WeightLayer):
     def __init__(self, output_dim, learning_rate=0.5, scope="fully_connected_layer"):
