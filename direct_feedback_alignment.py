@@ -1,13 +1,16 @@
 from layer import *
 from loader import *
 from neuralnetwork import NeuralNetwork
-from propagate import direct_feedback_alignment
+from propagator import DirectPropagator, DirectFixedRandom
 
 
 class DirectFeedbackAlignment(NeuralNetwork):
-    def set_propagate_functions(self):
-        for block in self.sequence:
-            block.head.propagate_func = direct_feedback_alignment
+    def __init__(self, input_dim, sequence, output_dim, propagator=None, *args, **kwargs):
+        if not propagator:
+            propagator = DirectFixedRandom(output_dim)
+        elif not isinstance(propagator, DirectPropagator):
+            raise TypeError("Propagator for DirectFeedbackAlignment must be instance of DirectPropagator")
+        super().__init__(input_dim, sequence, output_dim, propagator, *args, **kwargs)
 
     def build_forward(self):
         a = self.features
