@@ -23,9 +23,11 @@ def define_network(options):
     else:
         raise NotImplementedError(f"Model {model} is not recognized.")
 
-    return Network([28,28,1],
-                   [Block([FullyConnected(50), BatchNormalization(), Sigmoid()]),
-                    Block([FullyConnected(30), BatchNormalization(), Sigmoid()]),
+    return Network([28, 28, 1],
+                   [
+                       Block([ConvolutionalLayer(3,number_of_filters=2), Sigmoid()]),
+                       Block([ConvolutionalLayer(3,number_of_filters=2), Sigmoid()]),
+                       # Block([FullyConnected(50), BatchNormalization(), Sigmoid()]),
                     Block([FullyConnected(10), Sigmoid()])],
                    10,
                    learning_rate=options['training_parameters']['learning_rate'],
@@ -40,9 +42,9 @@ if __name__ == '__main__':
     parser.add_argument('-opt', type=str, required=False, help='Path to option JSON file.')
 
     if parser.parse_args().opt is None:
-        #opt_path = "./options/backpropagation.json"
+        opt_path = "./options/backpropagation.json"
         #opt_path = "./options/direct_feedback_alignment.json"
-        opt_path = "./options/feedback_alignment.json"
+        # opt_path = "./options/feedback_alignment.json"
     else:
         opt_path = parser.parse_args().opt
 

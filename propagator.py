@@ -13,8 +13,8 @@ class Backpropagator(Propagator):
     def get_fc(self, weights):
         return tf.transpose(weights)
 
-    def get_conv(self, weights):
-        raise NotImplementedError("TODO")
+    def get_conv(self, filters):
+        return filters
 
 
 class FixedRandom(Propagator):
@@ -25,8 +25,9 @@ class FixedRandom(Propagator):
         return tf.get_variable("random_weights", shape=tf.transpose(weights).get_shape().as_list(),
             initializer=self.initializer)
 
-    def get_conv(self, weights):
-        raise NotImplementedError("TODO")
+    def get_conv(self, filters):
+        return tf.get_variable("random_filters", shape=filters.get_shape().as_list(),
+            initializer=self.initializer)
 
 
 class DirectPropagator(Propagator):
