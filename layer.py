@@ -38,6 +38,16 @@ class Layer(object):
     def build_backward(self, error, gather_stats=True):
         raise NotImplementedError("This method should be implemented in subclass")
 
+    def save_shape(self, input_vec):
+        self.input_shape = tf.shape(input_vec)
+
+    def restore_shape(self, input_vec):
+        return tf.reshape(input_vec, self.input_shape)
+
+    def flatten_input(self, input_vec):
+        return tf.layers.Flatten()(input_vec)
+
+
 
 class WeightLayer(Layer):
     def __init__(self, learning_rate=0.5, scope="weight_layer"):
@@ -65,6 +75,8 @@ class FullyConnected(WeightLayer):
         self.output_dim = output_dim
 
     def build_forward(self, input_vec, remember_input=True, gather_stats=True):
+        self.save_shape(input_vec)
+        input_vec=self.flatten_input(input_vec)
         if remember_input:
             self.input_vec = input_vec
         with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
@@ -79,7 +91,7 @@ class FullyConnected(WeightLayer):
             raise AttributeError("The propagate function should be specified")
         with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
             weights = tf.get_variable("weights")
-            return self.propagate_func(error, weights)
+            return self.flatten_input(self.propagate_func(error, weights))
 
     def build_update(self, error, gather_stats=True):
         input_vec = self.restore_input()

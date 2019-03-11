@@ -8,7 +8,7 @@ file_name = "run_auto_increment"
 
 
 class NeuralNetwork(object):
-    def __init__(self, input_dim, sequence, output_dim, learning_rate=0.1, scope="main", gather_stats=True,
+    def __init__(self, input_shape, sequence, output_dim, learning_rate=0.1, scope="main", gather_stats=True,
                  restore_model=False, save_model=False, restore_model_path=None, save_model_path=None):
         print(f"Create {scope} model with learning_rate={learning_rate}")
         self.scope = scope
@@ -17,7 +17,7 @@ class NeuralNetwork(object):
             for j, layer in enumerate(block):
                 layer.scope = f"{self.scope}_{layer.scope}_{i}_{j}"
         self.learning_rate = tf.constant(learning_rate)
-        self.features = tf.placeholder(tf.float32, [None, input_dim])
+        self.features = tf.placeholder(tf.float32, [None]+input_shape)
         self.labels = tf.placeholder(tf.float32, [None, output_dim])
         self.result = None
         self.gather_stats = gather_stats

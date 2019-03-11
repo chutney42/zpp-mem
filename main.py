@@ -23,7 +23,7 @@ def define_network(options):
     else:
         raise NotImplementedError(f"Model {model} is not recognized.")
 
-    return Network(784,
+    return Network([28,28,1],
                    [Block([FullyConnected(50), BatchNormalization(), Sigmoid()]),
                     Block([FullyConnected(30), BatchNormalization(), Sigmoid()]),
                     Block([FullyConnected(10), Sigmoid()])],

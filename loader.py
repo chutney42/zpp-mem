@@ -10,7 +10,7 @@ def load_mnist():
     training, test = tf.keras.datasets.mnist.load_data()
 
     def transform(feature, label):
-        feature = tf.reshape(feature, [-1])
+        feature = tf.reshape(feature, [28, 28, 1])
         label = tf.one_hot(label, 10)
         feature = tf.to_float(feature) / 255.0
         return feature, label
