@@ -1,5 +1,4 @@
 import tensorflow as tf
-from propagate import *
 
 
 class Block(object):
@@ -41,7 +40,7 @@ class Layer(object):
 class WeightLayer(Layer):
     def __init__(self, learning_rate=0.5, scope="weight_layer"):
         super().__init__(trainable=True, scope=scope)
-        self.propagate_func = None
+        self.propagator = None
         self.learning_rate = learning_rate
 
     def build_propagate(self, error, gather_stats=True):
@@ -51,8 +50,8 @@ class WeightLayer(Layer):
         raise NotImplementedError("This method should be implemented in subclass")
 
     def build_backward(self, error, gather_stats=True):
-        if not self.propagate_func:
-            raise AttributeError("The propagate function should be specified")
+        if not self.propagator:
+            raise AttributeError("The propagator should be specified")
         propagated_error = self.build_propagate(error, gather_stats)
         self.build_update(error, gather_stats)
         return propagated_error
@@ -74,11 +73,12 @@ class FullyConnected(WeightLayer):
             return tf.add(tf.matmul(input_vec, weights), biases)
 
     def build_propagate(self, error, gather_stats=True):
-        if not self.propagate_func:
-            raise AttributeError("The propagate function should be specified")
+        if not self.propagator:
+            raise AttributeError("The propagator should be specified")
         with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
             weights = tf.get_variable("weights")
-            return self.propagate_func(error, weights)
+            propagator = self.propagator.get_fc(weights)
+            return tf.matmul(error, propagator)
 
     def build_update(self, error, gather_stats=True):
         input_vec = self.restore_input()

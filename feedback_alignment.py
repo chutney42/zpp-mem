@@ -1,9 +1,7 @@
 from backward_propagation import BackwardPropagation
-from propagate import feedback_alignment
+from propagator import FixedRandom
 
 
 class FeedbackAlignment(BackwardPropagation):
-    def set_propagate_functions(self):
-        for block in self.sequence:
-            block.head.propagate_func = feedback_alignment
-
+    def __init__(self, input_dim, sequence, output_dim, propagator=FixedRandom(), *args, **kwargs):
+            super().__init__(input_dim, sequence, output_dim, propagator, *args, **kwargs)

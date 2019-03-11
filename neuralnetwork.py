@@ -7,12 +7,14 @@ file_name = "run_auto_increment"
 
 
 class NeuralNetwork(object):
-    def __init__(self, input_dim, sequence, output_dim, learning_rate=0.1, scope="main", gather_stats=True,
+    def __init__(self, input_dim, sequence, output_dim, propagator, learning_rate=0.1, scope="main", gather_stats=True,
                  restore_model=False, save_model=False, restore_model_path=None, save_model_path=None):
         print(f"Create {scope} model with learning_rate={learning_rate}")
         self.scope = scope
         self.sequence = sequence
+        self.propagator = propagator
         for i, block in enumerate(self.sequence):
+            block.head.propagator = self.propagator
             for j, layer in enumerate(block):
                 layer.scope = f"{self.scope}_{layer.scope}_{i}_{j}"
         self.learning_rate = tf.constant(learning_rate)
@@ -24,7 +26,6 @@ class NeuralNetwork(object):
         self.__init_run_number()
         self.__init_model_saving(restore_model, save_model, restore_model_path, save_model_path)
         self.step = None
-        self.set_propagate_functions()
         self.build()
         self.merged_summary = tf.summary.merge_all()
 
@@ -49,9 +50,6 @@ class NeuralNetwork(object):
             self.save_model_path = save_model_path
         else:
             self.save_model_path = f"./saved_model_{self.scope}_{self.run_number}/model.ckpt"
-
-    def set_propagate_functions(self):
-        raise NotImplementedError("This method should be implemented in subclass")
 
     def build_forward(self):
         raise NotImplementedError("This method should be implemented in subclass")
