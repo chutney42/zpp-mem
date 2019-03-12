@@ -8,8 +8,10 @@ from loader import load
 def load_dataset(options):
     dataset = options['dataset']
     if dataset is None:
-        raise RuntimeError("need dataset")
-    return load(dataset['name'])
+        dataset_name = 'mnist'
+    else:
+        dataset_name = options['dataset']['name']
+    return load(dataset_name)
 
 
 def define_network(options):
@@ -23,7 +25,7 @@ def define_network(options):
     else:
         raise NotImplementedError(f"Model {model} is not recognized.")
 
-    return Network(784,
+    return Network(32*32,
                    [Block([FullyConnected(50), BatchNormalization(), Sigmoid()]),
                     Block([FullyConnected(30), BatchNormalization(), Sigmoid()]),
                     Block([FullyConnected(10), Sigmoid()])],
