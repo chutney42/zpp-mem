@@ -8,7 +8,7 @@ def sigmoid_prime(x, name=None):
 
 
 def tanh_prime(x, name=None):
-    with tf.name_scope(name or "relu_prime"):
+    with tf.name_scope(name or "tanh_prime"):
         return tf.constant(1.0) - tf.multiply(tf.tanh(x), tf.tanh(x))
 
 
