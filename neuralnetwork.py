@@ -141,10 +141,9 @@ class NeuralNetwork(object):
                     run_metadata = tf.RunMetadata()
                     summary, _ = self.sess.run([self.merged_summary, self.step], feed_dict, run_options, run_metadata)
                     writer.add_run_metadata(run_metadata, f"step_{self.counter}")
+                    writer.add_summary(summary, self.counter)
                 else:
-                    summary, _ = self.sess.run([self.merged_summary, self.step], feed_dict)
-
-                writer.add_summary(summary, self.counter)
+                    self.sess.run(self.step, feed_dict)
 
                 if self.counter % eval_period is 0:
                     res = self.__validate(batch, validation_it, validation_handle, val_writer)

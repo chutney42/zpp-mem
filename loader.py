@@ -16,6 +16,7 @@ def load_cifar100():
 
     def transform(feature, label):
         feature = tf.reshape(feature, [-1])
+        label = label[0]
         label = tf.one_hot(label, 100)
         feature = tf.to_float(feature) / 255.0
         return feature, label
@@ -31,6 +32,7 @@ def load_cifar10():
 
     def transform(feature, label):
         feature = tf.reshape(feature, [-1])
+        label = label[0]
         label = tf.one_hot(label, 10)
         feature = tf.to_float(feature) / 255.0
         return feature, label
