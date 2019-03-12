@@ -25,8 +25,8 @@ def define_network(options):
 
     return Network([28, 28, 1],
                    [
-                       Block([ConvolutionalLayer(3,number_of_filters=10), BatchNormalization(), Sigmoid()]),
-                       Block([ConvolutionalLayer(3,number_of_filters=10), BatchNormalization(), Sigmoid()]),
+                       Block([ConvolutionalLayer((3, 3), number_of_filters=3), BatchNormalization(), Sigmoid()]),
+                       Block([ConvolutionalLayer((3, 3), number_of_filters=3), BatchNormalization(), Sigmoid()]),
                        # Block([ConvolutionalLayer(3,number_of_filters=10), BatchNormalization(), Sigmoid()]),
                        Block([FullyConnected(100), BatchNormalization(), Sigmoid()]),
                     Block([FullyConnected(10), Sigmoid()])],
@@ -43,9 +43,9 @@ if __name__ == '__main__':
     parser.add_argument('-opt', type=str, required=False, help='Path to option JSON file.')
 
     if parser.parse_args().opt is None:
-        opt_path = "./options/backpropagation.json"
+        # opt_path = "./options/backpropagation.json"
         # opt_path = "./options/direct_feedback_alignment.json"
-        # opt_path = "./options/feedback_alignment.json"
+        opt_path = "./options/feedback_alignment.json"
     else:
         opt_path = parser.parse_args().opt
 

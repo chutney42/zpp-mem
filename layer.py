@@ -1,7 +1,7 @@
 import tensorflow as tf
 from utils import sigmoid_prime
-from functools import reduce
-from six.moves import reduce
+
+
 class Block(object):
     def __init__(self, sequence):
         if not all(isinstance(item, Layer) for item in sequence):
@@ -16,6 +16,7 @@ class Block(object):
         for sublayer in self.tail:
             yield sublayer
 
+
 class Layer(object):
     def __init__(self, trainable, scope="layer"):
         self.trainable = trainable
@@ -24,7 +25,6 @@ class Layer(object):
         self.scope = scope
         self.input_vec = None
         self.input_shape = None
-
 
     def restore_input(self):
         if self.input_vec is None:
@@ -47,7 +47,6 @@ class Layer(object):
 
     def flatten_input(self, input_vec):
         return tf.layers.Flatten()(input_vec)
-
 
 
 class WeightLayer(Layer):
@@ -87,7 +86,7 @@ class ConvolutionalLayer(WeightLayer):
             if remember_input:
                 self.input_vec = input_vec
             (width, length, depth) = input_vec.shape[1], input_vec.shape[2], input_vec.shape[3]
-            filter_shape = [self.filter_dim, self.filter_dim, depth,
+            filter_shape = [self.filter_dim[0], self.filter_dim[1], depth,
                             self.number_of_filters]
             filters = tf.get_variable("filters", filter_shape,
                                       initializer=tf.random_normal_initializer())
@@ -115,18 +114,6 @@ class ConvolutionalLayer(WeightLayer):
             self.step = filters
             return
 
-    # def build_backward(self, error_matrix):
-    #     with tf.variable_scope(self.scope, reuse=True):
-    #         filters = tf.get_variable("filters")
-    #         input_matrix = self.input_matrix
-    #
-    #         backprop_error = tf.nn.conv2d_backprop_input(self.input_shape, filters, error_matrix, self.stride,
-    #                                                      self.padding)
-    #
-    #         roc_cost_over_filter = tf.nn.conv2d_backprop_filter(input_matrix, tf.shape(filters), error_matrix,
-    #                                                             self.stride, self.padding)
-    #         self.step = tf.assign(filters, filters - self.learning_rate * roc_cost_over_filter)
-    #         return backprop_error
 
 class FullyConnected(WeightLayer):
     def __init__(self, output_dim, learning_rate=0.5, scope="fully_connected_layer"):
@@ -225,7 +212,7 @@ class BatchNormalization(Layer):
         error=self.flatten_input(error)
         with tf.variable_scope(self.scope, reuse=True):
             input_shape = input_vec.get_shape()[1:]
-            N = int(input_shape[0]) #int(reduce(lambda x, y: x*y, input_shape)) #Number of features in input_vec
+            N = int(input_shape[0])
             gamma = tf.get_variable("gamma")
             beta = tf.get_variable("beta")
             batch_mean, batch_var = tf.nn.moments(input_vec, [0])

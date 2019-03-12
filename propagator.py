@@ -44,5 +44,6 @@ class DirectFixedRandom(DirectPropagator):
         return tf.get_variable("random_weights", shape=[self.output_error_dim, weights.shape[0]],
             initializer=self.initializer)
 
-    def get_conv(self, weights):
-        raise NotImplementedError("TODO")
+    def get_conv(self, dim):
+        return tf.get_variable("random_weights", shape=[self.output_error_dim, dim],
+                               initializer=self.initializer)
