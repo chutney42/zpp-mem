@@ -135,16 +135,17 @@ class NeuralNetwork(object):
             try:
                 batch_xs, batch_ys = self.sess.run(batch, {self.handle: training_handle})
                 feed_dict = {self.features: batch_xs, self.labels: batch_ys}
-
+                # print(f"feed dict {feed_dict}")
                 if self.gather_stats and self.counter % stat_period is 0:
                     run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
                     run_metadata = tf.RunMetadata()
                     summary, _ = self.sess.run([self.merged_summary, self.step], feed_dict, run_options, run_metadata)
                     writer.add_run_metadata(run_metadata, f"step_{self.counter}")
-                else:
-                    summary, _ = self.sess.run([self.merged_summary, self.step], feed_dict)
+                    writer.add_summary(summary, self.counter)
 
-                writer.add_summary(summary, self.counter)
+                else:
+                    self.sess.run(self.step, feed_dict)
+
 
                 if self.counter % eval_period is 0:
                     res = self.__validate(batch, validation_it, validation_handle, val_writer)

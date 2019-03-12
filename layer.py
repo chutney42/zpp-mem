@@ -82,8 +82,8 @@ class ConvolutionalLayer(WeightLayer):
         self.padding = padding
 
     def build_forward(self, input_vec, remember_input=True, gather_stats=True):
-        with tf.variable_scope(self.scope):
-            self.input_shape = tf.shape(input_vec)
+        with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
+            self.save_shape(input_vec)
             if remember_input:
                 self.input_vec = input_vec
             (width, length, depth) = input_vec.shape[1], input_vec.shape[2], input_vec.shape[3]
@@ -111,9 +111,22 @@ class ConvolutionalLayer(WeightLayer):
             filters = tf.get_variable("filters")
             delta_filters = tf.nn.conv2d_backprop_filter(input_vec, tf.shape(filters), error,
                                                                 self.stride, self.padding)
-            self.step = tf.assign(filters, filters - self.learning_rate * delta_filters)
+            filters = tf.assign(filters, filters - self.learning_rate * delta_filters)
+            self.step = filters
             return
 
+    # def build_backward(self, error_matrix):
+    #     with tf.variable_scope(self.scope, reuse=True):
+    #         filters = tf.get_variable("filters")
+    #         input_matrix = self.input_matrix
+    #
+    #         backprop_error = tf.nn.conv2d_backprop_input(self.input_shape, filters, error_matrix, self.stride,
+    #                                                      self.padding)
+    #
+    #         roc_cost_over_filter = tf.nn.conv2d_backprop_filter(input_matrix, tf.shape(filters), error_matrix,
+    #                                                             self.stride, self.padding)
+    #         self.step = tf.assign(filters, filters - self.learning_rate * roc_cost_over_filter)
+    #         return backprop_error
 
 class FullyConnected(WeightLayer):
     def __init__(self, output_dim, learning_rate=0.5, scope="fully_connected_layer"):
@@ -184,16 +197,16 @@ class BatchNormalization(Layer):
         self.learning_rate = learning_rate
 
     def build_forward(self, input_vec, remember_input=True, gather_stats=True):
-        # self.save_shape(input_vec)
-        # input_vec=self.flatten_input(input_vec)
+        self.save_shape(input_vec)
+        input_vec=self.flatten_input(input_vec)
         if remember_input:
             self.input_vec = input_vec
         with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
             if remember_input:
                 self.input_vec = input_vec
-            N = input_vec.get_shape()[1:]
-            gamma = tf.get_variable("gamma", N, initializer=tf.ones_initializer())
-            beta = tf.get_variable("beta", N, initializer=tf.zeros_initializer())
+            N = input_vec.get_shape()[1]
+            gamma = tf.get_variable("gamma", [N], initializer=tf.ones_initializer())
+            beta = tf.get_variable("beta", [N], initializer=tf.zeros_initializer())
             batch_mean, batch_var = tf.nn.moments(input_vec, [0])
 
             input_act_normalized = (input_vec - batch_mean) / tf.sqrt(batch_var + self.epsilon)
@@ -205,14 +218,14 @@ class BatchNormalization(Layer):
                 tf.summary.histogram("mean", batch_mean)
                 tf.summary.histogram("input_normalized", input_act_normalized)
 
-            return input_act_normalized
+            return self.restore_shape(input_act_normalized)
 
     def build_backward(self, error, gather_stats=True):
         input_vec = self.restore_input()
-        # error=self.flatten_input(error)
+        error=self.flatten_input(error)
         with tf.variable_scope(self.scope, reuse=True):
             input_shape = input_vec.get_shape()[1:]
-            N = int(reduce(lambda x, y: x*y, input_shape))
+            N = int(input_shape[0]) #int(reduce(lambda x, y: x*y, input_shape)) #Number of features in input_vec
             gamma = tf.get_variable("gamma")
             beta = tf.get_variable("beta")
             batch_mean, batch_var = tf.nn.moments(input_vec, [0])
@@ -233,4 +246,4 @@ class BatchNormalization(Layer):
             update_beta = tf.assign(beta, tf.subtract(beta, tf.multiply(dbeta, self.learning_rate)))
             update_gamma = tf.assign(gamma, tf.subtract(gamma, tf.multiply(dgamma, self.learning_rate)))
             self.step = (update_beta, update_gamma)
-            return output_error
+            return self.restore_shape(output_error)
