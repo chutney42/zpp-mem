@@ -1,4 +1,3 @@
-from keras.datasets import cifar10
 import os
 
 from keras.datasets import cifar10
@@ -11,7 +10,6 @@ from keras.preprocessing.image import ImageDataGenerator
 from keras.utils import np_utils
 
 os.environ['KMP_DUPLICATE_LIB_OK']='TRUE'
-
 
 if __name__ == '__main__':
     (X_train, y_train), (X_test, y_test) = cifar10.load_data()
@@ -49,5 +47,5 @@ if __name__ == '__main__':
     test_gen = ImageDataGenerator()
     train_generator = gen.flow(X_train, Y_train, batch_size=64)
     test_generator = test_gen.flow(X_test, Y_test, batch_size=64)
-    model.fit_generator(train_generator, steps_per_epoch=60000//64, epochs=5,
+    model.fit_generator(train_generator, steps_per_epoch=60000//64, epochs=2,
                         validation_data=test_generator, validation_steps=10000//64)
