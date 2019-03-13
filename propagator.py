@@ -78,3 +78,5 @@ class DirectFixedRandom(DirectPropagator):
     def __get_filter(self, dim):
         return tf.get_variable("direct_random_weights", shape=[self.output_error_dim, dim],
                                initializer=self.initializer)
+
+

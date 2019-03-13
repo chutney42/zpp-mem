@@ -16,7 +16,7 @@ def load_cifar100():
     training, test = tf.keras.datasets.cifar100.load_data()
 
     def transform(feature, label):
-        feature = tf.reshape(feature, [-1])
+        feature = tf.reshape(feature, [32,32,3])
         label = label[0]
         label = tf.one_hot(label, 100)
         feature = tf.to_float(feature) / 255.0
@@ -32,7 +32,7 @@ def load_cifar10():
     training, test = tf.keras.datasets.cifar10.load_data()
 
     def transform(feature, label):
-        feature = tf.reshape(feature, [-1])
+        feature = tf.reshape(feature, [32,32,3])
         label = label[0]
         label = tf.one_hot(label, 10)
         feature = tf.to_float(feature) / 255.0
