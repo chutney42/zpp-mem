@@ -8,6 +8,12 @@ class Propagator(object):
     def get_conv(self, weights):
         raise NotImplementedError("This method should be implemented in subclass")
 
+    def propagate_conv(self,layer,error):
+        raise NotImplementedError("This method should be implemented in subclass")
+
+    def propagate_fc(self, layer, error):
+        raise NotImplementedError("This method should be implemented in subclass")
+
 
 class Backpropagator(Propagator):
     def get_fc(self, weights):
@@ -17,17 +23,23 @@ class Backpropagator(Propagator):
         return filters
 
 
-class FixedRandom(Propagator):
+class FixedRandom(Backpropagator):
     def __init__(self, initializer=tf.random_normal_initializer()):
         self.initializer = initializer
+
+    def __get_filter(self,filters):
+        return tf.get_variable("random_filters", shape=filters.get_shape().as_list(),
+            initializer=self.initializer)
+
+    def __get_weights(self,weights):
+        return tf.get_variable("random_weights", shape=tf.transpose(weights).get_shape().as_list(),
+            initializer=self.initializer)
 
     def get_fc(self, weights):
         return tf.get_variable("random_weights", shape=tf.transpose(weights).get_shape().as_list(),
             initializer=self.initializer)
 
-    def get_conv(self, filters):
-        return tf.get_variable("random_filters", shape=filters.get_shape().as_list(),
-            initializer=self.initializer)
+
 
 
 class DirectPropagator(Propagator):

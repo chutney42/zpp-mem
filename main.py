@@ -43,7 +43,7 @@ if __name__ == '__main__':
     parser.add_argument('-opt', type=str, required=False, help='Path to option JSON file.')
 
     if parser.parse_args().opt is None:
-        # opt_path = "./options/backpropagation.json"
+        opt_path = "./options/backpropagation.json"
         # opt_path = "./options/direct_feedback_alignment.json"
         opt_path = "./options/feedback_alignment.json"
     else:
