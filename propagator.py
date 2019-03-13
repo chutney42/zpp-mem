@@ -2,25 +2,40 @@ import tensorflow as tf
 
 
 class Propagator(object):
-    def get_fc(self, weights):
-        raise NotImplementedError("This method should be implemented in subclass")
-
-    def get_conv(self, weights):
-        raise NotImplementedError("This method should be implemented in subclass")
-
     def propagate_conv(self,layer,error):
         raise NotImplementedError("This method should be implemented in subclass")
 
     def propagate_fc(self, layer, error):
         raise NotImplementedError("This method should be implemented in subclass")
 
+    def __get_filter(self, filters):
+        raise NotImplementedError("This method should be implemented in subclass")
+
+    def __get_weights(self, weights):
+        raise NotImplementedError("This method should be implemented in subclass")
+
 
 class Backpropagator(Propagator):
-    def get_fc(self, weights):
+    def __init__(self):
+        self.isDFA=False
+
+    def __get_filter(self, filters):
+        return filters
+
+    def __get_weights(self, weights):
         return tf.transpose(weights)
 
-    def get_conv(self, filters):
-        return filters
+    def propagate_fc(self, layer, error):
+        weights = tf.get_variable("weights")
+        propagator = self.__get_weights(weights)
+        return layer.restore_shape(tf.matmul(error, propagator))
+
+    def propagate_conv(self,layer,error):
+        filters = tf.get_variable("filters")
+        filters = self.__get_filter(filters)
+        backprop_error = tf.nn.conv2d_backprop_input(layer.input_shape, filters, error, layer.stride,
+                                                     layer.padding)
+        return backprop_error
 
 
 class FixedRandom(Backpropagator):
@@ -34,12 +49,6 @@ class FixedRandom(Backpropagator):
     def __get_weights(self,weights):
         return tf.get_variable("random_weights", shape=tf.transpose(weights).get_shape().as_list(),
             initializer=self.initializer)
-
-    def get_fc(self, weights):
-        return tf.get_variable("random_weights", shape=tf.transpose(weights).get_shape().as_list(),
-            initializer=self.initializer)
-
-
 
 
 class DirectPropagator(Propagator):

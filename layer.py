@@ -136,9 +136,7 @@ class FullyConnected(WeightLayer):
         if not self.propagator:
             raise AttributeError("The propagator should be specified")
         with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
-            weights = tf.get_variable("weights")
-            propagator = self.propagator.get_fc(weights)
-            return self.restore_shape(tf.matmul(error, propagator))
+            return self.propagator.propagate_fc(self,error)
 
     def build_update(self, error, gather_stats=True):
         input_vec = self.restore_input()
