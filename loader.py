@@ -9,7 +9,8 @@ def load(dataset_name):
     elif dataset_name == 'cifar100':
         return load_cifar100()
     else:
-        return
+        raise RuntimeError("Unknown dataset name")
+
 
 def load_cifar100():
     training, test = tf.keras.datasets.cifar100.load_data()
