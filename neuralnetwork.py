@@ -1,6 +1,5 @@
 import os
 import tensorflow as tf
-from utils import *
 from layer import *
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'  # hacked by Adam
 
