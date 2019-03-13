@@ -1,6 +1,7 @@
 import argparse
 
 from layer import *
+from activation_function import *
 from options import parse
 from loader import load
 
@@ -8,11 +9,13 @@ from loader import load
 def load_dataset(options):
     dataset = options['dataset']
     if dataset is None:
-        raise RuntimeError("need dataset")
-    return load(dataset['name'])
+        dataset_name = 'mnist'
+    else:
+        dataset_name = options['dataset']['name']
+    return load(dataset_name)
 
 
-def define_network(options):
+def define_network(output_shapes, options):
     model = options['type']
     if model == 'BP':
         from backpropagation import Backpropagation as Network
@@ -23,6 +26,9 @@ def define_network(options):
     else:
         raise NotImplementedError(f"Model {model} is not recognized.")
 
+    return Network(output_shapes[0][0].value,
+                   [Block([FullyConnected(50), BatchNormalization(), Sigmoid()]),
+                    Block([FullyConnected(30), BatchNormalization(), Sigmoid()]),
     return Network([28, 28, 1],
                    [
                        Block([ConvolutionalLayer((3, 3), number_of_filters=3), BatchNormalization(), Sigmoid()]),
@@ -30,7 +36,7 @@ def define_network(options):
                        # Block([ConvolutionalLayer(3,number_of_filters=10), BatchNormalization(), Sigmoid()]),
                        Block([FullyConnected(100), BatchNormalization(), Sigmoid()]),
                     Block([FullyConnected(10), Sigmoid()])],
-                   10,
+                   output_shapes[1][0].value,
                    learning_rate=options['training_parameters']['learning_rate'],
                    scope=options['type'],
                    gather_stats=options['training_parameters']['gather_stats'],
@@ -44,8 +50,8 @@ if __name__ == '__main__':
 
     if parser.parse_args().opt is None:
         opt_path = "./options/backpropagation.json"
-        # opt_path = "./options/direct_feedback_alignment.json"
-        # opt_path = "./options/feedback_alignment.json"
+        #opt_path = "./options/direct_feedback_alignment.json"
+        #opt_path = "./options/feedback_alignment.json"
     else:
         opt_path = parser.parse_args().opt
 
@@ -57,7 +63,7 @@ if __name__ == '__main__':
     eval_period = options['periods']['eval_period']
     stat_period = options['periods']['stat_period']
 
-    NN = define_network(options)
+    NN = define_network(training.output_shapes, options)
     if options['is_train']:
         NN.train(training, test, batch_size=batch_size, epochs=epochs, eval_period=eval_period,
                  stat_period=stat_period)
