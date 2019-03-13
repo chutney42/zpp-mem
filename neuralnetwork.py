@@ -18,7 +18,7 @@ class NeuralNetwork(object):
             for j, layer in enumerate(block):
                 layer.scope = f"{self.scope}_{layer.scope}_{i}_{j}"
         self.learning_rate = tf.constant(learning_rate)
-        self.features = tf.placeholder(tf.float32, [None]+input_shape)
+        self.features = tf.placeholder(tf.float32, [None]+input_shape.as_list())
         self.labels = tf.placeholder(tf.float32, [None, output_dim])
         self.result = None
         self.gather_stats = gather_stats

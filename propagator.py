@@ -40,6 +40,7 @@ class Backpropagator(Propagator):
 
 class FixedRandom(Backpropagator):
     def __init__(self, initializer=tf.random_normal_initializer()):
+        super().__init__()
         self.initializer = initializer
 
     def __get_filter(self,filters):
@@ -61,10 +62,19 @@ class DirectFixedRandom(DirectPropagator):
         self.initializer = initializer
         super().__init__(output_error_dim)
 
-    def get_fc(self, weights):
-        return tf.get_variable("random_weights", shape=[self.output_error_dim, weights.shape[0]],
+    def propagate_fc(self, layer, error):
+        weights = tf.get_variable("weights")
+        propagator = self.__get_weights(weights)
+        return layer.restore_shape(tf.matmul(error, propagator))
+
+    def propagate_conv(self,layer,error):
+        filters = self.__get_filter(layer.input_flat_shape)
+        return layer.restore_shape(tf.matmul(error, filters))
+
+    def __get_weights(self, weights):
+        return tf.get_variable("direct_random_weights", shape=[self.output_error_dim, weights.shape[0]],
             initializer=self.initializer)
 
-    def get_conv(self, dim):
-        return tf.get_variable("random_weights", shape=[self.output_error_dim, dim],
+    def __get_filter(self, dim):
+        return tf.get_variable("direct_random_weights", shape=[self.output_error_dim, dim],
                                initializer=self.initializer)
