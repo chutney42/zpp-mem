@@ -1,6 +1,5 @@
 import os
 import tensorflow as tf
-from utils import *
 from layer import *
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'  # hacked by Adam
@@ -170,10 +169,9 @@ class NeuralNetwork(object):
             res = self.sess.run(self.acc)
         else:
             summary, res = self.sess.run([self.acc_summary, self.acc])
-            writer.add_summary(tf.summary.Summary())
             writer.add_summary(summary, self.counter)
         self.__switch_context()
-        return res
+        return res * 100
 
     def __save_context(self):
         self.context = self.sess.run(self.running_vars)

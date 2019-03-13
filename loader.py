@@ -9,7 +9,8 @@ def load(dataset_name):
     elif dataset_name == 'cifar100':
         return load_cifar100()
     else:
-        return
+        raise RuntimeError("Unknown dataset name")
+
 
 def load_cifar100():
     training, test = tf.keras.datasets.cifar100.load_data()
@@ -37,11 +38,10 @@ def load_cifar10():
         feature = tf.to_float(feature) / 255.0
         return feature, label
 
-    train_data_set = tf.data.Dataset.from_tensor_slices(training).map(transform, num_parallel_calls=4)
-    test_data_set = tf.data.Dataset.from_tensor_slices(test).map(transform, num_parallel_calls=4)
+    train_data_set = tf.data.Dataset.from_tensor_slices(training).map(transform)
+    test_data_set = tf.data.Dataset.from_tensor_slices(test).map(transform)
 
     return train_data_set, test_data_set
-
 
 def load_mnist():
     training, test = tf.keras.datasets.mnist.load_data()
@@ -52,7 +52,7 @@ def load_mnist():
         feature = tf.to_float(feature) / 255.0
         return feature, label
 
-    train_data_set = tf.data.Dataset.from_tensor_slices(training).map(transform, num_parallel_calls=4)
-    test_data_set = tf.data.Dataset.from_tensor_slices(test).map(transform, num_parallel_calls=4)
+    train_data_set = tf.data.Dataset.from_tensor_slices(training).map(transform)
+    test_data_set = tf.data.Dataset.from_tensor_slices(test).map(transform)
 
     return train_data_set, test_data_set

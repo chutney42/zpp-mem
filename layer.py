@@ -1,5 +1,4 @@
 import tensorflow as tf
-from utils import sigmoid_prime
 
 
 class Block(object):
@@ -93,29 +92,6 @@ class FullyConnected(WeightLayer):
                 axis=[0]))))
             self.step = (weights, biases)
             return
-
-
-class ActivationFunction(Layer):
-    def __init__(self, func, func_prime, scope="activation_function_layer"):
-        super().__init__(trainable=False, scope=scope)
-        self.func = func
-        self.func_prime = func_prime
-
-    def build_forward(self, input_vec, remember_input=True, gather_stats=True):
-        if remember_input:
-            self.input_vec = input_vec
-        with tf.variable_scope(self.scope, tf.AUTO_REUSE):
-            return self.func(input_vec)
-
-    def build_backward(self, error, gather_stats=True):
-        input_vec = self.restore_input()
-        with tf.variable_scope(self.scope):
-            return tf.multiply(error, self.func_prime(input_vec))
-
-
-class Sigmoid(ActivationFunction):
-    def __init__(self, scope="sigmoid_layer"):
-        super().__init__(tf.sigmoid, sigmoid_prime, scope)
 
 
 class BatchNormalization(Layer):

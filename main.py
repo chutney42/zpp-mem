@@ -1,6 +1,7 @@
 import argparse
 
 from layer import *
+from activation_function import *
 from options import parse
 from loader import load
 
