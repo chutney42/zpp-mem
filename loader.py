@@ -37,10 +37,11 @@ def load_cifar10():
         feature = tf.to_float(feature) / 255.0
         return feature, label
 
-    train_data_set = tf.data.Dataset.from_tensor_slices(training).map(transform)
-    test_data_set = tf.data.Dataset.from_tensor_slices(test).map(transform)
+    train_data_set = tf.data.Dataset.from_tensor_slices(training).map(transform, num_parallel_calls=4)
+    test_data_set = tf.data.Dataset.from_tensor_slices(test).map(transform, num_parallel_calls=4)
 
     return train_data_set, test_data_set
+
 
 def load_mnist():
     training, test = tf.keras.datasets.mnist.load_data()
@@ -51,7 +52,7 @@ def load_mnist():
         feature = tf.to_float(feature) / 255.0
         return feature, label
 
-    train_data_set = tf.data.Dataset.from_tensor_slices(training).map(transform)
-    test_data_set = tf.data.Dataset.from_tensor_slices(test).map(transform)
+    train_data_set = tf.data.Dataset.from_tensor_slices(training).map(transform, num_parallel_calls=4)
+    test_data_set = tf.data.Dataset.from_tensor_slices(test).map(transform, num_parallel_calls=4)
 
     return train_data_set, test_data_set

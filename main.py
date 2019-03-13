@@ -14,7 +14,7 @@ def load_dataset(options):
     return load(dataset_name)
 
 
-def define_network(output_shapes, options):
+def define_network(output_types, output_shapes, options):
     model = options['type']
     if model == 'BP':
         from backpropagation import Backpropagation as Network
@@ -25,11 +25,10 @@ def define_network(output_shapes, options):
     else:
         raise NotImplementedError(f"Model {model} is not recognized.")
 
-    return Network(output_shapes[0][0].value,
+    return Network(output_types, output_shapes,
                    [Block([FullyConnected(50), BatchNormalization(), Sigmoid()]),
                     Block([FullyConnected(30), BatchNormalization(), Sigmoid()]),
-                    Block([FullyConnected(10), Sigmoid()])],
-                   output_shapes[1][0].value,
+                    Block([FullyConnected(output_shapes[1][0].value), Sigmoid()])],
                    learning_rate=options['training_parameters']['learning_rate'],
                    scope=options['type'],
                    gather_stats=options['training_parameters']['gather_stats'],
@@ -56,7 +55,7 @@ if __name__ == '__main__':
     eval_period = options['periods']['eval_period']
     stat_period = options['periods']['stat_period']
 
-    NN = define_network(training.output_shapes, options)
+    NN = define_network(training.output_types, training.output_shapes, options)
     if options['is_train']:
         NN.train(training, test, batch_size=batch_size, epochs=epochs, eval_period=eval_period,
                  stat_period=stat_period)

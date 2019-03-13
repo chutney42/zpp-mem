@@ -11,11 +11,11 @@
     "save": false
   },
   "training_parameters": {
-    "learning_rate": 1e-1,
-    "gather_stats": false
+    "learning_rate": 0.1,
+    "gather_stats": true
   },
   "periods": {
-    "eval_period": 1e3,
-    "stat_period": 1e2
+    "eval_period": 1000,
+    "stat_period": 100
   }
 }
