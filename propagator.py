@@ -8,32 +8,32 @@ class Propagator(object):
     def propagate_fc(self, layer, error):
         raise NotImplementedError("This method should be implemented in subclass")
 
-    def __get_filter(self, filters):
+    def get_filter(self, filters):
         raise NotImplementedError("This method should be implemented in subclass")
 
-    def __get_weights(self, weights):
+    def get_weights(self, weights):
         raise NotImplementedError("This method should be implemented in subclass")
 
 
 class BackwardPropagator(Propagator):
     def propagate_fc(self, layer, error):
         weights = tf.get_variable("weights")
-        propagator = self.__get_weights(weights)
+        propagator = self.get_weights(weights)
         return layer.restore_shape(tf.matmul(error, propagator))
 
     def propagate_conv(self, layer, error):
         filters = tf.get_variable("filters")
-        filters = self.__get_filter(filters)
+        filters = self.get_filter(filters)
         backprop_error = tf.nn.conv2d_backprop_input(layer.input_shape, filters, error, layer.stride,
                                                      layer.padding)
         return backprop_error
 
 
 class Backpropagator(BackwardPropagator):
-    def __get_filter(self, filters):
+    def get_filter(self, filters):
         return filters
 
-    def __get_weights(self, weights):
+    def get_weights(self, weights):
         return tf.transpose(weights)
 
 
@@ -42,11 +42,11 @@ class FixedRandom(BackwardPropagator):
         super().__init__()
         self.initializer = initializer
 
-    def __get_filter(self, filters):
+    def get_filter(self, filters):
         return tf.get_variable("random_filters", shape=filters.get_shape().as_list(),
                                initializer=self.initializer)
 
-    def __get_weights(self, weights):
+    def get_weights(self, weights):
         return tf.get_variable("random_weights", shape=tf.transpose(weights).get_shape().as_list(),
                                initializer=self.initializer)
 
@@ -63,17 +63,17 @@ class DirectFixedRandom(DirectPropagator):
 
     def propagate_fc(self, layer, error):
         weights = tf.get_variable("weights")
-        propagator = self.__get_weights(weights)
+        propagator = self.get_weights(weights)
         return layer.restore_shape(tf.matmul(error, propagator))
 
     def propagate_conv(self, layer, error):
-        filters = self.__get_filter(layer.input_flat_shape)
+        filters = self.get_filter(layer.input_flat_shape)
         return layer.restore_shape(tf.matmul(error, filters))
 
-    def __get_weights(self, weights):
+    def get_weights(self, weights):
         return tf.get_variable("direct_random_weights", shape=[self.output_error_dim, weights.shape[0]],
                                initializer=self.initializer)
 
-    def __get_filter(self, dim):
+    def get_filter(self, dim):
         return tf.get_variable("direct_random_weights", shape=[self.output_error_dim, dim],
                                initializer=self.initializer)
