@@ -1,5 +1,5 @@
 import os
-from Layers.Layer import *
+from layer.layer import *
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'  # hacked by Adam
 

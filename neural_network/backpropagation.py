@@ -1,5 +1,5 @@
-from NeuralNetwork.BackwardPropagation import BackwardPropagation
-from Propagators.BackwardPropagator import Backpropagator
+from neural_network.backward_propagation import BackwardPropagation
+from propagator.backward_propagator import Backpropagator
 
 
 class Backpropagation(BackwardPropagation):

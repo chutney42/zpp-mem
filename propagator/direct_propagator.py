@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from Propagators.Propagator import Propagator
+from propagator.propagator import Propagator
 
 
 class DirectPropagator(Propagator):

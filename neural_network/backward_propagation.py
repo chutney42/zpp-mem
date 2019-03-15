@@ -1,5 +1,5 @@
-from Utils.loader import *
-from NeuralNetwork.NeuralNetwork import DirectFeedbackAlignment
+from util.loader import *
+from neural_network.neural_network import DirectFeedbackAlignment
 
 
 class BackwardPropagation(DirectFeedbackAlignment):

@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from Layers.Layer import Layer
+from layer.layer import Layer
 
 
 class BatchNormalization(Layer):

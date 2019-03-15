@@ -1,4 +1,4 @@
-from Layers.Layer import Layer
+from layer.layer import Layer
 
 
 class WeightLayer(Layer):

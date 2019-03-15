@@ -1,5 +1,5 @@
 import tensorflow as tf
-from Layers.Layer import Layer
+from layer.layer import Layer
 
 
 def sigmoid_prime(x, name=None):

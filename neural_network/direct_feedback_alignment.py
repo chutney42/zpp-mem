@@ -1,6 +1,6 @@
-from Utils.loader import *
-from NeuralNetwork.NeuralNetwork import DirectFeedbackAlignment
-from Propagators.DirectPropagator import DirectFixedRandom, DirectPropagator
+from util.loader import *
+from neural_network.neural_network import DirectFeedbackAlignment
+from propagator.direct_propagator import DirectFixedRandom, DirectPropagator
 
 
 class DirectFeedbackAlignment(DirectFeedbackAlignment):
@@ -8,7 +8,7 @@ class DirectFeedbackAlignment(DirectFeedbackAlignment):
         if not propagator:
             propagator = DirectFixedRandom(shapes[1][0].value)
         elif not isinstance(propagator, DirectPropagator):
-            raise TypeError("Propagator for DirectFeedbackAlignment must be instance of DirectPropagator")
+            raise TypeError("propagator for DirectFeedbackAlignment must be instance of DirectPropagator")
         super().__init__(types, shapes, sequence, propagator, *args, **kwargs)
 
     def build_forward(self):
