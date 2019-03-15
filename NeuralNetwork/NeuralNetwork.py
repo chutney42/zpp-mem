@@ -1,13 +1,12 @@
 import os
-import tensorflow as tf
-from layer import *
+from Layers.Layer import *
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'  # hacked by Adam
 
 file_name = "run_auto_increment"
 
 
-class NeuralNetwork(object):
+class DirectFeedbackAlignment(object):
     def __init__(self, types, shapes, sequence, propagator, learning_rate=0.1, scope="main", gather_stats=True,
                  restore_model=False, save_model=False, restore_model_path=None, save_model_path=None):
         print(f"Create {scope} model with learning_rate={learning_rate}")

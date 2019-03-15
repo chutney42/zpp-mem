@@ -1,5 +1,5 @@
-from backward_propagation import BackwardPropagation
-from propagator import FixedRandom
+from NeuralNetwork.BackwardPropagation import BackwardPropagation
+from Propagators.BackwardPropagator import FixedRandom
 
 
 class FeedbackAlignment(BackwardPropagation):

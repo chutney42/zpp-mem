@@ -1,9 +1,12 @@
 import argparse
 
-from layer import *
-from activation_function import *
-from options import parse
-from loader import load
+from Layers.Block import Block
+from Layers.UtilLayers.BatchNormalization import BatchNormalization
+from Layers.WeightLayers.ConvolutionalLayers import ConvolutionalLayer
+from Layers.WeightLayers.FullyConnected import FullyConnected
+from Layers.Activations.ActivationLayer import *
+from Utils.options import parse
+from Utils.loader import load
 import time
 
 def load_dataset(options):
@@ -18,11 +21,11 @@ def load_dataset(options):
 def define_network(output_types, output_shapes, options):
     model = options['type']
     if model == 'BP':
-        from backpropagation import Backpropagation as Network
+        from NeuralNetwork.Backpropagation import Backpropagation as Network
     elif model == 'DFA':
-        from direct_feedback_alignment import DirectFeedbackAlignment as Network
+        from NeuralNetwork.DirectFeedbackAlignment import DirectFeedbackAlignment as Network
     elif model == 'FA':
-        from feedback_alignment import FeedbackAlignment as Network
+        from NeuralNetwork.FeedbackAlignment import FeedbackAlignment as Network
     else:
         raise NotImplementedError(f"Model {model} is not recognized.")
 
