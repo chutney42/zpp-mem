@@ -22,7 +22,11 @@ for file_path in files:
                     residual = mem_matcher.group(3)
                     output = mem_matcher.group(4)
                     out_str = f"{requested} {peak} {residual} {output}\n"
-                    with open(f"../network_metadata/{file_path}", 'a') as meta:
-                        meta.write(labels)
-                        meta.write(out_str)
+                    meta_file_path = f"../network_metadata/_{file_path}"
+                    new_meta_file_path = f"../network_metadata/{file_path}"
+                    if os.path.isfile(meta_file_path):
+                        with open(meta_file_path, 'a') as meta:
+                            meta.write(labels)
+                            meta.write(out_str)
+                        os.rename(meta_file_path, new_meta_file_path)
                     break
