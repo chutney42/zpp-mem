@@ -1,5 +1,5 @@
 import tensorflow as tf
-from layer import Layer
+from layer.layer import Layer
 
 
 def sigmoid_prime(x, name=None):
@@ -24,7 +24,7 @@ def leaky_relu_prime(x, alpha=0.3, name=None):
         return tf.where(condition, tf.multiply(tf.ones_like(x), alpha), tf.ones_like(x))
 
 
-class ActivationFunction(Layer):
+class ActivationLayer(Layer):
     def __init__(self, func, func_prime, scope="activation_function_layer"):
         super().__init__(trainable=False, scope=scope)
         self.func = func
@@ -42,21 +42,21 @@ class ActivationFunction(Layer):
             return tf.multiply(error, self.func_prime(input_vec))
 
 
-class Sigmoid(ActivationFunction):
+class Sigmoid(ActivationLayer):
     def __init__(self, scope="sigmoid_layer"):
         super().__init__(tf.sigmoid, sigmoid_prime, scope)
 
 
-class Tanh(ActivationFunction):
+class Tanh(ActivationLayer):
     def __init__(self, scope="tanh_layer"):
         super().__init__(tf.tanh, tanh_prime)
 
 
-class ReLu(ActivationFunction):
+class ReLu(ActivationLayer):
     def __init__(self, scope="relu_layer"):
         super().__init__(tf.nn.relu, relu_prime)
 
 
-class LeakyReLu(ActivationFunction):
+class LeakyReLu(ActivationLayer):
     def __init__(self, scope="leaky_relu_layer"):
         super().__init__(tf.nn.leaky_relu, leaky_relu_prime)
