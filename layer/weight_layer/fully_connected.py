@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from layer.weigh_layer import WeightLayer
+from layer.weight_layer.weight_layer import WeightLayer
 
 
 class FullyConnected(WeightLayer):
