@@ -8,6 +8,9 @@ class FullyConnected(WeightLayer):
         super().__init__(learning_rate, scope)
         self.output_dim = output_dim
 
+    def __str__(self):
+        return f"FullyConnected({self.output_dim})"
+
     def build_forward(self, input_vec, remember_input=True, gather_stats=True):
         self.save_shape(input_vec)
         input_vec = self.flatten_input(input_vec)

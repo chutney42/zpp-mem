@@ -15,3 +15,10 @@ class Block(object):
         yield self.head
         for sublayer in self.tail:
             yield sublayer
+
+    def __str__(self):
+        s = f"Block[{str(self.head)}"
+        for layer in self.tail:
+            s = s + f", {str(layer)}"
+        s = s + "]"
+        return s
