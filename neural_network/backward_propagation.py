@@ -1,8 +1,8 @@
 from util.loader import *
-from neural_network.neural_network import DirectFeedbackAlignment
+from neural_network.neural_network import NeuralNetwork
 
 
-class BackwardPropagation(DirectFeedbackAlignment):
+class BackwardPropagation(NeuralNetwork):
     def build_forward(self):
         a = self.features
         for block in self.sequence:

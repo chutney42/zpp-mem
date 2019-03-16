@@ -1,9 +1,9 @@
 from util.loader import *
-from neural_network.neural_network import DirectFeedbackAlignment
+from neural_network.neural_network import NeuralNetwork
 from propagator.direct_propagator import DirectFixedRandom, DirectPropagator
 
 
-class DirectFeedbackAlignment(DirectFeedbackAlignment):
+class DirectFeedbackAlignment(NeuralNetwork):
     def __init__(self, types, shapes, sequence, propagator=None, *args, **kwargs):
         if not propagator:
             propagator = DirectFixedRandom(shapes[1][0].value)
