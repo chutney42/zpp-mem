@@ -12,7 +12,7 @@
   },
   "training_parameters": {
     "learning_rate": 1e-1,
-    "gather_stats": false
+    "gather_stats": true
   },
   "periods": {
     "eval_period": 1e3,

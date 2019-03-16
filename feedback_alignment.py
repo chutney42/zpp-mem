@@ -3,5 +3,5 @@ from propagator import FixedRandom
 
 
 class FeedbackAlignment(BackwardPropagation):
-    def __init__(self, input_dim, sequence, output_dim, propagator=FixedRandom(), *args, **kwargs):
-            super().__init__(input_dim, sequence, output_dim, propagator, *args, **kwargs)
+    def __init__(self, types, shapes, sequence, propagator=FixedRandom(), *args, **kwargs):
+            super().__init__(types, shapes, sequence, propagator, *args, **kwargs)

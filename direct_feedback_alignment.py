@@ -5,12 +5,12 @@ from propagator import DirectPropagator, DirectFixedRandom
 
 
 class DirectFeedbackAlignment(NeuralNetwork):
-    def __init__(self, input_dim, sequence, output_dim, propagator=None, *args, **kwargs):
+    def __init__(self, types, shapes, sequence, propagator=None, *args, **kwargs):
         if not propagator:
-            propagator = DirectFixedRandom(output_dim)
+            propagator = DirectFixedRandom(shapes[1][0].value)
         elif not isinstance(propagator, DirectPropagator):
             raise TypeError("Propagator for DirectFeedbackAlignment must be instance of DirectPropagator")
-        super().__init__(input_dim, sequence, output_dim, propagator, *args, **kwargs)
+        super().__init__(types, shapes, sequence, propagator, *args, **kwargs)
 
     def build_forward(self):
         a = self.features

@@ -1,4 +1,5 @@
 import tensorflow as tf
+from six.moves import reduce
 
 
 class Block(object):
@@ -15,6 +16,7 @@ class Block(object):
         for sublayer in self.tail:
             yield sublayer
 
+
 class Layer(object):
     def __init__(self, trainable, scope="layer"):
         self.trainable = trainable
@@ -22,6 +24,7 @@ class Layer(object):
             self.step = None
         self.scope = scope
         self.input_vec = None
+        self.input_shape = None
 
     def restore_input(self):
         if self.input_vec is None:
@@ -35,6 +38,15 @@ class Layer(object):
 
     def build_backward(self, error, gather_stats=True):
         raise NotImplementedError("This method should be implemented in subclass")
+
+    def save_shape(self, input_vec):
+        self.input_shape = tf.shape(input_vec)
+
+    def restore_shape(self, input_vec):
+        return tf.reshape(input_vec, self.input_shape)
+
+    def flatten_input(self, input_vec):
+        return tf.layers.Flatten()(input_vec)
 
 
 class WeightLayer(Layer):
@@ -57,12 +69,61 @@ class WeightLayer(Layer):
         return propagated_error
 
 
+class ConvolutionalLayer(WeightLayer):
+    def __init__(self, filter_dim, stride=[1, 1, 1, 1], number_of_filters=1, padding="SAME",
+                 trainable=True, learning_rate=0.5,
+                 scope="convoluted_layer"):
+        super().__init__(learning_rate, scope)
+        self.stride = stride
+        self.filter_dim = filter_dim
+        self.number_of_filters = number_of_filters
+        self.trainable = trainable
+        self.padding = padding
+        self.output_shape = None
+        self.input_flat_shape = None
+
+    def build_forward(self, input_vec, remember_input=True, gather_stats=True):
+        with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
+            self.save_shape(input_vec)
+            self.input_flat_shape= int(reduce(lambda x, y: x * y, input_vec.shape[1:]))  # Number of features in input_vec
+
+            if remember_input:
+                self.input_vec = input_vec
+            (width, length, depth) = input_vec.shape[1], input_vec.shape[2], input_vec.shape[3]
+            filter_shape = [self.filter_dim[0], self.filter_dim[1], depth,
+                            self.number_of_filters]
+            filters = tf.get_variable("filters", filter_shape,
+                                      initializer=tf.random_normal_initializer())
+            output = tf.nn.conv2d(input_vec, filters, strides=self.stride, padding=self.padding, name="Convolution")
+            self.output_shape = tf.shape(output)
+            return output
+
+    def build_propagate(self, error, gather_stats=True):
+        if not self.propagator:
+            raise AttributeError("The propagator should be specified")
+        with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
+            backprop_error = self.propagator.propagate_conv(self,error)
+            return self.restore_shape(backprop_error)
+
+    def build_update(self, error, gather_stats=True):
+        input_vec = self.restore_input()
+        with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
+            filters = tf.get_variable("filters")
+            delta_filters = tf.nn.conv2d_backprop_filter(input_vec, tf.shape(filters), error,
+                                                                self.stride, self.padding)
+            filters = tf.assign(filters, filters - self.learning_rate * delta_filters)
+            self.step = filters
+            return
+
+
 class FullyConnected(WeightLayer):
     def __init__(self, output_dim, learning_rate=0.5, scope="fully_connected_layer"):
         super().__init__(learning_rate, scope)
         self.output_dim = output_dim
 
     def build_forward(self, input_vec, remember_input=True, gather_stats=True):
+        self.save_shape(input_vec)
+        input_vec = self.flatten_input(input_vec)
         if remember_input:
             self.input_vec = input_vec
         with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
@@ -76,9 +137,7 @@ class FullyConnected(WeightLayer):
         if not self.propagator:
             raise AttributeError("The propagator should be specified")
         with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
-            weights = tf.get_variable("weights")
-            propagator = self.propagator.get_fc(weights)
-            return tf.matmul(error, propagator)
+            return self.propagator.propagate_fc(self,error)
 
     def build_update(self, error, gather_stats=True):
         input_vec = self.restore_input()
@@ -101,10 +160,13 @@ class BatchNormalization(Layer):
         self.learning_rate = learning_rate
 
     def build_forward(self, input_vec, remember_input=True, gather_stats=True):
+        self.save_shape(input_vec)
+        input_vec=self.flatten_input(input_vec)
         if remember_input:
             self.input_vec = input_vec
         with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
-            self.input_vec = input_vec
+            if remember_input:
+                self.input_vec = input_vec
             N = input_vec.get_shape()[1]
             gamma = tf.get_variable("gamma", [N], initializer=tf.ones_initializer())
             beta = tf.get_variable("beta", [N], initializer=tf.zeros_initializer())
@@ -119,12 +181,14 @@ class BatchNormalization(Layer):
                 tf.summary.histogram("mean", batch_mean)
                 tf.summary.histogram("input_normalized", input_act_normalized)
 
-            return input_act_normalized
+            return self.restore_shape(input_act_normalized)
 
     def build_backward(self, error, gather_stats=True):
         input_vec = self.restore_input()
+        error=self.flatten_input(error)
         with tf.variable_scope(self.scope, reuse=True):
-            N = int(input_vec.get_shape()[1])
+            input_shape = input_vec.get_shape()[1:]
+            N = int(input_shape[0])
             gamma = tf.get_variable("gamma")
             beta = tf.get_variable("beta")
             batch_mean, batch_var = tf.nn.moments(input_vec, [0])
@@ -145,4 +209,4 @@ class BatchNormalization(Layer):
             update_beta = tf.assign(beta, tf.subtract(beta, tf.multiply(dbeta, self.learning_rate)))
             update_gamma = tf.assign(gamma, tf.subtract(gamma, tf.multiply(dgamma, self.learning_rate)))
             self.step = (update_beta, update_gamma)
-            return output_error
+            return self.restore_shape(output_error)
