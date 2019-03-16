@@ -2,7 +2,7 @@ from functools import reduce
 
 import tensorflow as tf
 
-from layer.weigh_layer import WeightLayer
+from layer.weight_layer import WeightLayer
 
 
 class ConvolutionalLayer(WeightLayer):
