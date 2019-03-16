@@ -106,6 +106,8 @@ class DirectFeedbackAlignment(object):
             print(f"start epoch {self.epoch}, accuracy: {res}%")
             self.__train_single_epoch(training_it, validation_it, training_handle, validation_handle, writer,
                                       val_writer, eval_period, stat_period)
+            if self.memory_only:
+                break
 
         res = self.__validate(validation_it, validation_handle)
         print(f"total accuracy: {res}%")
@@ -156,6 +158,10 @@ class DirectFeedbackAlignment(object):
                     summary, _, _ = self.sess.run([self.merged_summary, self.step, self.acc_update], feed_dict, run_options, run_metadata)
                     writer.add_run_metadata(run_metadata, f"step_{self.counter}")
                     writer.add_summary(summary, self.counter)
+                    if self.counter is stat_period:
+                        self.__gather_memory_usage(run_metadata)
+                        if self.memory_only:
+                            break
                 else:
                     self.sess.run([self.step, self.acc_update], feed_dict)
 
@@ -185,6 +191,15 @@ class DirectFeedbackAlignment(object):
             writer.add_summary(summary, self.counter)
         self.__switch_context()
         return res * 100
+
+    def __gather_memory_usage(self, run_metadata):
+        print(f"gather memory stats in file ./memory_usage/data_{self.scope}_{self.run_number}")
+        options = tf.profiler.ProfileOptionBuilder.time_and_memory()
+        options = tf.profiler.ProfileOptionBuilder(options) \
+            .with_file_output(f"./memory_usage/data_{self.scope}_{self.run_number}") \
+            .select(("bytes", "peak_bytes", "output_bytes", "residual_bytes")) \
+            .build()
+        tf.profiler.profile(self.sess.graph, run_meta=run_metadata, cmd="scope", options=options)
 
     def __save_context(self):
         self.context = self.sess.run(self.running_vars)
