@@ -31,7 +31,7 @@ class NeuralNetwork(object):
         self.step = None
         self.build()
         self.merged_summary = tf.summary.merge_all()
-        self.__save_model_metadata(shapes)
+        self.__print_model_metadata(shapes)
 
     def __init_run_number(self):
         if not os.path.isfile(file_name):
@@ -55,12 +55,11 @@ class NeuralNetwork(object):
         else:
             self.save_model_path = f"./saved_model_{self.scope}_{self.run_number}/model.ckpt"
 
-    def __save_model_metadata(self, shapes):
-        with open(f"./network_metadata/data_{self.scope}_{self.run_number}", 'w+') as f:
-            f.write(f"input dims: {[x.value for x in shapes[0]]} output dims: {[x.values for x in shapes[1]]}\n")
-            for block in self.sequence:
-                f.write(str(block))
-                f.write("\n")
+    def __print_model_metadata(self, shapes):
+        print(f"data_{self.scope}_{self.run_number}")
+        print(f"input dims: {[x.value for x in shapes[0]]} output dims: {[x.value for x in shapes[1]]}")
+        for block in self.sequence:
+            print(str(block))
 
     def build_forward(self):
         raise NotImplementedError("This method should be implemented in subclass")
@@ -82,8 +81,7 @@ class NeuralNetwork(object):
     def train(self, training_set, validation_set, batch_size=20, epochs=2, eval_period=1000, stat_period=100,
             memory_only=False):
         self.memory_only = memory_only
-        with open(f"./network_metadata/data_{self.scope}_{self.run_number}", 'a') as f:
-            f.write(f"batch_size: {batch_size} epochs: {epochs} eval_per: {eval_period} stat_per: {stat_period}\n")
+        print(f"batch_size: {batch_size} epochs: {epochs} eval_per: {eval_period} stat_per: {stat_period}")
         training_set = training_set.shuffle(200).batch(batch_size)
 
         with tf.variable_scope("itarators", reuse=tf.AUTO_REUSE):
@@ -110,9 +108,7 @@ class NeuralNetwork(object):
                 break
 
         res = self.__validate(validation_it, validation_handle)
-        print(f"total accuracy: {res}%")
-        with open(f"./network_metadata/data_{self.scope}_{self.run_number}", 'a') as f:
-            f.write(f"total accuracy: {res} iterations: {self.counter}\n")
+        print(f"total accuracy: {res}% iterations: {self.counter}")
         self.__close_writers(writer, val_writer)
         self.__maybe_save_model()
 
@@ -152,13 +148,13 @@ class NeuralNetwork(object):
             try:
                 feed_dict = {self.handle: training_handle}
 
-                if self.gather_stats and self.counter % stat_period is 0:
+                if self.memory_only or (self.gather_stats and self.counter % stat_period is 0):
                     run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
                     run_metadata = tf.RunMetadata()
                     summary, _, _ = self.sess.run([self.merged_summary, self.step, self.acc_update], feed_dict, run_options, run_metadata)
                     writer.add_run_metadata(run_metadata, f"step_{self.counter}")
                     writer.add_summary(summary, self.counter)
-                    if self.counter is stat_period:
+                    if self.memory_only or self.counter is stat_period:
                         self.__gather_memory_usage(run_metadata)
                         if self.memory_only:
                             break

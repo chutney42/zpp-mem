@@ -3,9 +3,9 @@ import re
 
 file_name_regexp = re.compile(r'data_(\w+)_([0-9]+)')
 memory_usage_regexp = re.compile(r'_TFProfRoot \(--/(.*), --/(.*), --/(.*), --/(.*)\)')
+labels = "requested bytes | peak bytes | residual bytes | output bytes\n"
 
 files = os.listdir("./")
-print("net_type | run_number | requested bytes | peak bytes | residual bytes | output bytes")
 for file_path in files:
     matcher = file_name_regexp.match(file_path)
     if matcher is not None:
@@ -21,5 +21,8 @@ for file_path in files:
                     peak = mem_matcher.group(2)
                     residual = mem_matcher.group(3)
                     output = mem_matcher.group(4)
-                    print(f"{net_type} {run_number} {requested} {peak} {residual} {output}")
+                    out_str = f"{requested} {peak} {residual} {output}\n"
+                    with open(f"../network_metadata/{file_path}", 'a') as meta:
+                        meta.write(labels)
+                        meta.write(out_str)
                     break
