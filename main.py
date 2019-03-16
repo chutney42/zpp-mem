@@ -46,8 +46,8 @@ if __name__ == '__main__':
 
     if parser.parse_args().opt is None:
         # opt_path = "./options/backpropagation.json"
-        # opt_path = "./options/direct_feedback_alignment.json"
-        opt_path = "./options/feedback_alignment.json"
+        opt_path = "./options/direct_feedback_alignment.json"
+        # opt_path = "./options/feedback_alignment.json"
     else:
         opt_path = parser.parse_args().opt
 
