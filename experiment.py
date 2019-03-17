@@ -2,8 +2,8 @@ import argparse
 import time
 
 from inspect import getmembers, isfunction
-from exp import blocks_definitions
-from exp import network_definitions
+from definition import blocks_definitions
+from definition import network_definitions
 from util.loader import datasets
 
 blocks_dict = dict(getmembers(blocks_definitions, isfunction))
