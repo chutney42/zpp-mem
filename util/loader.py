@@ -1,17 +1,6 @@
 import tensorflow as tf
 
 
-def load(dataset_name):
-    if dataset_name == 'mnist':
-        return load_mnist()
-    elif dataset_name == 'cifar10':
-        return load_cifar10()
-    elif dataset_name == 'cifar100':
-        return load_cifar100()
-    else:
-        raise RuntimeError("Unknown dataset name")
-
-
 def load_cifar100():
     training, test = tf.keras.datasets.cifar100.load_data()
 
@@ -43,6 +32,7 @@ def load_cifar10():
 
     return train_data_set, test_data_set
 
+
 def load_mnist():
     training, test = tf.keras.datasets.mnist.load_data()
 
@@ -56,3 +46,10 @@ def load_mnist():
     test_data_set = tf.data.Dataset.from_tensor_slices(test).map(transform)
 
     return train_data_set, test_data_set
+
+
+datasets = {
+    "mnist": load_mnist,
+    "cifar100": load_cifar100,
+    "cifar10": load_cifar10
+}

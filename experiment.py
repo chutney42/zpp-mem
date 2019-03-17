@@ -1,62 +1,71 @@
 import argparse
-from layer.block import Block
-from layer.util_layer.batch_normalization import BatchNormalization
-from layer.weight_layer.fully_connected import FullyConnected
-from layer.activation.activation_layer import *
-from neural_network.backpropagation import Backpropagation
-from neural_network.feedback_alignment import FeedbackAlignment
-from neural_network.direct_feedback_alignment import DirectFeedbackAlignment
-from util.loader import load
+import time
+
+from inspect import getmembers, isfunction
+from exp import blocks_definitions
+from exp import network_definitions
+from util.loader import datasets
+
+blocks_dict = dict(getmembers(blocks_definitions, isfunction))
+networks_dict = {
+    network_name: network_definition for network_name, network_definition in getmembers(network_definitions)
+    if isinstance(network_definition, dict) and network_name != "__builtins__"
+}
+networks_list = [
+    network_definition for network_name, network_definition in getmembers(network_definitions)
+    if isinstance(network_definition, dict) and network_name != "__builtins__"
+]
 
 
-def create_blocks(id):
-    if 0 <= id < 3:
-        return [Block([FullyConnected(50), BatchNormalization(), Sigmoid()]),
-                Block([FullyConnected(30), BatchNormalization(), Sigmoid()]),
-                Block([FullyConnected(10), Sigmoid()])]
-    elif 3 <= id < 9:
-        blocks = [Block([FullyConnected(500), BatchNormalization(), Sigmoid()]) for _ in range(30)]
-        blocks.append(Block([FullyConnected(10), Sigmoid()]))
-        return blocks
+def define_network(network, output_types, output_shapes):
+    model = network['type']
+    if model == 'BP':
+        from neural_network.backpropagation import Backpropagation as Network
+    elif model == 'DFA':
+        from neural_network.direct_feedback_alignment import DirectFeedbackAlignment as Network
+    elif model == 'FA':
+        from neural_network.feedback_alignment import FeedbackAlignment as Network
+    else:
+        raise NotImplementedError(f"Model {model} is not recognized.")
+
+    sequence = blocks_dict[network['sequence']](output_shapes[1][0].value)
+
+    return Network(output_types,
+                   output_shapes,
+                   sequence,
+                   learning_rate=network['learning_rate'],
+                   scope=model,
+                   gather_stats=network['gather_stats'],
+                   # restore_model_path=network['restore_model_path'],
+                   # save_model_path=network['save_model_path'],
+                   restore_model=network['restore_model'],
+                   save_model=network['save_model'])
 
 
-def create_network(id, training, test):
-    if 0 <= id < 3:
-        if id == 0:
-            return lambda: Backpropagation(training.output_types, training.output_shapes, create_blocks(id), gather_stats=True, scope='BP')\
-                .train(training, test, epochs=1)
-        elif id == 1:
-            return lambda: FeedbackAlignment(training.output_types, training.output_shapes, create_blocks(id), gather_stats=True, scope='FA')\
-                .train(training, test, epochs=1)
-        elif id == 2:
-            return lambda: DirectFeedbackAlignment(training.output_types, training.output_shapes, create_blocks(id), gather_stats=True, scope='DFA')\
-                .train(training, test, epochs=1)
-    elif 3 <= id < 6:
-        if id == 3:
-            return lambda: Backpropagation(training.output_types, training.output_shapes, create_blocks(id), gather_stats=True, scope='BP')\
-                .train(training, test, epochs=1)
-        elif id == 4:
-            return lambda: FeedbackAlignment(training.output_types, training.output_shapes, create_blocks(id), gather_stats=True, scope='FA')\
-                .train(training, test, epochs=1)
-        elif id == 5:
-            return lambda: DirectFeedbackAlignment(training.output_types, training.output_shapes, create_blocks(id), gather_stats=True, scope='DFA')\
-                .train(training, test, epochs=1)
-    elif 6 <= id < 9:
-        if id == 6:
-            return lambda: Backpropagation(training.output_types, training.output_shapes, create_blocks(id), gather_stats=True, scope='BP')\
-                .train(training, test, epochs=1, batch_size=200)
-        elif id == 7:
-            return lambda: FeedbackAlignment(training.output_types, training.output_shapes, create_blocks(id), gather_stats=True, scope='FA')\
-                .train(training, test, epochs=1, batch_size=200)
-        elif id == 8:
-            return lambda: DirectFeedbackAlignment(training.output_types, training.output_shapes, create_blocks(id), gather_stats=True, scope='DFA')\
-                .train(training, test, epochs=1, batch_size=200)
-    raise Exception("wrong argument")
+def learn_network(neural_network, training, test, network):
+    start_learning_time = time.time()
+    neural_network.train(training_set=training,
+                         validation_set=test,
+                         batch_size=network['batch_size'],
+                         epochs=network['epochs'],
+                         eval_period=network['eval_period'],
+                         stat_period=network['stat_period'],
+                         memory_only=network['memory_only'])
+    print(f"learning process took {time.time() - start_learning_time} seconds")
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-id', type=int, required=True, help='Number of network')
+    parser.add_argument('-id', type=int, required=False, help='number of network')
+    parser.add_argument('-name', type=str, required=False, help='network name')
     id = parser.parse_args().id
-    training, test = load('mnist')
-    create_network(id, training, test)()
+    name = parser.parse_args().name
+    if id is not None:
+        network = networks_list[id]
+    elif name is not None:
+        network = networks_dict[name]
+    else:
+        raise Exception("you must choose a network to run")
+    training, test = datasets[network['dataset_name']]()
+    neural_network = define_network(network, training.output_types, training.output_shapes)
+    learn_network(neural_network, training, test, network)

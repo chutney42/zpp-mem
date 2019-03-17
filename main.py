@@ -6,8 +6,9 @@ from layer.weight_layer.convolutional_layers import ConvolutionalLayer
 from layer.weight_layer.fully_connected import FullyConnected
 from layer.activation.activation_layer import *
 from util.options import parse
-from util.loader import load
+from util.loader import datasets
 import time
+
 
 def load_dataset(options):
     dataset = options['dataset']
@@ -15,7 +16,7 @@ def load_dataset(options):
         dataset_name = 'mnist'
     else:
         dataset_name = options['dataset']['name']
-    return load(dataset_name)
+    return datasets[dataset_name]()
 
 
 def define_network(output_types, output_shapes, options):
