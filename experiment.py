@@ -17,6 +17,24 @@ networks_list = [
 ]
 
 
+def get_network_definition():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-id', type=int, required=False, help='number of network')
+    parser.add_argument('-name', type=str, required=False, help='network name')
+    id = parser.parse_args().id
+    name = parser.parse_args().name
+    if id is not None:
+        print(f"running network with id={id}")
+        network = networks_list[id]
+    elif name is not None:
+        print(f"running network with name={name}")
+        network = networks_dict[name]
+    else:
+        raise Exception("you must choose a network to run")
+    print(network)
+    return network
+
+
 def define_network(network, output_types, output_shapes):
     model = network['type']
     if model == 'BP':
@@ -55,17 +73,7 @@ def learn_network(neural_network, training, test, network):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-id', type=int, required=False, help='number of network')
-    parser.add_argument('-name', type=str, required=False, help='network name')
-    id = parser.parse_args().id
-    name = parser.parse_args().name
-    if id is not None:
-        network = networks_list[id]
-    elif name is not None:
-        network = networks_dict[name]
-    else:
-        raise Exception("you must choose a network to run")
+    network = get_network_definition()
     training, test = datasets[network['dataset_name']]()
     neural_network = define_network(network, training.output_types, training.output_shapes)
     learn_network(neural_network, training, test, network)
