@@ -13,7 +13,6 @@ class FullyConnected(WeightLayer):
 
     def build_forward(self, input_vec, remember_input=True, gather_stats=True):
         self.save_shape(input_vec)
-        input_vec = self.flatten_input(input_vec)
         if remember_input:
             self.input_vec = input_vec
         with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
@@ -27,7 +26,7 @@ class FullyConnected(WeightLayer):
         if not self.propagator:
             raise AttributeError("The propagator should be specified")
         with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
-            return self.propagator.propagate_fc(self,error)
+            return self.propagator.propagate_fc(self, error)
 
     def build_update(self, error, gather_stats=True):
         input_vec = self.restore_input()

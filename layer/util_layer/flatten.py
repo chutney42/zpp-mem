@@ -9,6 +9,7 @@ class Flatten(Layer):
 
     def __str__(self):
         return "Flatten()"
+
     def build_forward(self, input_vec, remember_input=False, gather_stats=True):
         self.save_shape(input_vec)
         with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):

@@ -2,6 +2,7 @@ import argparse
 
 from layer.block import Block
 from layer.util_layer.batch_normalization import BatchNormalization
+from layer.util_layer.flatten import Flatten
 from layer.weight_layer.convolutional_layers import ConvolutionalLayer
 from layer.weight_layer.fully_connected import FullyConnected
 from layer.activation.activation_layer import *
@@ -31,7 +32,8 @@ def define_network(output_types, output_shapes, options):
         raise NotImplementedError(f"Model {model} is not recognized.")
 
     return Network(output_types, output_shapes,
-                   [Block([ConvolutionalLayer((3,3), number_of_filters=10), BatchNormalization(), Sigmoid()]),
+                   [Block([ConvolutionalLayer((3, 3), number_of_filters=10), BatchNormalization(), Sigmoid()]),
+                   Block([ConvolutionalLayer((3, 3), number_of_filters=10), BatchNormalization(), Sigmoid(), Flatten()]),
                     Block([FullyConnected(30), BatchNormalization(), Sigmoid()]),
                     Block([FullyConnected(output_shapes[1][0].value), Sigmoid()])],
                    learning_rate=options['training_parameters']['learning_rate'],
@@ -46,9 +48,9 @@ if __name__ == '__main__':
     parser.add_argument('-opt', type=str, required=False, help='Path to option JSON file.')
 
     if parser.parse_args().opt is None:
-        # opt_path = "./options/backpropagation.json"
+        opt_path = "./options/backpropagation.json"
         # opt_path = "./options/direct_feedback_alignment.json"
-        opt_path = "./options/feedback_alignment.json"
+        # opt_path = "./options/feedback_alignment.json"
     else:
         opt_path = parser.parse_args().opt
 

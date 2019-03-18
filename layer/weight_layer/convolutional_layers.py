@@ -23,7 +23,7 @@ class ConvolutionalLayer(WeightLayer):
     def build_forward(self, input_vec, remember_input=True, gather_stats=True):
         with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
             self.save_shape(input_vec)
-            self.input_flat_shape= int(reduce(lambda x, y: x * y, input_vec.shape[1:]))  # Number of features in input_vec
+            self.input_flat_shape = int(reduce(lambda x, y: x * y, input_vec.shape[1:]))  # Number of features in input_vec
 
             if remember_input:
                 self.input_vec = input_vec
@@ -41,7 +41,7 @@ class ConvolutionalLayer(WeightLayer):
             raise AttributeError("The propagator should be specified")
         with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
             backprop_error = self.propagator.propagate_conv(self,error)
-            return self.restore_shape(backprop_error)
+            return backprop_error
 
     def build_update(self, error, gather_stats=True):
         input_vec = self.restore_input()
