@@ -4,13 +4,13 @@ from layer.util_layer.batch_normalization import BatchNormalization
 from layer.weight_layer.fully_connected import FullyConnected
 
 
-def blocks_1(output_size):
+def blocks_50_30_10_bn_sigmoid(output_size):
     return [Block([FullyConnected(50), BatchNormalization(), Sigmoid()]),
             Block([FullyConnected(30), BatchNormalization(), Sigmoid()]),
             Block([FullyConnected(output_size), Sigmoid()])]
 
 
-def blocks_2(output_size):
+def blocks_30x500_10_bn_sigmoid(output_size):
         blocks = [Block([FullyConnected(500), BatchNormalization(), Sigmoid()]) for _ in range(30)]
         blocks.append(Block([FullyConnected(output_size), Sigmoid()]))
         return blocks
