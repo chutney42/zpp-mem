@@ -21,22 +21,22 @@ def get_network_definition():
     parser = argparse.ArgumentParser()
     parser.add_argument('-id', type=int, required=False, help='number of network')
     parser.add_argument('-name', type=str, required=False, help='network name')
-    id = parser.parse_args().id
-    name = parser.parse_args().name
-    if id is not None:
-        print(f"running network with id={id}")
-        network = networks_list[id]
-    elif name is not None:
-        print(f"running network with name={name}")
-        network = networks_dict[name]
+    network_id = parser.parse_args().id
+    network_name = parser.parse_args().name
+    if network_id is not None:
+        print(f"running network with id={network_id}")
+        network_definition = networks_list[network_id]
+    elif network_name is not None:
+        print(f"running network with name={network_name}")
+        network_definition = networks_dict[network_name]
     else:
         raise Exception("you must choose a network to run")
-    print(network)
-    return network
+    print(network_definition)
+    return network_definition
 
 
-def define_network(network, output_types, output_shapes):
-    model = network['type']
+def create_network(network_definition, output_types, output_shapes):
+    model = network_definition['type']
     if model == 'BP':
         from neural_network.backpropagation import Backpropagation as Network
     elif model == 'DFA':
@@ -46,18 +46,18 @@ def define_network(network, output_types, output_shapes):
     else:
         raise NotImplementedError(f"Model {model} is not recognized.")
 
-    sequence = blocks_dict[network['sequence']](output_shapes[1][0].value)
+    sequence = blocks_dict[network_definition['sequence']](output_shapes[1][0].value)
 
     return Network(output_types,
                    output_shapes,
                    sequence,
-                   learning_rate=network['learning_rate'],
+                   learning_rate=network_definition['learning_rate'],
                    scope=model,
-                   gather_stats=network['gather_stats'],
+                   gather_stats=network_definition['gather_stats'],
                    # restore_model_path=network['restore_model_path'],
                    # save_model_path=network['save_model_path'],
-                   restore_model=network['restore_model'],
-                   save_model=network['save_model'])
+                   restore_model=network_definition['restore_model'],
+                   save_model=network_definition['save_model'])
 
 
 def learn_network(neural_network, training, test, network):
@@ -73,7 +73,7 @@ def learn_network(neural_network, training, test, network):
 
 
 if __name__ == '__main__':
-    network = get_network_definition()
-    training, test = datasets[network['dataset_name']]()
-    neural_network = define_network(network, training.output_types, training.output_shapes)
-    learn_network(neural_network, training, test, network)
+    network_def = get_network_definition()
+    training_set, test_set = datasets[network_def['dataset_name']]()
+    neural_net = create_network(network_def, training_set.output_types, training_set.output_shapes)
+    learn_network(neural_net, training_set, test_set, network_def)
