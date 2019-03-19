@@ -1,9 +1,11 @@
 from collections import OrderedDict
 import json
 
+
 class NoneDict(OrderedDict):
     def __missing__(self, key):
         return None
+
 
 def parse(opt_path):
     # remove comments starting with '//'
