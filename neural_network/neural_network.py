@@ -71,7 +71,9 @@ class NeuralNetwork(object):
         self.__build_test(self.result)
         self.build_backward(self.result)
 
-    def train(self, training_set, validation_set, batch_size=20, epochs=2, eval_period=1000, stat_period=100):
+    def train(self, training_set, validation_set, batch_size=20, epochs=2, eval_period=1000, stat_period=100,
+            memory_only=False):
+        self.memory_only = memory_only
         training_set = training_set.shuffle(200).batch(batch_size)
 
         with tf.variable_scope("itarators", reuse=tf.AUTO_REUSE):
