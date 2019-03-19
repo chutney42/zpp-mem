@@ -6,9 +6,8 @@ from layer.weight_layer.weight_layer import WeightLayer
 
 
 class ConvolutionalLayer(WeightLayer):
-    def __init__(self, filter_dim, stride=[1, 1, 1, 1], number_of_filters=1, padding="SAME",
-                 trainable=True, learning_rate=0.5, momentum=0.0,
-                 scope="convoluted_layer"):
+    def __init__(self, filter_dim, stride=[1, 1, 1, 1], number_of_filters=1, padding="SAME", trainable=True,
+                 learning_rate=0.5, momentum=0.0, scope="convoluted_layer"):
         super().__init__(learning_rate, momentum, scope)
         self.stride = stride
         self.filter_dim = filter_dim
@@ -17,6 +16,9 @@ class ConvolutionalLayer(WeightLayer):
         self.padding = padding
         self.output_shape = None
         self.input_flat_shape = None
+
+    def __str__(self):
+        return f"ConvolutionalLayer({self.filter_dim} {self.number_of_filters} {self.stride})"
 
     def build_forward(self, input_vec, remember_input=True, gather_stats=True):
         with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):

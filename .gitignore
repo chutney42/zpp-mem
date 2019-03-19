@@ -7,4 +7,6 @@ __pycache__/*
 models/*
 saved_model_*/*
 .DS_Store
+memory_usage/data_*
+network_metadata/*
 *__pycache__*

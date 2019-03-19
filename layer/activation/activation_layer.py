@@ -46,17 +46,29 @@ class Sigmoid(ActivationLayer):
     def __init__(self, scope="sigmoid_layer"):
         super().__init__(tf.sigmoid, sigmoid_prime, scope)
 
+    def __str__(self):
+        return "Sigmoid()"
+
 
 class Tanh(ActivationLayer):
     def __init__(self, scope="tanh_layer"):
         super().__init__(tf.tanh, tanh_prime)
+
+    def __str__(self):
+        return "Tanh()"
 
 
 class ReLu(ActivationLayer):
     def __init__(self, scope="relu_layer"):
         super().__init__(tf.nn.relu, relu_prime)
 
+    def __str__(self):
+        return "ReLu()"
+
 
 class LeakyReLu(ActivationLayer):
     def __init__(self, scope="leaky_relu_layer"):
         super().__init__(tf.nn.leaky_relu, leaky_relu_prime)
+
+    def __str__(self):
+        return "LeakyReLu()"
