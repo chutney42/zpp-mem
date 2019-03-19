@@ -9,6 +9,9 @@ class BatchNormalization(Layer):
         self.epsilon = 0.0000001
         self.learning_rate = learning_rate
 
+    def __str__(self):
+        return "BatchNormalization()"
+
     def build_forward(self, input_vec, remember_input=True, gather_stats=True):
         self.save_shape(input_vec)
         input_vec=self.flatten_input(input_vec)
