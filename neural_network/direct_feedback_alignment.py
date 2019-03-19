@@ -1,4 +1,4 @@
-from util.loader import *
+import tensorflow as tf
 from neural_network.neural_network import NeuralNetwork
 from propagator.direct_propagator import DirectFixedRandom, DirectPropagator
 
