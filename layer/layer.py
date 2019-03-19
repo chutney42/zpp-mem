@@ -31,5 +31,3 @@ class Layer(object):
 
     def flatten_input(self, input_vec):
         return tf.layers.Flatten()(input_vec)
-
-
