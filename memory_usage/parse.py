@@ -1,8 +1,12 @@
 import os
 import re
 
+# example file name "data_BP_13"
 file_name_regexp = re.compile(r'data_(\w+)_([0-9]+)')
+
+# example memory usage line "_TFProfRoot (--/114.44MB, --/114.44MB, --/114.44MB, --/136.71MB)"
 memory_usage_regexp = re.compile(r'_TFProfRoot \(--/(.*), --/(.*), --/(.*), --/(.*)\)')
+
 labels = "requested bytes | peak bytes | residual bytes | output bytes\n"
 
 files = os.listdir("./")

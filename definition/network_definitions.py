@@ -2,7 +2,7 @@ default_network = {
     # constructor parameters
     "type": "BP",
     "dataset_name": "mnist",
-    "sequence": "blocks_1",
+    "sequence": "blocks_50_30_10_bn_sigmoid",
     "learning_rate": 0.1,
     "gather_stats": False,
     "restore_model": False,
@@ -18,8 +18,8 @@ default_network = {
     "memory_only": False
 }
 
-example_network = dict(default_network)
-example_network.update({
-    "sequence": "blocks_2",
+memory_testing_network = dict(default_network)
+memory_testing_network.update({
+    "sequence": "blocks_30x500_10_bn_sigmoid",
     "memory_only": True
 })
