@@ -1,6 +1,6 @@
 default_network = {
     # constructor parameters
-    "type": "BP",
+    "type": "FA",
     "dataset_name": "mnist",
     "sequence": "blocks_50_30_10_bn_sigmoid",
     "learning_rate": 0.1,

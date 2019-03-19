@@ -12,7 +12,7 @@ mkdir $folder
 # stores stdout and stderr in $3.out and $3.err in $folder catalogue
 function run_experiment {
     echo "run experiment $2"
-    /usr/bin/time -lp python experiment.py $1 $2 >$folder/$3.out 2>$folder/$3.err
+    python experiment.py $1 $2 >$folder/$3.out 2>$folder/$3.err
     return $?
 }
 
