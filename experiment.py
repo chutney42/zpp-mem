@@ -68,7 +68,7 @@ def create_network(network_definition, output_types, output_shapes):
                    save_model=network_definition['save_model'])
 
 
-def learn_network(neural_network, training, test, network):
+def train_network(neural_network, training, test, network):
     start_learning_time = time.time()
     neural_network.train(training_set=training,
                          validation_set=test,
@@ -84,4 +84,4 @@ if __name__ == '__main__':
     network_def = get_network_definition()
     training_set, test_set = datasets_dict[network_def['dataset_name']]()
     neural_net = create_network(network_def, training_set.output_types, training_set.output_shapes)
-    learn_network(neural_net, training_set, test_set, network_def)
+    train_network(neural_net, training_set, test_set, network_def)
