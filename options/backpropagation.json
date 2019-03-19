@@ -4,7 +4,7 @@
   "dataset": {
     "name": "mnist",
     "batch_size": 20,
-    "epochs": 2
+    "epochs": 5
   },
   "model_handling": {
     "restore": false,
