@@ -78,7 +78,10 @@ class NeuralNetwork(object):
         self.__build_test(self.result)
         self.build_backward(self.result)
 
-    def train(self, training_set, validation_set, batch_size=20, epochs=2, eval_period=1000, stat_period=100):
+    def train(self, training_set, validation_set, batch_size=20, epochs=2, eval_period=1000, stat_period=100,
+            memory_only=False):
+        self.memory_only = memory_only
+        print(f"batch_size: {batch_size} epochs: {epochs} eval_per: {eval_period} stat_per: {stat_period}")
         training_set = training_set.shuffle(200).batch(batch_size)
 
         with tf.variable_scope("itarators", reuse=tf.AUTO_REUSE):
@@ -101,9 +104,11 @@ class NeuralNetwork(object):
             print(f"start epoch {self.epoch}, accuracy: {res}%")
             self.__train_single_epoch(training_it, validation_it, training_handle, validation_handle, writer,
                                       val_writer, eval_period, stat_period)
+            if self.memory_only:
+                break
 
         res = self.__validate(validation_it, validation_handle)
-        print(f"total accuracy: {res}%")
+        print(f"total accuracy: {res}% iterations: {self.counter}")
         self.__close_writers(writer, val_writer)
         self.__maybe_save_model()
 
@@ -143,12 +148,16 @@ class NeuralNetwork(object):
             try:
                 feed_dict = {self.handle: training_handle}
 
-                if self.gather_stats and self.counter % stat_period is 0:
+                if self.memory_only or (self.gather_stats and self.counter % stat_period is 0):
                     run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
                     run_metadata = tf.RunMetadata()
                     summary, _, _ = self.sess.run([self.merged_summary, self.step, self.acc_update], feed_dict, run_options, run_metadata)
                     writer.add_run_metadata(run_metadata, f"step_{self.counter}")
                     writer.add_summary(summary, self.counter)
+                    if self.memory_only or self.counter is stat_period:
+                        self.__gather_memory_usage(run_metadata)
+                        if self.memory_only:
+                            break
                 else:
                     self.sess.run([self.step, self.acc_update], feed_dict)
 
@@ -178,6 +187,15 @@ class NeuralNetwork(object):
             writer.add_summary(summary, self.counter)
         self.__switch_context()
         return res * 100
+
+    def __gather_memory_usage(self, run_metadata):
+        print(f"gather memory stats in file ./memory_usage/data_{self.scope}_{self.run_number}")
+        options = tf.profiler.ProfileOptionBuilder.time_and_memory()
+        options = tf.profiler.ProfileOptionBuilder(options) \
+            .with_file_output(f"./memory_usage/data_{self.scope}_{self.run_number}") \
+            .select(("bytes", "peak_bytes", "output_bytes", "residual_bytes")) \
+            .build()
+        tf.profiler.profile(self.sess.graph, run_meta=run_metadata, cmd="scope", options=options)
 
     def __save_context(self):
         self.context = self.sess.run(self.running_vars)
