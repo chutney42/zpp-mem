@@ -31,6 +31,7 @@ class NeuralNetwork(object):
         self.step = None
         self.build()
         self.merged_summary = tf.summary.merge_all()
+        self.__print_model_metadata(shapes)
 
     def __init_run_number(self):
         if not os.path.isfile(file_name):
@@ -53,6 +54,12 @@ class NeuralNetwork(object):
             self.save_model_path = save_model_path
         else:
             self.save_model_path = f"./saved_model_{self.scope}_{self.run_number}/model.ckpt"
+
+    def __print_model_metadata(self, shapes):
+        print(f"data_{self.scope}_{self.run_number}")
+        print(f"input dims: {[x.value for x in shapes[0]]} output dims: {[x.value for x in shapes[1]]}")
+        for block in self.sequence:
+            print(str(block))
 
     def build_forward(self):
         raise NotImplementedError("This method should be implemented in subclass")
