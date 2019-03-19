@@ -7,15 +7,17 @@ default_network = {
     "gather_stats": False,
     "restore_model": False,
     "save_model": False,
-    # "restore_model_path": "./saved_model/model.ckpt",
-    # "save_model_path": "./saved_model/model.ckpt",
+    "restore_model_path": None,
+    "save_model_path": None,
 
     # train parameters
     "batch_size": 20,
     "epochs": 2,
     "eval_period": 1000,
     "stat_period": 100,
-    "memory_only": False
+    "memory_only": False,
+    "seed": None,
+    "device": "/cpu:0"
 }
 
 memory_testing_network = dict(default_network)

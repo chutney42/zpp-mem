@@ -88,7 +88,9 @@ class NeuralNetwork(object):
             training_it = training_set.make_initializable_iterator()
             validation_it = validation_set.batch(batch_size).make_initializable_iterator()
 
-        with tf.Session() as self.sess:
+        config = tf.ConfigProto()
+        config.gpu_options.allow_growth = True
+        with tf.Session(config=config) as self.sess:
             self.__train_all_epochs(training_it, validation_it, batch_size, epochs, eval_period, stat_period)
 
     def __train_all_epochs(self, training_it, validation_it, batch_size, epochs, eval_period, stat_period):
@@ -145,6 +147,7 @@ class NeuralNetwork(object):
                              val_writer, eval_period, stat_period):
         self.sess.run(training_it.initializer)
         while True:
+
             try:
                 feed_dict = {self.handle: training_handle}
 
