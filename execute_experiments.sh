@@ -30,17 +30,17 @@ function rename_file {
     fi
 }
 
-i=0
+iterator=0
 # if script is called with parameters, run every requested experiment
 if [[ ! -z "$1" ]]; then
     echo "executing chosen experiments"
     for test_id in $@; do
         if [[ $test_id =~ $number_regex ]]; then
-            run_experiment -id $test_id $i
+            run_experiment -id $test_id $iterator
         else
-            run_experiment -name $test_id $i
+            run_experiment -name $test_id $iterator
         fi
-        ((i++))
+        ((iterator++))
     done
 # else run all experiments (run experiment with each id starting from 0,
 # and stop when run_experiment returns error code)
@@ -48,16 +48,16 @@ else
     echo "executing all experiments"
     ret=0
     while [ $ret -eq 0 ]; do
-        run_experiment -id $i $i
-        ret=$i
+        run_experiment -id $iterator $iterator
+        ret=$?
         ((i++))
     done
-    ((i--))
-    rm $folder/$i.*
+    ((iterator--))
+    rm $folder/$iterator.*
 fi
 
 # rename all stdout and stderr files
-for file_name in $(seq 0 $(($i-1))); do
+for file_name in $(seq 0 $(($iterator-1))); do
     rename_file $file_name
 done
 
