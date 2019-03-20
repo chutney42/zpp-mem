@@ -4,7 +4,7 @@ from layer.weight_layer.weight_layer import WeightLayer
 
 
 class FullyConnected(WeightLayer):
-    def __init__(self, output_dim, learning_rate=0.5, momentum=0.0, scope="fully_connected_layer"):
+    def __init__(self, output_dim, learning_rate=0.5, momentum=0.0, scope="fully_connected_layer",flatten=False):
         super().__init__(learning_rate, momentum, scope)
         self.output_dim = output_dim
         self.flatten = flatten
@@ -55,7 +55,7 @@ class FullyConnected(WeightLayer):
             return
 
 
-class FullyConnectedManthattan(FullyConnected):
+class FullyConnectedManhattan(FullyConnected):
 
     def build_update(self, error, gather_stats=True):
         input_vec = self.restore_input()

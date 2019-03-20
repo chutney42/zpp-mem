@@ -30,3 +30,15 @@ simple_convolutional_network = dict(default_network)
 simple_convolutional_network.update({
     "sequence": "blocks_simple_convoluted",
 })
+
+simple_convolutional_manhattan_network = dict(default_network)
+simple_convolutional_manhattan_network.update({
+    "sequence": "blocks_simple_convoluted_bm",
+})
+
+simple_fully_connected_manhattan_network = dict(default_network)
+simple_fully_connected_manhattan_network.update({
+    "sequence": "blocks_50_30_10_bn_bm_sigmoid",
+})
+
+
