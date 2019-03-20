@@ -49,7 +49,7 @@ else
     ret=0
     while [ $ret -eq 0 ]; do
         run_experiment -id $i $i
-        ret=$i
+        ret=$?
         ((i++))
     done
     ((i--))
