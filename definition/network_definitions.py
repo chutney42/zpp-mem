@@ -31,7 +31,7 @@ simple_convolutional_network.update({
     "sequence": "blocks_simple_convoluted",
 })
 simple_convolutional_network_pool = dict(default_network)
-pool.update({
+simple_convolutional_network_pool.update({
     "sequence": "blocks_simple_convoluted_with_pool",
 })
 
