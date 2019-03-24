@@ -65,14 +65,3 @@ done
 # and remove first underscore from that files' names (if succeed)
 cd memory_usage
 python parse.py
-
-# mkdir python
-# mkdir python_tmp
-# cd python_tmp
-# wget https://www.python.org/ftp/python/3.7.2/Python-3.7.2.tgz
-# tar xf Python-3.7.2.tgz
-# cd Python-3.7.2
-# ./configure --prefix=$HOME/python --without-ensurepip
-# make -j 20
-# make test -j 12
-# make install
