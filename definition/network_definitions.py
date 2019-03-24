@@ -1,6 +1,6 @@
 default_network = {
     # constructor parameters
-    "type": "DFA",
+    "type": "BP",
     "dataset_name": "mnist",
     "sequence": "blocks_50_30_10_bn_sigmoid",
     "learning_rate": 0.1,
@@ -29,6 +29,10 @@ memory_testing_network.update({
 simple_convolutional_network = dict(default_network)
 simple_convolutional_network.update({
     "sequence": "blocks_simple_convoluted",
+})
+simple_convolutional_network_pool = dict(default_network)
+pool.update({
+    "sequence": "blocks_simple_convoluted_with_pool",
 })
 
 simple_convolutional_manhattan_network = dict(default_network)
