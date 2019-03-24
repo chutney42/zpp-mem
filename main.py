@@ -34,8 +34,8 @@ def define_network(output_types, output_shapes, options):
         raise NotImplementedError(f"Model {model} is not recognized.")
 
     return Network(output_types, output_shapes,
-                   [Block([ConvolutionalLayer((3, 3), number_of_filters=10), BatchNormalization(), Sigmoid()]),
-                    Block([FullyConnected(30), BatchNormalization(), Sigmoid()]),
+                   [Block([ConvolutionalLayer((3,3), number_of_filters=10), BatchNormalization(), Sigmoid()]),
+                    Block([FullyConnected(30,flatten=True), BatchNormalization(), Sigmoid()]),
                     Block([FullyConnected(output_shapes[1][0].value), Sigmoid()])],
                    learning_rate=options['training_parameters']['learning_rate'],
                    scope=options['type'],
