@@ -7,7 +7,7 @@ class BackwardPropagator(Propagator):
     def propagate_fc(self, layer, error):
         weights = tf.get_variable("weights")
         propagator = self.get_weights(weights)
-        return layer.restore_shape(tf.matmul(error, propagator))
+        return tf.matmul(error, propagator)
 
     def propagate_conv(self, layer, error):
         filters = tf.get_variable("filters")

@@ -20,6 +20,7 @@ class DirectFixedRandom(DirectPropagator):
 
     def propagate_conv(self, layer, error):
         filters = self.get_filter(layer.input_flat_shape)
+
         return layer.restore_shape(tf.matmul(error, filters))
 
     def get_weights(self, weights):
