@@ -2,7 +2,7 @@
 
 number_regex='^[0-9]+$'
 folder=network_metadata
-mkdir $folder
+mkdir ${folder}
 
 # runs single experiment with parameters:
 # $1 - type of network identifier (either "-id" or "-name")
@@ -12,7 +12,7 @@ mkdir $folder
 # stores stdout and stderr in $3.out and $3.err in $folder catalogue
 function run_experiment {
     echo "run experiment $2"
-    /usr/bin/time -lp python experiment.py $1 $2 >$folder/$3.out 2>$folder/$3.err
+    python experiment.py $1 $2 >${folder}/$3.out 2>${folder}/$3.err
     return $?
 }
 
@@ -23,10 +23,10 @@ function run_experiment {
 # where $a is a run name collected from stdout file (e.g. "data_BP_12")
 function rename_file {
     file_name=$1
-    new_file_name=$(grep -m 1 data_ $folder/$file_name.out)
+    new_file_name=$(grep -m 1 data_ ${folder}/${file_name}.out)
     if [[ ! -z "$new_file_name" ]]; then
-        mv $folder/$file_name.out $folder/_$new_file_name
-        mv $folder/$file_name.err $folder/$new_file_name.err
+        mv ${folder}/${file_name}.out ${folder}/_${new_file_name}
+        mv ${folder}/${file_name}.err ${folder}/${new_file_name}.err
     fi
 }
 
@@ -35,10 +35,10 @@ iterator=0
 if [[ ! -z "$1" ]]; then
     echo "executing chosen experiments"
     for test_id in $@; do
-        if [[ $test_id =~ $number_regex ]]; then
-            run_experiment -id $test_id $iterator
+        if [[ ${test_id} =~ $number_regex ]]; then
+            run_experiment -id ${test_id} ${iterator}
         else
-            run_experiment -name $test_id $iterator
+            run_experiment -name ${test_id} ${iterator}
         fi
         ((iterator++))
     done
@@ -47,18 +47,18 @@ if [[ ! -z "$1" ]]; then
 else
     echo "executing all experiments"
     ret=0
-    while [ $ret -eq 0 ]; do
-        run_experiment -id $iterator $iterator
+    while [[ ${ret} -eq 0 ]]; do
+        run_experiment -id ${iterator} ${iterator}
         ret=$?
-        ((i++))
+        ((iterator++))
     done
     ((iterator--))
-    rm $folder/$iterator.*
+    rm ${folder}/${iterator}.*
 fi
 
 # rename all stdout and stderr files
 for file_name in $(seq 0 $(($iterator-1))); do
-    rename_file $file_name
+    rename_file ${file_name}
 done
 
 # add memory metadata to stdout files,
