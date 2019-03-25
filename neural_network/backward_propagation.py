@@ -11,11 +11,10 @@ class BackwardPropagation(NeuralNetwork):
                 a = layer.build_forward(a, remember_input=True)
         return a
 
-    def build_backward(self, output_vec):
-        error = tf.subtract(output_vec, self.labels)
+    def build_backward(self, error):
         self.step = []
         for block in reversed(self.sequence):
-            for layer in reversed(list(block)):
+            for layer in reversed(block):
                 error = layer.build_backward(error)
                 if layer.trainable:
                     self.step.append(layer.step)

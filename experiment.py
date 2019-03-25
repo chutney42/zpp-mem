@@ -59,6 +59,7 @@ def create_network(network_definition, output_types, output_shapes):
     return Network(output_types,
                    output_shapes,
                    sequence,
+                   network_definition['cost_function'],
                    learning_rate=network_definition['learning_rate'],
                    scope=model,
                    gather_stats=network_definition['gather_stats'],

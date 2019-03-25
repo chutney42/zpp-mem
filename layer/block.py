@@ -11,6 +11,19 @@ class Block(object):
         self.head = sequence[0]
         self.tail = sequence[1:]
 
+    def __len__(self):
+        return len(self.tail) + 1
+
+    def __getitem__(self, i):
+        l = self.__len__()
+        if abs(i) >= l:
+            raise IndexError("Block index out of range")
+        if i < 0:
+            i += l
+        if i == 0:
+            return self.head
+        return self.tail[i - 1]
+
     def __iter__(self):
         yield self.head
         for sublayer in self.tail:

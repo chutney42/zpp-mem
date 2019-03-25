@@ -74,7 +74,7 @@ class ConvolutionalLayerManhattan(ConvolutionalLayer):
             self.step = filters
             if gather_stats:
                 tf.summary.image(f"delta_{self.scope}", put_kernels_on_grid(raw_delta))
-                tf.summary.image(f"manhatam_{self.scope}", put_kernels_on_grid(manhattan))
+                tf.summary.image(f"manhattan_{self.scope}", put_kernels_on_grid(manhattan))
                 tf.summary.image(f"filters_{self.scope}", put_kernels_on_grid(filters))
             return
 
