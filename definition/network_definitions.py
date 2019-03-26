@@ -11,7 +11,7 @@ default_network = {
     "save_model_path": None,
 
     # train parameters
-    "batch_size": 20,
+    "batch_size": 10,
     "epochs": 2,
     "eval_period": 1000,
     "stat_period": 100,
@@ -43,6 +43,13 @@ simple_convolutional_manhattan_network.update({
 simple_fully_connected_manhattan_network = dict(default_network)
 simple_fully_connected_manhattan_network.update({
     "sequence": "blocks_50_30_10_bn_bm_sigmoid",
+})
+
+resnetish = dict(default_network)
+resnetish.update({
+    "dataset_name": "cifar100",
+
+    "sequence": "blocks_3x50_10_residual_relu",
 })
 
 

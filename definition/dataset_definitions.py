@@ -12,7 +12,7 @@ def cifar100():
         return feature, label
 
     train_data_set = tf.data.Dataset.from_tensor_slices(training).map(transform)
-    test_data_set = tf.data.Dataset.from_tensor_slices(test).map(transform).
+    test_data_set = tf.data.Dataset.from_tensor_slices(test).map(transform)
 
     return train_data_set, test_data_set
 

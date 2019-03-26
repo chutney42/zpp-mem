@@ -38,7 +38,7 @@ def get_network_definition():
         print(f"running network with name={network_name}")
         network_definition = networks_dict[network_name]
     else:
-        network_definition = networks_list[4]
+        network_definition = networks_dict["resnetish"]
         #raise Exception("you must choose a network to run")
     print(network_definition)
     return network_definition

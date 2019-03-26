@@ -6,10 +6,10 @@ from layer.weight_layer.weight_layer import WeightLayer
 
 
 class ConvolutionalLayer(WeightLayer):
-    def __init__(self, filter_dim, stride=[1, 1, 1, 1], number_of_filters=1, padding="SAME", trainable=True,
+    def __init__(self, filter_dim, stride=[1, 1], number_of_filters=1, padding="SAME", trainable=True,
                  learning_rate=0.5, momentum=0.0, scope="convoluted_layer"):
         super().__init__(learning_rate, momentum, scope)
-        self.stride = stride
+        self.stride = [1] + stride + [1]
         self.filter_dim = filter_dim
         self.number_of_filters = number_of_filters
         self.trainable = trainable

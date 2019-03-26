@@ -36,12 +36,12 @@ class Pool(Layer):
 
 
 class MaxPool(Pool):
-    def __init__(self, *args):
-        super().__init__(tf.nn.max_pool, scope="max_pool", *args)
+    def __init__(self, kernel_size, strides, padding="VALID", data_format='NHWC', scope="max_pool_layer"):
+        super().__init__(tf.nn.max_pool, kernel_size, strides, padding, data_format, scope)
         self.pooling_function_name = "MaxPool"
 
 
 class AveragePool(Pool):
-    def __init__(self, *args):
-        super().__init__(tf.nn.avg_pool, scope="average_pool", *args)
+    def __init__(self, kernel_size, strides, padding="VALID", data_format='NHWC', scope="avg_pool_layer"):
+        super().__init__(tf.nn.avg_pool, kernel_size, strides, padding, data_format, scope)
         self.pooling_function_name = "AveragePool"
