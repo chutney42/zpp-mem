@@ -2,8 +2,10 @@ from layer.activation.activation_layer import Sigmoid, ReLu
 from layer.block import Block
 from layer.util_layer.batch_normalization import BatchNormalization
 from layer.util_layer.max_pool import MaxPool, AveragePool
-from layer.weight_layer.fully_connected import FullyConnected, FullyConnectedManhattan
+from layer.util_layer.softmax import Softmax
 from layer.weight_layer.convolutional_layers import ConvolutionalLayer, ConvolutionalLayerManhattan
+from layer.weight_layer.fully_connected import FullyConnected
+from layer.weight_layer.fully_connected import FullyConnectedManhattan
 from layer.weight_layer.residual_layer import ResidualLayer
 
 
@@ -65,10 +67,10 @@ def blocks_3x50_10_residual_relu(output_size):
                               Block([BatchNormalization(), ReLu(), ConvolutionalLayer((3, 3), stride=[2, 2],
                                                                                       number_of_filters=2 ^ 4 * num_filters)])]),
                BatchNormalization(), ReLu(), AveragePool([1, 1], [1, 1])])]
-    blocks += [Block([FullyConnected(output_size, flatten=True)]), Sigmoid()]
+    blocks += [Block([FullyConnected(output_size, flatten=True)]), Softmax()]
     return blocks
 
 def blocks_simple_convoluted(output_size):
    return [Block([ConvolutionalLayer((5, 5), number_of_filters=10), BatchNormalization(), MaxPool([4,4],[2,2]), ReLu()]),
            Block([ConvolutionalLayer((5, 5), number_of_filters=10), BatchNormalization(),MaxPool([4,4],[2,2]), ReLu()]),
-           Block([FullyConnected(output_size,flatten=True), Sigmoid()])]
+           Block([FullyConnected(output_size,flatten=True), Softmax()])]

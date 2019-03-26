@@ -43,16 +43,24 @@ class ActivationLayer(Layer):
 
 
 class Sigmoid(ActivationLayer):
-    def __init__(self, scope="sigmoid_layer"):
-        super().__init__(tf.sigmoid, sigmoid_prime, scope)
+    def __init__(self, sigmoid_cross_entropy=False, scope="sigmoid_layer"):
+        super().__init__(tf.sigmoid, sigmoid_prime, scope=scope)
+        self.sigmoid_cross_entropy = sigmoid_cross_entropy
 
     def __str__(self):
         return "Sigmoid()"
 
+    def build_backward(self, error, gather_stats=True):
+        input_vec = self.restore_input()
+        with tf.variable_scope(self.scope):
+            if self.sigmoid_cross_entropy:
+                return error
+            return tf.multiply(error, self.func_prime(input_vec))
+
 
 class Tanh(ActivationLayer):
     def __init__(self, scope="tanh_layer"):
-        super().__init__(tf.tanh, tanh_prime)
+        super().__init__(tf.tanh, tanh_prime, scope=scope)
 
     def __str__(self):
         return "Tanh()"
@@ -60,7 +68,7 @@ class Tanh(ActivationLayer):
 
 class ReLu(ActivationLayer):
     def __init__(self, scope="relu_layer"):
-        super().__init__(tf.nn.relu, relu_prime)
+        super().__init__(tf.nn.relu, relu_prime, scope=scope)
 
     def __str__(self):
         return "ReLu()"
@@ -68,7 +76,7 @@ class ReLu(ActivationLayer):
 
 class LeakyReLu(ActivationLayer):
     def __init__(self, scope="leaky_relu_layer"):
-        super().__init__(tf.nn.leaky_relu, leaky_relu_prime)
+        super().__init__(tf.nn.leaky_relu, leaky_relu_prime, scope=scope)
 
     def __str__(self):
         return "LeakyReLu()"

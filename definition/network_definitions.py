@@ -3,6 +3,7 @@ default_network = {
     "type": "BP",
     "dataset_name": "mnist",
     "sequence": "blocks_50_30_10_bn_sigmoid",
+    "cost_function": "sigmoid_cross_entropy",
     "learning_rate": 0.1,
     "gather_stats": False,
     "restore_model": False,
@@ -12,7 +13,7 @@ default_network = {
 
     # train parameters
     "batch_size": 10,
-    "epochs": 2,
+    "epochs": 4,
     "eval_period": 1000,
     "stat_period": 100,
     "memory_only": False,
