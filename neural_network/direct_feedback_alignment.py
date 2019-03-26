@@ -4,12 +4,12 @@ from propagator.direct_propagator import DirectFixedRandom, DirectPropagator
 
 
 class DirectFeedbackAlignment(NeuralNetwork):
-    def __init__(self, types, shapes, sequence, propagator=None, *args, **kwargs):
+    def __init__(self, types, shapes, sequence, cost_function_name, propagator=None, *args, **kwargs):
         if not propagator:
             propagator = DirectFixedRandom(shapes[1][0].value)
         elif not isinstance(propagator, DirectPropagator):
             raise TypeError("propagator for DirectFeedbackAlignment must be instance of DirectPropagator")
-        super().__init__(types, shapes, sequence, propagator, *args, **kwargs)
+        super().__init__(types, shapes, sequence, cost_function_name, propagator, *args, **kwargs)
 
     def build_forward(self):
         a = self.features
@@ -18,8 +18,7 @@ class DirectFeedbackAlignment(NeuralNetwork):
                 a = layer.build_forward(a, remember_input=False)
         return a
 
-    def build_backward(self, output_vec):
-        output_error = tf.subtract(output_vec, self.labels)
+    def build_backward(self, output_error):
         self.step = []
         a = self.features
         for i, block in enumerate(self.sequence):

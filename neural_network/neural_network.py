@@ -1,5 +1,7 @@
 import os
 from layer.layer import *
+from layer.activation.activation_layer import Sigmoid
+from layer.util_layer.softmax import Softmax
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'  # hacked by Adam
 
@@ -7,16 +9,13 @@ file_name = "run_auto_increment"
 
 
 class NeuralNetwork(object):
-    def __init__(self, types, shapes, sequence, propagator, learning_rate=0.1, scope="main", gather_stats=True,
+    def __init__(self, types, shapes, sequence, cost_function_name, propagator, learning_rate=0.1, scope="main", gather_stats=True,
                  restore_model=False, save_model=False, restore_model_path=None, save_model_path=None):
         print(f"Create {scope} model with learning_rate={learning_rate}")
         self.scope = scope
         self.sequence = sequence
         self.propagator = propagator
-        for i, block in enumerate(self.sequence):
-            block.head.propagator = self.propagator
-            for j, layer in enumerate(block):
-                layer.scope = f"{self.scope}_{layer.scope}_{i}_{j}"
+        self.__prepare_sequence(cost_function_name)
         self.learning_rate = tf.constant(learning_rate)
 
         self.handle = tf.placeholder(tf.string, shape=[], name="handle")
@@ -33,6 +32,29 @@ class NeuralNetwork(object):
         self.merged_summary = tf.summary.merge_all()
         self.__print_model_metadata(shapes)
 
+    def __prepare_sequence(self, cost_function_name):
+        for i, block in enumerate(self.sequence):
+            block.head.propagator = self.propagator
+            for j, layer in enumerate(block):
+                layer.scope = f"{self.scope}_{layer.scope}_{i}_{j}"
+        if cost_function_name == "sigmoid_cross_entropy":
+            assert isinstance(self.sequence[-1][-1], Sigmoid), \
+                "Sigmoid cross entropy should be used along with sigmoid activation in the last layer!"
+            self.sequence[-1][-1].sigmoid_cross_entropy = True
+            from cost_function.sigmoid_cross_entropy import SigmoidCrossEntropy
+            self.cost_function = SigmoidCrossEntropy
+        elif cost_function_name == "softmax_cross_entropy":
+            assert isinstance(self.sequence[-1][-1], Softmax), \
+                "Softmax cross entropy should be used along with softmax in the last layer!"
+            self.sequence[-1][-1].softmax_cross_entropy = True
+            from cost_function.softmax_cross_entropy import SoftmaxCrossEntropy
+            self.cost_function = SoftmaxCrossEntropy
+        elif cost_function_name == "mean_squared_error":
+            from cost_function.mean_squared_error import MeanSquaredError
+            self.cost_function = MeanSquaredError
+        else:
+            raise NotImplementedError(f"Cost function {cost_function_name} is not recognized.")
+        
     def __init_run_number(self):
         if not os.path.isfile(file_name):
             with open(file_name, 'w+') as file:
@@ -64,7 +86,7 @@ class NeuralNetwork(object):
     def build_forward(self):
         raise NotImplementedError("This method should be implemented in subclass")
 
-    def build_backward(self, output_vec):
+    def build_backward(self, error):
         raise NotImplementedError("This method should be implemented in subclass")
 
     def __build_test(self, a):
@@ -75,8 +97,9 @@ class NeuralNetwork(object):
 
     def build(self):
         self.result = self.build_forward()
+        error = self.cost_function.error(self.result, self.labels)
         self.__build_test(self.result)
-        self.build_backward(self.result)
+        self.build_backward(error)
 
     def train(self, training_set, validation_set, batch_size=20, epochs=2, eval_period=1000, stat_period=100,
             memory_only=False):

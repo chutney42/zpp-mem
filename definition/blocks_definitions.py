@@ -4,6 +4,8 @@ from layer.util_layer.batch_normalization import BatchNormalization
 from layer.util_layer.max_pool import MaxPool
 from layer.weight_layer.fully_connected import FullyConnected, FullyConnectedManhattan
 from layer.weight_layer.convolutional_layers import ConvolutionalLayer, ConvolutionalLayerManhattan
+from layer.weight_layer.fully_connected import FullyConnected
+from layer.util_layer.softmax import Softmax
 
 
 def blocks_50_30_10_bn_sigmoid(output_size):
