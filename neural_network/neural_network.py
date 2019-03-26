@@ -115,13 +115,17 @@ class NeuralNetwork(object):
         self.__maybe_save_model()
 
     def __init_writers(self):
-        writer = tf.summary.FileWriter(f"./demo/{self.scope}_{self.run_number}", self.sess.graph)
-        val_writer = tf.summary.FileWriter(f"./demo/val_{self.scope}_{self.run_number}", self.sess.graph)
-        return writer, val_writer
+        if self.gather_stats or self.memory_only:
+            writer = tf.summary.FileWriter(f"./demo/{self.scope}_{self.run_number}", self.sess.graph)
+            val_writer = tf.summary.FileWriter(f"./demo/val_{self.scope}_{self.run_number}", self.sess.graph)
+            return writer, val_writer
+        else:
+            return None, None
 
     def __close_writers(self, writer, val_writer):
-        writer.close()
-        val_writer.close()
+        if self.gather_stats or self.memory_only:
+            writer.close()
+            val_writer.close()
 
     def __init_handlers(self, training_it, validation_it):
         training_handle = self.sess.run(training_it.string_handle())
