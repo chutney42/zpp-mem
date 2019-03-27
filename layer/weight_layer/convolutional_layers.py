@@ -102,9 +102,9 @@ def put_kernels_on_grid(kernel, grid_Y=None, grid_X=None, pad=1):
     X = kernel.get_shape()[1] + 2 * pad
     channels = kernel.get_shape()[2]
     x = tf.transpose(x, (3, 0, 1, 2))
-    x = tf.reshape(x, tf.stack([grid_X, Y * grid_Y, X, channels]))  # 3
+    x = tf.reshape(x, tf.stack([grid_X, Y * grid_Y, X, channels]))
     x = tf.transpose(x, (0, 2, 1, 3))
-    x = tf.reshape(x, tf.stack([1, X * grid_X, Y * grid_Y, channels]))  # 3
+    x = tf.reshape(x, tf.stack([1, X * grid_X, Y * grid_Y, channels]))
     x = tf.transpose(x, (2, 1, 3, 0))
     x = tf.transpose(x, (2, 0, 1, 3))
     return tf.image.convert_image_dtype(x, dtype=tf.uint8)
