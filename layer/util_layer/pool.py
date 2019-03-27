@@ -6,10 +6,12 @@ from layer.layer import Layer
 class Pool(Layer):
     def __init__(self, pooling_function, kernel_size, strides, padding="VALID", data_format='NHWC', scope="pool_layer"):
         super().__init__(trainable=False, scope=scope)
-        self.kernel_size = [1] + kernel_size + [1]
+        self.kernel_size = None
+        if kernel_size is not None:
+            self.kernel_size = [1] + kernel_size + [1]
+            if len(self.kernel_size) > 4:
+                self.kernel_size = kernel_size
         self.strides = [1] + strides + [1]
-        if len(self.kernel_size) > 4:
-            self.kernel_size = kernel_size
         if len(self.strides) > 4:
             self.strides = strides
         self.padding = padding
@@ -24,6 +26,8 @@ class Pool(Layer):
         if remember_input:
             self.input_vec = input_vec
         with tf.variable_scope(self.scope, tf.AUTO_REUSE):
+            if self.kernel_size is None:
+                self.kernel_size = [1] + list(map(lambda x: x.value, input_vec.shape[1:-1])) + [1]
             output = self.pooling_function(input_vec, self.kernel_size, self.strides, self.padding, self.data_format)
             return output
 

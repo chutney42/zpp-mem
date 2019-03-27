@@ -9,6 +9,7 @@ class ResidualLayer(Layer):
         super().__init__(trainable, scope=scope)
         self.propagator = None
         self.sequenceA = sequenceA
+        self.shortcut_conv = None
 
     def __str__(self):
         s = f"ResidualLayer["
@@ -22,17 +23,14 @@ class ResidualLayer(Layer):
             self.input_vec = input_vec
 
         with tf.variable_scope(self.scope, tf.AUTO_REUSE):
-            for i, block in enumerate(self.sequenceA):
-                for j, layer in enumerate(block):
-                    if isinstance(layer, WeightLayer):
-                        layer.propagator = self.propagator
-                    layer.scope = f"{self.scope}_{layer.scope}_{i}_{j}"
+            for i, layer in enumerate(self.sequenceA):
+                if isinstance(layer, WeightLayer):
+                    layer.propagator = self.propagator
+                layer.scope = f"{self.scope}_{layer.scope}_{i}"
 
             residual = input_vec
-            for block in self.sequenceA:
-                residual = block.head.build_forward(residual, remember_input=True)
-                for layer in block.tail:
-                    residual = layer.build_forward(residual, remember_input=True)
+            for layer in self.sequenceA:
+                residual = layer.build_forward(residual, remember_input=True)
 
             res_shape = residual.shape
             input_shape = input_vec.shape
@@ -48,8 +46,6 @@ class ResidualLayer(Layer):
                                   padding="VALID", scope=f"{self.scope}_convoluted_shortcut")
                 self.shortcut_conv.propagator = self.propagator
                 input_vec = self.shortcut_conv.build_forward(input_vec)
-            else:
-                self.shortcut_conv = None
 
             return input_vec + residual
 
@@ -60,10 +56,9 @@ class ResidualLayer(Layer):
             if self.shortcut_conv is not None:
                 input_err = self.shortcut_conv.build_backward(error)
                 self.step.append(self.shortcut_conv.step)
-            for block in reversed(self.sequenceA):
-                for layer in reversed(list(block)):
-                    error = layer.build_backward(error)
-                    if layer.trainable:
-                        self.step.append(layer.step)
+            for layer in reversed(self.sequenceA):
+                error = layer.build_backward(error)
+                if layer.trainable:
+                    self.step.append(layer.step)
 
         return error + input_err

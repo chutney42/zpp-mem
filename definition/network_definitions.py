@@ -5,7 +5,7 @@ default_network = {
     "sequence": "blocks_50_30_10_bn_sigmoid",
     "cost_function": "mean_squared_error",
     "learning_rate": 0.1,
-    "gather_stats": True,
+    "gather_stats": False,
     "restore_model": False,
     "save_model": False,
     "restore_model_path": None,
@@ -51,7 +51,7 @@ resnetish.update({
     "dataset_name": "cifar10",
 
     #"sequence": "blocks_3x50_10_residual_relu",
-     "sequence": "mini_resnet",
+     "sequence": "resnet_18",
 
 })
 

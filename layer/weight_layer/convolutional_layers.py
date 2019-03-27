@@ -56,6 +56,8 @@ class ConvolutionalLayer(WeightLayer):
             self.step = filters
             if gather_stats:
                 tf.summary.image(f"delta", put_kernels_on_grid(raw_delta), 1)
+                tf.summary.image(f"delta", put_kernels_on_grid(delta_filters), 1)
+
                 tf.summary.image(f"filters", put_kernels_on_grid(filters), 1)
             return
 

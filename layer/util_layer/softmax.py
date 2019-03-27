@@ -20,4 +20,4 @@ class Softmax(Layer):
         with tf.name_scope(self.scope):
             if self.softmax_cross_entropy:
                 return error
-            return tf.gradients(input_vec, tf.nn.softmax(input_vec), error)
+            return tf.gradients(tf.nn.softmax(input_vec), input_vec, error)[0]
