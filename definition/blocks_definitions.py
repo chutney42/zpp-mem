@@ -99,14 +99,3 @@ def resnet_101(output_size):
 def resnet_152(output_size):
     return build_resnet(output_size, [3, 8, 36, 3], batch_relu_conv_3)
 
-def mini_resnet(output_size):
-    num_filters = 16
-    blocks = [Block([ConvolutionalLayer((7, 7), number_of_filters=16, stride=[2, 2]), MaxPool([3, 3], strides=[2, 2])]),
-              Block([ResidualLayer(
-                  [Block([BatchNormalization(), ReLu(), ConvolutionalLayer((3, 3), number_of_filters=num_filters)]),
-                   Block([BatchNormalization(), ReLu(),
-                          ConvolutionalLayer((3, 3), stride=[2, 2], number_of_filters=num_filters)])]),
-                  BatchNormalization(), Sigmoid()])]
-
-    blocks += [Block([FullyConnected(output_size, flatten=True), Sigmoid()])]
-    return blocks
