@@ -1,44 +1,82 @@
 from definition.resnet import *
 from layer import *
 
-def blocks_50_30_10_bn_sigmoid(output_size):
+def fc1(output_size):
     return [Block([FullyConnected(50, flatten=True), BatchNormalization(), Sigmoid()]),
             Block([FullyConnected(30), BatchNormalization(), Sigmoid()]),
             Block([FullyConnected(output_size), Sigmoid()])]
 
 
-def blocks_50_30_10_bn_bm_sigmoid(output_size):
-    return [Block([FullyConnectedManhattan(50, flatten=True), BatchNormalization(), Sigmoid()]),
-            Block([FullyConnectedManhattan(30), BatchNormalization(), Sigmoid()]),
-            Block([FullyConnectedManhattan(output_size), Sigmoid()])]
+def fc2(output_size):
+    return [Block([FullyConnected(100, flatten=True), BatchNormalization(), Sigmoid()]),
+            Block([FullyConnected(200), BatchNormalization(), Sigmoid()]),
+            Block([FullyConnected(50), BatchNormalization(), Sigmoid()]),
+            Block([FullyConnected(output_size), Sigmoid()])]
 
 
-def blocks_simple_convoluted_with_pool(output_size):
+def fc3(output_size):
+    return [Block([FullyConnected(200, flatten=True), BatchNormalization(), Sigmoid()]),
+            Block([FullyConnected(1000), BatchNormalization(), Sigmoid()]),
+            Block([FullyConnected(100), BatchNormalization(), Sigmoid()]),
+            Block([FullyConnected(output_size), Sigmoid()])]
+
+
+def fc1_relu(output_size):
+    return [Block([FullyConnected(50, flatten=True), BatchNormalization(), ReLu()]),
+            Block([FullyConnected(30), BatchNormalization(), ReLu()]),
+            Block([FullyConnected(output_size), Sigmoid()])]
+
+
+def fc2_relu(output_size):
+    return [Block([FullyConnected(100, flatten=True), BatchNormalization(), ReLu()]),
+            Block([FullyConnected(200), BatchNormalization(), ReLu()]),
+            Block([FullyConnected(50), BatchNormalization(), ReLu()]),
+            Block([FullyConnected(output_size), Sigmoid()])]
+
+
+def fc3_relu(output_size):
+    return [Block([FullyConnected(200, flatten=True), BatchNormalization(), ReLu()]),
+            Block([FullyConnected(1000), BatchNormalization(), ReLu()]),
+            Block([FullyConnected(100), BatchNormalization(), ReLu()]),
+            Block([FullyConnected(output_size), Sigmoid()])]
+
+
+def conv1(output_size):
     return [Block(
-        [ConvolutionalLayer((3, 3), number_of_filters=5), MaxPool([4, 4], [2, 2]), BatchNormalization(), Sigmoid()]),
-        Block([ConvolutionalLayer((3, 3), number_of_filters=5), BatchNormalization(), Sigmoid()]),
+        [ConvolutionalLayer((5, 5), number_of_filters=10), BatchNormalization(), Sigmoid()]),
+        Block([ConvolutionalLayer((5, 5), number_of_filters=10), BatchNormalization(), Sigmoid()]),
         Block([FullyConnected(30, flatten=True), BatchNormalization(), Sigmoid()]),
         Block([FullyConnected(output_size), Sigmoid()])]
 
 
-def blocks_simple_convoluted(output_size):
+def conv2(output_size):
     return [Block(
-        [ConvolutionalLayer((3, 3), number_of_filters=5), BatchNormalization(), Sigmoid()]),
-        Block([ConvolutionalLayer((3, 3), number_of_filters=5), BatchNormalization(), Sigmoid()]),
-        Block([FullyConnected(30, flatten=True), BatchNormalization(), Sigmoid()]),
-        Block([FullyConnected(output_size), Sigmoid()])]
+        [ConvolutionalLayer((5, 5), number_of_filters=10), BatchNormalization(), MaxPool([4, 4], [2, 2]), Sigmoid()]),
+        Block([ConvolutionalLayer((5, 5), number_of_filters=10), BatchNormalization(), MaxPool([4, 4], [2, 2]),
+               Sigmoid()]),
+        Block([FullyConnected(output_size, flatten=True), Sigmoid()])]
 
 
-def blocks_simple_convoluted_bm(output_size):
-    return [Block([ConvolutionalLayerManhattan((3, 3), number_of_filters=5), BatchNormalization(), Sigmoid()]),
-            Block([ConvolutionalLayerManhattan((3, 3), number_of_filters=5), BatchNormalization(), Sigmoid()]),
-            Block([FullyConnectedManhattan(30, flatten=True), BatchNormalization(), Sigmoid()]),
-            Block([FullyConnectedManhattan(output_size), Sigmoid()])]
+def conv3(output_size):
+    return [Block(
+        [ConvolutionalLayer((5, 5), number_of_filters=15), BatchNormalization(), MaxPool([4, 4], [2, 2]), Sigmoid()]),
+        Block([ConvolutionalLayer((5, 5), number_of_filters=15), BatchNormalization(), MaxPool([4, 4], [2, 2]),
+               Sigmoid()]),
+        Block([ConvolutionalLayer((5, 5), number_of_filters=15), BatchNormalization(), MaxPool([4, 4], [2, 2]),
+               Sigmoid()]),
+        Block([FullyConnected(output_size, flatten=True), Sigmoid()])]
 
 
-def blocks_30x500_10_bn_sigmoid(output_size):
+def long_fc(output_size):
     blocks = [Block([FullyConnected(500, flatten=(i == 0)), BatchNormalization(), Sigmoid()]) for i in range(30)]
     blocks.append(Block([FullyConnected(output_size), Sigmoid()]))
+    return blocks
+
+
+def long_conv(output_size):
+    blocks = [Block([ConvolutionalLayer((5, 5), number_of_filters=5), BatchNormalization(), Sigmoid()]) for i in
+              range(30)]
+    blocks.append(Block([FullyConnected(output_size, flatten=True), Sigmoid()]))
     return blocks
 
 
@@ -61,7 +99,6 @@ def resnet_101(output_size):
 def resnet_152(output_size):
     return build_resnet(output_size, [3, 8, 36, 3], batch_relu_conv_3)
 
-
 def mini_resnet(output_size):
     num_filters = 16
     blocks = [Block([ConvolutionalLayer((7, 7), number_of_filters=16, stride=[2, 2]), MaxPool([3, 3], strides=[2, 2])]),
@@ -73,11 +110,3 @@ def mini_resnet(output_size):
 
     blocks += [Block([FullyConnected(output_size, flatten=True), Sigmoid()])]
     return blocks
-
-
-def blocks_simple_convoluted(output_size):
-    return [Block(
-        [ConvolutionalLayer((5, 5), number_of_filters=10), BatchNormalization(), MaxPool([4, 4], [2, 2]), ReLu()]),
-        Block([ConvolutionalLayer((5, 5), number_of_filters=10), BatchNormalization(), MaxPool([4, 4], [2, 2]),
-               ReLu()]),
-        Block([FullyConnected(output_size, flatten=True), Sigmoid()])]

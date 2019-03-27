@@ -29,11 +29,13 @@ def get_id_and_name_from_arguments():
     parser.add_argument('-epochs', type=int, required=False, help='epochs')
     parser.add_argument('-cost_method', type=str, required=False, help='cost method')
     parser.add_argument('-dataset', type=str, required=False, help='dataset')
+    parser.add_argument('-sequence', type=str, required=False, help='sequence')
+    parser.add_argument('-seed', type=int, required=False, help='seed')
+    parser.add_argument('-memory_only', type=bool, required=False, help='memory only')
+    parser.add_argument('-gather_stats', type=bool, required=False, help='gather stats')
 
     network_id = parser.parse_args().id
     network_name = parser.parse_args().name
-    if network_id is not None and network_name is not None:
-        raise Exception("either id or name should be provided, but not both")
     return network_id, network_name, parser
 
 
@@ -46,6 +48,10 @@ def get_network_definition():
     epochs = parser.parse_args().epochs
     cost_method = parser.parse_args().cost_method
     dataset = parser.parse_args().dataset
+    sequence = parser.parse_args().sequence
+    gather_stats = parser.parse_args().gather_stats
+    memory_only = parser.parse_args().memory_only
+    seed = parser.parse_args().seed
 
     if network_id is not None:
         print(f"running network with id={network_id}")
@@ -54,8 +60,8 @@ def get_network_definition():
         print(f"running network with name={network_name}")
         network_definition = dict(networks_dict[network_name])
     else:
-        print("running default network")
-        network_definition = networks_dict["default_network"]
+        network_name = "default_network"
+        network_definition = dict(networks_dict[network_name])
 
     if learning_type is not None:
         network_definition.update({"type": learning_type})
@@ -69,6 +75,14 @@ def get_network_definition():
         network_definition.update({"cost_function": cost_method})
     if dataset is not None:
         network_definition.update({"dataset": dataset})
+    if sequence is not None:
+        network_definition.update({"sequence": sequence})
+    if gather_stats is not None:
+        network_definition.update({"gather_stats": gather_stats})
+    if memory_only is not None:
+        network_definition.update({"memory_only": memory_only})
+    if seed is not None:
+        network_definition.update({"seed": seed})
 
     print(network_definition)
     return network_definition
