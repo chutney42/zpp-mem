@@ -1,13 +1,5 @@
 from definition.resnet import *
-from layer.activation.activation_layer import Sigmoid, ReLu
-from layer.block import Block
-from layer.util_layer.batch_normalization import BatchNormalization
-from layer.util_layer.pool import MaxPool
-from layer.weight_layer.convolutional_layers import ConvolutionalLayer, ConvolutionalLayerManhattan
-from layer.weight_layer.fully_connected import FullyConnected
-from layer.weight_layer.fully_connected import FullyConnectedManhattan
-from layer.weight_layer.residual_layer import ResidualLayer
-
+from layer import *
 
 def blocks_50_30_10_bn_sigmoid(output_size):
     return [Block([FullyConnected(50, flatten=True), BatchNormalization(), Sigmoid()]),
