@@ -29,6 +29,7 @@ def get_id_and_name_from_arguments():
     parser.add_argument('-epochs', type=int, required=False, help='epochs')
     parser.add_argument('-cost_method', type=str, required=False, help='cost method')
     parser.add_argument('-dataset', type=str, required=False, help='dataset')
+    parser.add_argument('-sequence', type=str, required=False, help='sequence')
 
     network_id = parser.parse_args().id
     network_name = parser.parse_args().name
@@ -46,6 +47,7 @@ def get_network_definition():
     epochs = parser.parse_args().epochs
     cost_method = parser.parse_args().cost_method
     dataset = parser.parse_args().dataset
+    sequence = parser.parse_args().sequence
 
     if network_id is not None:
         print(f"running network with id={network_id}")
@@ -68,6 +70,8 @@ def get_network_definition():
         network_definition.update({"cost_function": cost_method})
     if dataset is not None:
         network_definition.update({"dataset": dataset})
+    if sequence is not None:
+        network_definition.update({"sequence": sequence})
 
     print(network_definition)
     return network_definition
