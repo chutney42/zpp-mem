@@ -56,7 +56,8 @@ def get_network_definition():
         print(f"running network with name={network_name}")
         network_definition = dict(networks_dict[network_name])
     else:
-        raise Exception("you must choose a network to run")
+        network_name = "default_network"
+        network_definition = dict(networks_dict[network_name])
 
     if learning_type is not None:
         network_definition.update({"type": learning_type})
