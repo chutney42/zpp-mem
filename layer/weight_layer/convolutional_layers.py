@@ -6,10 +6,10 @@ from layer.weight_layer.weight_layer import WeightLayer
 
 
 class ConvolutionalLayer(WeightLayer):
-    def __init__(self, filter_dim, stride=[1, 1, 1, 1], number_of_filters=1, padding="SAME", trainable=True,
+    def __init__(self, filter_dim, stride=[1, 1], number_of_filters=1, padding="SAME", trainable=True,
                  learning_rate=0.5, momentum=0.0, scope="convoluted_layer"):
         super().__init__(learning_rate, momentum, scope)
-        self.stride = stride
+        self.stride = [1] + stride + [1]
         self.filter_dim = filter_dim
         self.number_of_filters = number_of_filters
         self.trainable = trainable
@@ -55,8 +55,10 @@ class ConvolutionalLayer(WeightLayer):
             filters = tf.assign(filters, filters - self.learning_rate * delta_filters)
             self.step = filters
             if gather_stats:
-                tf.summary.image(f"delta_{self.scope}", put_kernels_on_grid(raw_delta))
-                tf.summary.image(f"filters_{self.scope}", put_kernels_on_grid(filters))
+                tf.summary.image(f"delta", put_kernels_on_grid(raw_delta), 1)
+                tf.summary.image(f"delta", put_kernels_on_grid(delta_filters), 1)
+
+                tf.summary.image(f"filters", put_kernels_on_grid(filters), 1)
             return
 
 
@@ -73,37 +75,36 @@ class ConvolutionalLayerManhattan(ConvolutionalLayer):
             filters = tf.assign(filters, filters - self.learning_rate * delta_filters)
             self.step = filters
             if gather_stats:
-                tf.summary.image(f"delta_{self.scope}", put_kernels_on_grid(raw_delta))
-                tf.summary.image(f"manhattan_{self.scope}", put_kernels_on_grid(manhattan))
-                tf.summary.image(f"filters_{self.scope}", put_kernels_on_grid(filters))
+                tf.summary.image(f"delta", put_kernels_on_grid(raw_delta), 1)
+                tf.summary.image(f"manhattan", put_kernels_on_grid(manhattan), 1)
+                tf.summary.image(f"filters", put_kernels_on_grid(filters), 1)
             return
 
 
-def put_kernels_on_grid(kernel, pad=1):
+def put_kernels_on_grid(kernel, grid_Y=None, grid_X=None, pad=1):
+
     def factorization(n):
-        from math import sqrt
+        from numpy.ma import sqrt
         for i in range(int(sqrt(float(n))), 0, -1):
             if n % i == 0:
-                if i == 1: print('Cannot create grid')
                 return i, int(n / i)
 
-    (grid_Y, grid_X) = factorization(kernel.get_shape()[3].value)
+    if grid_Y is None:
+        (grid_Y, grid_X) = factorization(kernel.get_shape()[3].value)
 
     x_min = tf.reduce_min(kernel)
     x_max = tf.reduce_max(kernel)
+
     kernel = (kernel - x_min) / (x_max - x_min)
 
     x = tf.pad(kernel, tf.constant([[pad, pad], [pad, pad], [0, 0], [0, 0]]), mode='CONSTANT')
-
     Y = kernel.get_shape()[0] + 2 * pad
     X = kernel.get_shape()[1] + 2 * pad
-
     channels = kernel.get_shape()[2]
-
     x = tf.transpose(x, (3, 0, 1, 2))
     x = tf.reshape(x, tf.stack([grid_X, Y * grid_Y, X, channels]))
     x = tf.transpose(x, (0, 2, 1, 3))
     x = tf.reshape(x, tf.stack([1, X * grid_X, Y * grid_Y, channels]))
     x = tf.transpose(x, (2, 1, 3, 0))
-    x = tf.transpose(x, (3, 0, 1, 2))
-    return x
+    x = tf.transpose(x, (2, 0, 1, 3))
+    return tf.image.convert_image_dtype(x, dtype=tf.uint8)

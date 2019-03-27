@@ -34,7 +34,11 @@ class ActivationLayer(Layer):
         if remember_input:
             self.input_vec = input_vec
         with tf.variable_scope(self.scope, tf.AUTO_REUSE):
-            return self.func(input_vec)
+            activated = self.func(input_vec)
+            if gather_stats:
+                tf.summary.histogram("pre_activation", input_vec)
+                tf.summary.histogram("post_activation", activated)
+            return activated
 
     def build_backward(self, error, gather_stats=True):
         input_vec = self.restore_input()
@@ -55,6 +59,7 @@ class Sigmoid(ActivationLayer):
         with tf.variable_scope(self.scope):
             if self.sigmoid_cross_entropy:
                 return error
+
             return tf.multiply(error, self.func_prime(input_vec))
 
 
