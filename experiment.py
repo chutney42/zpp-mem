@@ -59,7 +59,7 @@ def get_network_definition():
     if learning_type is not None:
         network_definition.update({"type": learning_type})
     if learning_rate is not None:
-        network_definition.update({"learning_rate": learning_type})
+        network_definition.update({"learning_rate": learning_rate})
     if batch_size is not None:
         network_definition.update({"batch_size": batch_size})
     if epochs is not None:
