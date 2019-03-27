@@ -22,23 +22,53 @@ def get_id_and_name_from_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('-id', type=int, required=False, help='number of network')
     parser.add_argument('-name', type=str, required=False, help='network name')
+
+    parser.add_argument('-learning_type', type=str, required=False, help='type')
+    parser.add_argument('-learning_rate', type=float, required=False, help='learning rate')
+    parser.add_argument('-batch_size', type=int, required=False, help='batch size')
+    parser.add_argument('-epochs', type=int, required=False, help='epochs')
+    parser.add_argument('-cost_method', type=str, required=False, help='cost method')
+    parser.add_argument('-dataset', type=str, required=False, help='dataset')
+
     network_id = parser.parse_args().id
     network_name = parser.parse_args().name
     if network_id is not None and network_name is not None:
         raise Exception("either id or name should be provided, but not both")
-    return network_id, network_name
+    return network_id, network_name, parser
 
 
 def get_network_definition():
-    network_id, network_name = get_id_and_name_from_arguments()
+    network_id, network_name, parser = get_id_and_name_from_arguments()
+
+    learning_type = parser.parse_args().learning_type
+    learning_rate = parser.parse_args().learning_rate
+    batch_size = parser.parse_args().batch_size
+    epochs = parser.parse_args().epochs
+    cost_method = parser.parse_args().cost_method
+    dataset = parser.parse_args().dataset
+
     if network_id is not None:
         print(f"running network with id={network_id}")
-        network_definition = networks_list[network_id]
+        network_definition = dict(networks_list[network_id])
     elif network_name is not None:
         print(f"running network with name={network_name}")
-        network_definition = networks_dict[network_name]
+        network_definition = dict(networks_dict[network_name])
     else:
         raise Exception("you must choose a network to run")
+
+    if learning_type is not None:
+        network_definition.update({"type": learning_type})
+    if learning_rate is not None:
+        network_definition.update({"learning_rate": learning_rate})
+    if batch_size is not None:
+        network_definition.update({"batch_size": batch_size})
+    if epochs is not None:
+        network_definition.update({"epochs": epochs})
+    if cost_method is not None:
+        network_definition.update({"cost_function": cost_method})
+    if dataset is not None:
+        network_definition.update({"dataset": dataset})
+
     print(network_definition)
     return network_definition
 
@@ -86,7 +116,6 @@ if __name__ == '__main__':
     if network_def['seed'] is not None:
         tf.set_random_seed(network_def['seed'])
 
-    with tf.device(network_def['device']):
-        training_set, test_set = datasets_dict[network_def['dataset_name']]()
-        neural_net = create_network(network_def, training_set.output_types, training_set.output_shapes)
-        train_network(neural_net, training_set, test_set, network_def)
+    training_set, test_set = datasets_dict[network_def['dataset_name']]()
+    neural_net = create_network(network_def, training_set.output_types, training_set.output_shapes)
+    train_network(neural_net, training_set, test_set, network_def)
