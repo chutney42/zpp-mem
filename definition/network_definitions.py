@@ -3,9 +3,9 @@ default_network = {
     "type": "BP",
     "dataset_name": "mnist",
     "sequence": "blocks_50_30_10_bn_sigmoid",
-    "cost_function": "sigmoid_cross_entropy",
+    "cost_function": "mean_squared_error",
     "learning_rate": 0.1,
-    "gather_stats": False,
+    "gather_stats": True,
     "restore_model": False,
     "save_model": False,
     "restore_model_path": None,
@@ -48,9 +48,11 @@ simple_fully_connected_manhattan_network.update({
 
 resnetish = dict(default_network)
 resnetish.update({
-    "dataset_name": "cifar100",
+    "dataset_name": "cifar10",
 
-    "sequence": "blocks_3x50_10_residual_relu",
+    #"sequence": "blocks_3x50_10_residual_relu",
+     "sequence": "mini_resnet",
+
 })
 
 

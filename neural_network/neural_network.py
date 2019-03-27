@@ -191,6 +191,7 @@ class NeuralNetwork(object):
                 else:
                     self.sess.run([self.step, self.acc_update], feed_dict)
 
+
                 if self.counter % eval_period is 0:
                     res = self.__validate(validation_it, validation_handle, val_writer)
                     print(f"iteration: {self.counter}, accuracy: {res}%")

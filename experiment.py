@@ -85,9 +85,9 @@ def train_network(neural_network, training, test, network):
 if __name__ == '__main__':
     network_def = get_network_definition()
     if network_def['seed'] is not None:
+        print("aaa")
         tf.set_random_seed(network_def['seed'])
 
-    with tf.device(network_def['device']):
-        training_set, test_set = datasets_dict[network_def['dataset_name']]()
-        neural_net = create_network(network_def, training_set.output_types, training_set.output_shapes)
-        train_network(neural_net, training_set, test_set, network_def)
+    training_set, test_set = datasets_dict[network_def['dataset_name']]()
+    neural_net = create_network(network_def, training_set.output_types, training_set.output_shapes)
+    train_network(neural_net, training_set, test_set, network_def)

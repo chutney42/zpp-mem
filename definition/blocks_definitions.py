@@ -54,23 +54,34 @@ def blocks_3x50_10_residual_relu(output_size):
     num_filters = 16
     blocks = [Block([ConvolutionalLayer((7, 7), number_of_filters=16, stride=[2, 2]), MaxPool([3, 3], strides=[2, 2])]),
               Block([ResidualLayer(
-                  [Block([BatchNormalization(), ReLu(), ConvolutionalLayer((3, 3), number_of_filters=num_filters)]),
-                   Block([BatchNormalization(), ReLu(), ConvolutionalLayer((3, 3), stride=[2, 2], number_of_filters=num_filters)])])])]
+                  [Block([BatchNormalization(), Sigmoid(), ConvolutionalLayer((3, 3), number_of_filters=num_filters)]),
+                   Block([BatchNormalization(), Sigmoid(), ConvolutionalLayer((3, 3), stride=[2, 2], number_of_filters=num_filters)])])])]
 
-    blocks += [Block([ResidualLayer([Block([BatchNormalization(), ReLu(), ConvolutionalLayer((3, 3), stride=[2, 2],
+    blocks += [Block([ResidualLayer([Block([BatchNormalization(), Sigmoid(), ConvolutionalLayer((3, 3), stride=[2, 2],
                                                                                              number_of_filters=2 ^ i * num_filters)]),
-                                     Block([BatchNormalization(), ReLu(), ConvolutionalLayer((3, 3), stride=[2, 2],
+                                     Block([BatchNormalization(), Sigmoid(), ConvolutionalLayer((3, 3), stride=[2, 2],
                                                                                              number_of_filters=2 ^ i * num_filters)])])])
                for i in range(1, 3)]
-    blocks += [Block([ResidualLayer([Block([BatchNormalization(), ReLu(), ConvolutionalLayer((3, 3), stride=[2, 2],
+    blocks += [Block([ResidualLayer([Block([BatchNormalization(), Sigmoid(), ConvolutionalLayer((3, 3), stride=[2, 2],
                                                                                       number_of_filters=2 ^ 4 * num_filters)]),
-                              Block([BatchNormalization(), ReLu(), ConvolutionalLayer((3, 3), stride=[2, 2],
+                              Block([BatchNormalization(), Sigmoid(), ConvolutionalLayer((3, 3), stride=[2, 2],
                                                                                       number_of_filters=2 ^ 4 * num_filters)])]),
-               BatchNormalization(), ReLu(), AveragePool([1, 1], [1, 1])])]
-    blocks += [Block([FullyConnected(output_size, flatten=True)]), Softmax()]
+               BatchNormalization(), Sigmoid()])]
+    blocks += [Block([FullyConnected(output_size, flatten=True), Sigmoid()])]
+    return blocks
+
+def mini_resnet(output_size):
+    num_filters = 16
+    blocks = [Block([ConvolutionalLayer((7, 7), number_of_filters=16, stride=[2, 2]), MaxPool([3, 3], strides=[2, 2])]),
+              Block([ResidualLayer(
+                  [Block([BatchNormalization(), Sigmoid(), ConvolutionalLayer((3, 3), number_of_filters=num_filters)]),
+                   Block([BatchNormalization(), Sigmoid(), ConvolutionalLayer((3, 3), stride=[2, 2], number_of_filters=num_filters)])]),
+                     BatchNormalization(), Sigmoid()])]
+
+    blocks += [Block([FullyConnected(output_size, flatten=True), Sigmoid()])]
     return blocks
 
 def blocks_simple_convoluted(output_size):
    return [Block([ConvolutionalLayer((5, 5), number_of_filters=10), BatchNormalization(), MaxPool([4,4],[2,2]), ReLu()]),
            Block([ConvolutionalLayer((5, 5), number_of_filters=10), BatchNormalization(),MaxPool([4,4],[2,2]), ReLu()]),
-           Block([FullyConnected(output_size,flatten=True), Softmax()])]
+           Block([FullyConnected(output_size,flatten=True), Sigmoid()])]
