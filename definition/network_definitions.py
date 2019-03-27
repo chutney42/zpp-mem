@@ -1,7 +1,7 @@
 default_network = {
     "type": "BP",
     "dataset_name": "mnist",
-    "sequence": "blocks_50_30_10_bn_sigmoid",
+    "sequence": "resnet_18",
     "cost_function": "mean_squared_error",
     "learning_rate": 0.1,
     "gather_stats": False,

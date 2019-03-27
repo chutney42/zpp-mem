@@ -1,19 +1,20 @@
-from layer.layer import Layer
-from layer.weight_layer.convolutional_layers import ConvolutionalLayer
-from layer.weight_layer.weight_layer import WeightLayer
 import tensorflow as tf
 
-class ResidualLayer(Layer):
+from layer.weight_layer.convolutional_layers import ConvolutionalLayer
+from layer.weight_layer.weight_layer import WeightLayer
 
-    def __init__(self, sequenceA, trainable=True,  scope="residual_layer"):
+
+class ResidualLayer(WeightLayer):
+
+    def __init__(self, sequence, trainable=True, scope="residual_layer"):
         super().__init__(trainable, scope=scope)
         self.propagator = None
-        self.sequenceA = sequenceA
+        self.sequence = sequence
         self.shortcut_conv = None
 
     def __str__(self):
         s = f"ResidualLayer["
-        for layer in self.sequenceA:
+        for layer in self.sequence:
             s = s + f", {str(layer)}"
         s = s + "]"
         return s
@@ -23,13 +24,13 @@ class ResidualLayer(Layer):
             self.input_vec = input_vec
 
         with tf.variable_scope(self.scope, tf.AUTO_REUSE):
-            for i, layer in enumerate(self.sequenceA):
+            for i, layer in enumerate(self.sequence):
                 if isinstance(layer, WeightLayer):
                     layer.propagator = self.propagator
                 layer.scope = f"{self.scope}_{layer.scope}_{i}"
 
             residual = input_vec
-            for layer in self.sequenceA:
+            for layer in self.sequence:
                 residual = layer.build_forward(residual, remember_input=True)
 
             res_shape = residual.shape
@@ -56,7 +57,7 @@ class ResidualLayer(Layer):
             if self.shortcut_conv is not None:
                 input_err = self.shortcut_conv.build_backward(error)
                 self.step.append(self.shortcut_conv.step)
-            for layer in reversed(self.sequenceA):
+            for layer in reversed(self.sequence):
                 error = layer.build_backward(error)
                 if layer.trainable:
                     self.step.append(layer.step)
