@@ -1,6 +1,6 @@
 import tensorflow as tf
+
 from cost_function.cost_function import CostFunction
-from layer.util_layer.softmax import Softmax
 
 
 class SoftmaxCrossEntropy(CostFunction):

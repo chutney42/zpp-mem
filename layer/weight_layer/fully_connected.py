@@ -52,8 +52,10 @@ class FullyConnected(WeightLayer):
             self.step = (weights, biases)
 
             if gather_stats:
-                tf.summary.image(f"weights_{self.scope}",
-                                 tf.reshape(weights, (1, weights.shape[0], weights.shape[1], 1)))
+                tf.summary.histogram("weights", weights)
+                tf.summary.histogram("biases", biases)
+                tf.summary.histogram("delta_weights", delta_weights)
+                tf.summary.histogram("delta_biases", delta_biases)
             return
 
 
@@ -77,6 +79,10 @@ class FullyConnectedManhattan(FullyConnected):
             biases = tf.assign(biases, tf.subtract(biases, tf.multiply(self.learning_rate, delta_biases)))
             self.step = (weights, biases)
             if gather_stats:
-                tf.summary.image(f"weights_{self.scope}",
-                                 tf.reshape(weights, (1, weights.shape[0], weights.shape[1], 1)))
+                if gather_stats:
+                    tf.summary.histogram("weights", weights)
+                    tf.summary.histogram("biases", biases)
+                    tf.summary.histogram("manhattan", manhattan)
+                    tf.summary.histogram("delta_weights", delta_weights)
+                    tf.summary.histogram("delta_biases", delta_biases)
             return

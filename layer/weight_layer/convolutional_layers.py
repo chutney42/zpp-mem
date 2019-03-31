@@ -55,8 +55,9 @@ class ConvolutionalLayer(WeightLayer):
             filters = tf.assign(filters, filters - self.learning_rate * delta_filters)
             self.step = filters
             if gather_stats:
-                tf.summary.image(f"delta_{self.scope}", put_kernels_on_grid(raw_delta))
-                tf.summary.image(f"filters_{self.scope}", put_kernels_on_grid(filters))
+                tf.summary.histogram("delta", delta_filters)
+                tf.summary.histogram("filters", filters)
+                tf.summary.histogram("inputs", input_vec)
             return
 
 
@@ -73,37 +74,8 @@ class ConvolutionalLayerManhattan(ConvolutionalLayer):
             filters = tf.assign(filters, filters - self.learning_rate * delta_filters)
             self.step = filters
             if gather_stats:
-                tf.summary.image(f"delta_{self.scope}", put_kernels_on_grid(raw_delta))
-                tf.summary.image(f"manhattan_{self.scope}", put_kernels_on_grid(manhattan))
-                tf.summary.image(f"filters_{self.scope}", put_kernels_on_grid(filters))
+                tf.summary.image(f"delta", delta_filters)
+                tf.summary.image(f"manhattan", manhattan)
+                tf.summary.image(f"filters", filters)
+                tf.summary.histogram("inputs", input_vec)
             return
-
-
-def put_kernels_on_grid(kernel, pad=1):
-    def factorization(n):
-        from math import sqrt
-        for i in range(int(sqrt(float(n))), 0, -1):
-            if n % i == 0:
-                if i == 1: print('Cannot create grid')
-                return i, int(n / i)
-
-    (grid_Y, grid_X) = factorization(kernel.get_shape()[3].value)
-
-    x_min = tf.reduce_min(kernel)
-    x_max = tf.reduce_max(kernel)
-    kernel = (kernel - x_min) / (x_max - x_min)
-
-    x = tf.pad(kernel, tf.constant([[pad, pad], [pad, pad], [0, 0], [0, 0]]), mode='CONSTANT')
-
-    Y = kernel.get_shape()[0] + 2 * pad
-    X = kernel.get_shape()[1] + 2 * pad
-
-    channels = kernel.get_shape()[2]
-
-    x = tf.transpose(x, (3, 0, 1, 2))
-    x = tf.reshape(x, tf.stack([grid_X, Y * grid_Y, X, channels]))
-    x = tf.transpose(x, (0, 2, 1, 3))
-    x = tf.reshape(x, tf.stack([1, X * grid_X, Y * grid_Y, channels]))
-    x = tf.transpose(x, (2, 1, 3, 0))
-    x = tf.transpose(x, (3, 0, 1, 2))
-    return x
