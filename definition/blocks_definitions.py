@@ -101,26 +101,26 @@ def resnet_152(output_size):
     return build_resnet(output_size, [3, 8, 36, 3], batch_relu_conv_3)
 
 
+
 def vgg_16(output_size):
     return [
-        # Block([ConvolutionalLayer([3,3], [2,2], number_of_filters=53),
-        #        BatchNormalization(), ReLu(), MaxPool([2, 2], [2, 2])]),
-        ConvolutionalLayer.convolutionalLayerBlock([3, 3], number_of_filters=64),
-        ConvolutionalLayer.convolutionalLayerBlock([3, 3], number_of_filters=64, with_pooling=True),
+        ConvolutionalLayer.convolutionalLayerBlock((3, 3), number_of_filters=64),
+        ConvolutionalLayer.convolutionalLayerBlock((3, 3), number_of_filters=64, with_pooling=True),
 
-        ConvolutionalLayer.convolutionalLayerBlock([3, 3], number_of_filters=128),
-        ConvolutionalLayer.convolutionalLayerBlock([3, 3], number_of_filters=128, with_pooling=True),
+        ConvolutionalLayer.convolutionalLayerBlock((3, 3), number_of_filters=128),
+        ConvolutionalLayer.convolutionalLayerBlock((3, 3), number_of_filters=128, with_pooling=True),
+        #
+        ConvolutionalLayer.convolutionalLayerBlock((3, 3), number_of_filters=256),
+        ConvolutionalLayer.convolutionalLayerBlock((3, 3), number_of_filters=256),
+        ConvolutionalLayer.convolutionalLayerBlock((3, 3), number_of_filters=256, with_pooling=True),
 
-        ConvolutionalLayer.convolutionalLayerBlock([3, 3], number_of_filters=256),
-        ConvolutionalLayer.convolutionalLayerBlock([3, 3], number_of_filters=256),
-        ConvolutionalLayer.convolutionalLayerBlock([3, 3], number_of_filters=256, with_pooling=True),
+        ConvolutionalLayer.convolutionalLayerBlock((3, 3), number_of_filters=512),
+        ConvolutionalLayer.convolutionalLayerBlock((3, 3), number_of_filters=512),
+        ConvolutionalLayer.convolutionalLayerBlock((3, 3), number_of_filters=512, with_pooling=True),
 
-        ConvolutionalLayer.convolutionalLayerBlock([3, 3], number_of_filters=512),
-        ConvolutionalLayer.convolutionalLayerBlock([3, 3], number_of_filters=512),
-        ConvolutionalLayer.convolutionalLayerBlock([3, 3], number_of_filters=512, with_pooling=True),
-
-        ConvolutionalLayer.convolutionalLayerBlock([3, 3], number_of_filters=512),
-        ConvolutionalLayer.convolutionalLayerBlock([3, 3], number_of_filters=512, with_pooling=True),
+        ConvolutionalLayer.convolutionalLayerBlock((3, 3), number_of_filters=512),
+        ConvolutionalLayer.convolutionalLayerBlock((3, 3), number_of_filters=512),
+        ConvolutionalLayer.convolutionalLayerBlock((3, 3), number_of_filters=512, with_pooling=True),
 
         Block([FullyConnected(4096, flatten=True), BatchNormalization(), ReLu()]),
         Block([FullyConnected(4096), BatchNormalization(), ReLu()]),

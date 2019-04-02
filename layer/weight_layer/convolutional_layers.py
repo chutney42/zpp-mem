@@ -22,11 +22,11 @@ class ConvolutionalLayer(WeightLayer):
     @staticmethod
     def convolutionalLayerBlock(filter_dim, number_of_filters, stride=[1,1], with_pooling=False):
         if with_pooling == False:
-            return Block([ConvolutionalLayer(filter_dim, stride, number_of_filters),
+            return Block([ConvolutionalLayer(filter_dim, stride=stride, number_of_filters=number_of_filters),
                           BatchNormalization(), ReLu()])
         else:
-            return Block([ConvolutionalLayer(filter_dim, stride, number_of_filters),
-                          BatchNormalization(), ReLu(), MaxPool([2, 2], [2, 2])])
+            return Block([ConvolutionalLayer(filter_dim, stride=stride, number_of_filters=number_of_filters),
+                          BatchNormalization(), ReLu(), MaxPool([2, 2], [2, 2], padding="SAME")])
 
     def __str__(self):
         return f"ConvolutionalLayer({self.filter_dim} {self.number_of_filters} {self.stride})"
