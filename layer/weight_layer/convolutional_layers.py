@@ -2,6 +2,7 @@ from functools import reduce
 
 import tensorflow as tf
 
+from layer import Block, BatchNormalization, ReLu, MaxPool
 from layer.weight_layer.weight_layer import WeightLayer
 
 
@@ -16,6 +17,15 @@ class ConvolutionalLayer(WeightLayer):
         self.padding = padding
         self.output_shape = None
         self.input_flat_shape = None
+
+    @staticmethod
+    def convolutionalLayerBlock(filter_dim, number_of_filters, stride=[1, 1, 1, 1], with_pooling=False):
+        if with_pooling == False:
+            return Block([ConvolutionalLayer(filter_dim, stride, number_of_filters),
+                          BatchNormalization(), ReLu()])
+        else:
+            return Block([ConvolutionalLayer(filter_dim, stride, number_of_filters),
+                          BatchNormalization(), ReLu(), MaxPool((2, 2), strides=[1, 2, 2, 1])])
 
     def __str__(self):
         return f"ConvolutionalLayer({self.filter_dim} {self.number_of_filters} {self.stride})"
@@ -82,7 +92,6 @@ class ConvolutionalLayerManhattan(ConvolutionalLayer):
 
 
 def put_kernels_on_grid(kernel, grid_Y=None, grid_X=None, pad=1):
-
     def factorization(n):
         from numpy.ma import sqrt
         for i in range(int(sqrt(float(n))), 0, -1):
