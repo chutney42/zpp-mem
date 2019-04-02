@@ -1,8 +1,9 @@
 from functools import reduce
 
 import tensorflow as tf
-
-from layer import Block, BatchNormalization, ReLu, MaxPool
+from layer.block import Block
+from layer.activation import ReLu
+from layer.util_layer import  BatchNormalization,  MaxPool
 from layer.weight_layer.weight_layer import WeightLayer
 
 
@@ -19,13 +20,13 @@ class ConvolutionalLayer(WeightLayer):
         self.input_flat_shape = None
 
     @staticmethod
-    def convolutionalLayerBlock(filter_dim, number_of_filters, stride=[1, 1, 1, 1], with_pooling=False):
+    def convolutionalLayerBlock(filter_dim, number_of_filters, stride=[1,1], with_pooling=False):
         if with_pooling == False:
             return Block([ConvolutionalLayer(filter_dim, stride, number_of_filters),
                           BatchNormalization(), ReLu()])
         else:
             return Block([ConvolutionalLayer(filter_dim, stride, number_of_filters),
-                          BatchNormalization(), ReLu(), MaxPool((2, 2), strides=[1, 2, 2, 1])])
+                          BatchNormalization(), ReLu(), MaxPool([2, 2], [2, 2])])
 
     def __str__(self):
         return f"ConvolutionalLayer({self.filter_dim} {self.number_of_filters} {self.stride})"
