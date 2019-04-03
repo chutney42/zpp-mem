@@ -1,7 +1,4 @@
 import os
-import re
-import subprocess
-from subprocess import Popen
 
 from hyperparameter_tuner.run_command_generator import default_commands_generator
 # total accuracy: 69.23999786376953% iterations: 16000
