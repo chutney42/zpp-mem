@@ -134,3 +134,4 @@ if __name__ == '__main__':
     training_set, test_set = datasets_dict[network_def['dataset_name']]()
     neural_net = create_network(network_def, training_set.output_types, training_set.output_shapes)
     train_network(neural_net, training_set, test_set, network_def)
+    # return 0

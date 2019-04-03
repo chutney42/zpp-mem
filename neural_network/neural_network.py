@@ -107,7 +107,7 @@ class NeuralNetwork(object):
         print(f"batch_size: {batch_size} epochs: {epochs} eval_per: {eval_period} stat_per: {stat_period}")
         training_set = training_set.shuffle(200).batch(batch_size)
 
-        with tf.variable_scope("itarators", reuse=tf.AUTO_REUSE):
+        with tf.variable_scope("iterators_handlers", reuse=tf.AUTO_REUSE):
             training_it = training_set.make_initializable_iterator()
             validation_it = validation_set.batch(batch_size).make_initializable_iterator()
 

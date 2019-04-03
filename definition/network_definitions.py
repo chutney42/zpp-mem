@@ -19,4 +19,11 @@ default_network = {
     "device": "/cpu:0"
 }
 
+vgg_16 = dict(default_network)
+vgg_16.update({
+    "sequence": "vgg_16",
+    "epochs": 100,
+    "cost_function": "softmax_cross_entropy",
+    "dataset": "cifar10"
 
+})
