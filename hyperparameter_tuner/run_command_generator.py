@@ -1,14 +1,16 @@
 from itertools import product
 
-import hyperparameter_tuner.single_parameter_generator.single_parameter_generator  as gens
+# import hyperparameter_tuner.single_parameter_generator.single_parameter_generator  as gens
+from hyperparameter_tuner.single_parameter_generator.single_parameter_generator import \
+    single_parameter_generator as sgen
 
 
 class run_command_generator():
-    def __init__(self, single_parameter_generator_list, run_command="python ../experiment.py", output_path="./results"):
+    def __init__(self, single_parameter_generator_list, command_prefix="python ../experiment.py", output_path="./results"):
         for gen in single_parameter_generator_list:
-            assert isinstance(gen, gens.single_parameter_generator)
+            assert isinstance(gen, sgen)
         self.single_parameter_generator_list = single_parameter_generator_list
-        self.run_command = run_command
+        self.run_command = command_prefix
         self.output_path = output_path
 
     def run_commands(self):
@@ -24,13 +26,12 @@ class run_command_generator():
             yield command
 
 
-def default_commands_generator():
-    return run_command_generator([gens.batch_size(),
-                                  gens.learning_type(),
-                                  gens.name(),
-                                  # gens.cost_function(),
-                                  # gens.sequence(),
-                                  gens.learning_rate()]).run_commands()
+def default_commands_generator(command_prefix = "python ../experiment.py",output_path = "./results"):
+    return run_command_generator([sgen("name", ["vgg_16"]),
+                                  sgen("learning_type", ["DFA"]),
+                                  sgen("learning_rate", [0.001, 0.005, 0.01, 0.03, 0.07, 0.1, 0.5, 1]),
+                                  sgen("batch_size", [20, 25, 30, 35, 50, 75]),
+                                  ], command_prefix = command_prefix,output_path=output_path).run_commands()
 
 
 if __name__ == '__main__':

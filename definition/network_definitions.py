@@ -24,6 +24,6 @@ vgg_16.update({
     "sequence": "vgg_16",
     "epochs": 100,
     "cost_function": "softmax_cross_entropy",
-    "dataset": "cifar10"
+    "dataset_name": "cifar10"
 
 })
