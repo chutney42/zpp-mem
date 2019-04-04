@@ -9,7 +9,7 @@ from keras.optimizers import Adam
 from keras.preprocessing.image import ImageDataGenerator
 from keras.utils import np_utils
 
-os.environ['KMP_DUPLICATE_LIB_OK']='TRUE'
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
 if __name__ == '__main__':
     (X_train, y_train), (X_test, y_test) = cifar10.load_data()
@@ -18,8 +18,8 @@ if __name__ == '__main__':
     X_test = X_test.reshape(X_test.shape[0], 32, 32, 3)
     X_train = X_train.astype('float32')
     X_test = X_test.astype('float32')
-    X_train/=255
-    X_test/=255
+    X_train /= 255
+    X_test /= 255
 
     number_of_classes = 10
 
@@ -27,7 +27,7 @@ if __name__ == '__main__':
     Y_test = np_utils.to_categorical(y_test, number_of_classes)
 
     model = Sequential()
-    model.add(Conv2D(10, (3, 3), input_shape=(32,32,3)))
+    model.add(Conv2D(10, (3, 3), input_shape=(32, 32, 3)))
     model.add(BatchNormalization(axis=-1))
     model.add(Activation('relu'))
     model.add(Conv2D(10, (3, 3)))
@@ -47,5 +47,5 @@ if __name__ == '__main__':
     test_gen = ImageDataGenerator()
     train_generator = gen.flow(X_train, Y_train, batch_size=64)
     test_generator = test_gen.flow(X_test, Y_test, batch_size=64)
-    model.fit_generator(train_generator, steps_per_epoch=60000//64, epochs=2,
-                        validation_data=test_generator, validation_steps=10000//64)
+    model.fit_generator(train_generator, steps_per_epoch=60000 // 64, epochs=2,
+                        validation_data=test_generator, validation_steps=10000 // 64)

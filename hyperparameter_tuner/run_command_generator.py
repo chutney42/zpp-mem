@@ -21,14 +21,13 @@ class run_command_generator():
             command = str(train_params).replace('(', '').replace(')', '').replace('\'', '').replace(',', '')
             command = self.run_command + " " + command + " > " + self.output_path + "/" + command.replace(' ',
                                                                                                           '_').replace(
-                '-', '')
+                '-', '').replace('.', '')
 
             yield command
 
 
 def default_commands_generator(command_prefix="python experiment.py", output_path="./hyperparameter_tuner/results"):
     return run_command_generator([sgen("name", ["vgg_16"]),
-                                  sgen("learning_type", ["DFA"]),
                                   sgen("learning_rate", [0.001, 0.005, 0.01, 0.03, 0.07, 0.1, 0.5, 1]),
                                   sgen("batch_size", [20, 25, 30, 35, 50, 75]),
                                   ], command_prefix=command_prefix, output_path=output_path).run_commands()
