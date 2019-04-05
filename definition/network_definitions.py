@@ -22,8 +22,8 @@ default_network = {
 
 vgg_16 = dict(default_network)
 vgg_16.update({
-    "minimum_accuracy": [(10, 11), (50, 20)],
-    "learning_method": "BP",
+    "minimum_accuracy": [(10, 12), (50, 20)],
+    "type": "BP",
     "sequence": "vgg_16",
     "epochs": 100,
     "cost_function": "softmax_cross_entropy",
@@ -33,7 +33,7 @@ vgg_16.update({
 
 vgg_16_DFA = dict(vgg_16)
 vgg_16_DFA.update({
-    "learning_method": "DFA",
-    "minimum_accuracy": [(10, 20), (50, 40)],
+    "type": "DFA",
+    "minimum_accuracy": [(20, 20), (50, 40)],
 
 })

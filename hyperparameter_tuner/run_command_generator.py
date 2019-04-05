@@ -1,6 +1,6 @@
 from itertools import product
 
-from hyperparameter_tuner.single_parameter_generator.single_parameter_generator import \
+from hyperparameter_tuner.single_parameter_generator import \
     single_parameter_generator as sgen
 
 
