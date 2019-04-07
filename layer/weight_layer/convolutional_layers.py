@@ -7,7 +7,7 @@ from layer.weight_layer.weight_layer import WeightLayer
 
 class ConvolutionalLayer(WeightLayer):
     def __init__(self, filter_dim, stride=[1, 1], number_of_filters=1, padding="SAME", trainable=True,
-                 learning_rate=0.5, momentum=0.0, scope="convoluted_layer"):
+                 learning_rate=None, momentum=0.0, scope="convoluted_layer"):
         super().__init__(learning_rate, momentum, scope)
         self.stride = [1] + stride + [1]
         self.filter_dim = filter_dim
@@ -35,6 +35,11 @@ class ConvolutionalLayer(WeightLayer):
                                       initializer=tf.random_normal_initializer())
             output = tf.nn.conv2d(input_vec, filters, strides=self.stride, padding=self.padding, name="Convolution")
             self.output_shape = tf.shape(output)
+
+            if gather_stats:
+                tf.summary.histogram("weights", filters, family=self.scope)
+                tf.summary.histogram("output", output, family=self.scope)
+
             return output
 
     def build_propagate(self, error, gather_stats=False):
@@ -57,7 +62,6 @@ class ConvolutionalLayer(WeightLayer):
             if gather_stats:
                 tf.summary.histogram("error", error, family=self.scope)
                 tf.summary.histogram("delta", delta_filters, family=self.scope)
-                tf.summary.histogram("weights", filters, family=self.scope)
                 tf.summary.histogram("input", input_vec, family=self.scope)
             return
 

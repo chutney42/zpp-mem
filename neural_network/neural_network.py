@@ -17,9 +17,8 @@ class NeuralNetwork(object):
         self.scope = scope
         self.sequence = sequence
         self.propagator = propagator
+        self.learning_rate = learning_rate
         self.__prepare_sequence(cost_function_name)
-        self.learning_rate = tf.constant(learning_rate)
-
         self.handle = tf.placeholder(tf.string, shape=[], name="handle")
         with tf.variable_scope("iterator"):
             self.iterator = tf.data.Iterator.from_string_handle(self.handle, types, tuple(
@@ -39,6 +38,7 @@ class NeuralNetwork(object):
             block.head.propagator = self.propagator
             for j, layer in enumerate(block):
                 layer.scope = f"{i}_{j}_{self.scope}_{layer.scope}"
+                layer.set_lr(self.learning_rate)
         if cost_function_name == "sigmoid_cross_entropy":
             assert isinstance(self.sequence[-1][-1], Sigmoid), \
                 "Sigmoid cross entropy should be used along with sigmoid activation in the last layer!"
@@ -203,13 +203,7 @@ class NeuralNetwork(object):
                         if self.memory_only:
                             break
                 else:
-                    d, a, b, c, _, _, _ = self.sess.run(
-                        [self.sequence[3].head.sequence[3].restore_input(), self.sequence[3].head.sequence[3].gamma, self.sequence[3].head.sequence[3].beta,
-                         self.sequence[3].head.sequence[3].grads] + [self.step, self.acc_update, self.acc_update],
-                        feed_dict)
-                    print(f"gamma: {np.min(a)}, {np.max(a)}, {np.min(np.abs(a))} beta: {np.min(b)}, {np.max(b)}, {np.min(np.abs(b))}")
-                    print(f"grads: {np.min(c[0])}, {np.max(c[0])}, {np.min(np.abs(c[0]))}, {np.min(c[1])}, {np.max(c[1])}, {np.min(np.abs(c[1]))}, {np.min(c[2])}, {np.max(c[2])}, {np.min(np.abs(c[2]))}")
-                    print(f"input {np.min(d)}, {np.max(d)}, {np.min(np.abs(d))}")
+                    self.sess.run([self.step, self.acc_update, self.acc_update], feed_dict)
                 if self.counter % eval_period is 0:
                     acc, loss = self.__validate(validation_it, validation_handle, val_writer)
                     print(f"iteration: {self.counter}, accuracy: {acc}%, loss: {loss}")

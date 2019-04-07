@@ -4,7 +4,7 @@ default_network = {
     "type": "BP",
     "dataset_name": "mnist",
     "sequence": "resnet_18",
-    "cost_function": "mean_squared_error",
+    "cost_function": "softmax_cross_entropy",
     "learning_rate": 0.1,
     "gather_stats": True,
     "restore_model": False,

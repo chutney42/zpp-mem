@@ -4,7 +4,7 @@ from layer.weight_layer.weight_layer import WeightLayer
 
 
 class FullyConnected(WeightLayer):
-    def __init__(self, output_dim, learning_rate=0.5, momentum=0.0, scope="fully_connected_layer", flatten=False):
+    def __init__(self, output_dim, learning_rate=None, momentum=0.0, scope="fully_connected_layer", flatten=False):
         super().__init__(learning_rate, momentum, scope)
         self.output_dim = output_dim
         self.flatten = flatten
@@ -13,17 +13,24 @@ class FullyConnected(WeightLayer):
         return f"FullyConnected({self.output_dim})"
 
     def build_forward(self, input_vec, remember_input=True, gather_stats=False):
-        self.save_shape(input_vec)
-        if self.flatten:
-            input_vec = tf.layers.Flatten()(input_vec)
-        if remember_input:
-            self.input_vec = input_vec
         with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
+            self.save_shape(input_vec)
+            if self.flatten:
+                input_vec = tf.layers.Flatten()(input_vec)
+            if remember_input:
+                self.input_vec = input_vec
             weights = tf.get_variable("weights", [input_vec.shape[1], self.output_dim],
                                       initializer=tf.random_normal_initializer())
             biases = tf.get_variable("biases", [self.output_dim],
                                      initializer=tf.constant_initializer())
-            return tf.add(tf.matmul(input_vec, weights), biases)
+
+            output = tf.add(tf.matmul(input_vec, weights), biases)
+            if gather_stats:
+                tf.summary.histogram("input", input_vec, family=self.scope)
+                tf.summary.histogram("weights", weights, family=self.scope)
+                tf.summary.histogram("biases", biases, family=self.scope)
+                tf.summary.histogram("output", output, family=self.scope)
+            return output
 
     def build_propagate(self, error, gather_stats=False):
         if not self.propagator:
@@ -53,8 +60,6 @@ class FullyConnected(WeightLayer):
 
             if gather_stats:
                 tf.summary.histogram("error", error, family=self.scope)
-                tf.summary.histogram("weights", weights, family=self.scope)
-                tf.summary.histogram("biases", biases, family=self.scope)
                 tf.summary.histogram("delta_weights", delta_weights, family=self.scope)
                 tf.summary.histogram("delta_biases", delta_biases, family=self.scope)
             return
@@ -81,10 +86,7 @@ class FullyConnectedManhattan(FullyConnected):
             self.step = (weights, biases)
             if gather_stats:
                 if gather_stats:
-                    tf.summary.histogram("input", input_vec, family=self.scope)
-                    tf.summary.histogram("error", error, family=self.scope)
-                    tf.summary.histogram("weights", weights, family=self.scope)
-                    tf.summary.histogram("biases", biases, family=self.scope)
+                    tf.summary.histogram("error", error, family=self.scope),
                     tf.summary.histogram("manhattan", manhattan, family=self.scope)
                     tf.summary.histogram("delta_weights", delta_weights, family=self.scope)
                     tf.summary.histogram("delta_biases", delta_biases, family=self.scope)

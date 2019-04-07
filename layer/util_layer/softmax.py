@@ -13,11 +13,19 @@ class Softmax(Layer):
     def build_forward(self, input_vec, remember_input=True, gather_stats=False):
         if remember_input:
             self.input_vec = input_vec
-        return tf.nn.softmax(input_vec, name=self.scope)
+        output = tf.nn.softmax(input_vec, name=self.scope)
+        if gather_stats:
+            tf.summary.histogram("output", output, family=self.scope)
+        return output
 
     def build_backward(self, error, gather_stats=False):
-        input_vec = self.restore_input()
         with tf.name_scope(self.scope):
+            input_vec = self.restore_input()
+            if gather_stats:
+                tf.summary.histogram("error", error, family=self.scope)
             if self.softmax_cross_entropy:
                 return error
-            return tf.gradients(tf.nn.softmax(input_vec), input_vec, error)[0]
+            delta = tf.gradients(tf.nn.softmax(input_vec), input_vec, error)[0]
+            if gather_stats:
+                tf.summary.histogram("delta", delta, family=self.scope)
+            return delta
