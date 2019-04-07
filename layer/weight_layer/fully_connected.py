@@ -1,11 +1,15 @@
 import tensorflow as tf
 
+from tensorflow.initializers import he_normal
 from layer.weight_layer.weight_layer import WeightLayer
 
 
 class FullyConnected(WeightLayer):
-    def __init__(self, output_dim, learning_rate=0.5, momentum=0.0, scope="fully_connected_layer", flatten=False):
+    def __init__(self, output_dim, learning_rate=0.5, momentum=0.0, scope="fully_connected_layer", flatten=False,
+                 weights_initializer=he_normal(), biases_initializer=tf.constant_initializer()):
         super().__init__(learning_rate, momentum, scope)
+        self.weights_initializer = weights_initializer
+        self.biases_initializer = biases_initializer
         self.output_dim = output_dim
         self.flatten = flatten
 
@@ -19,10 +23,9 @@ class FullyConnected(WeightLayer):
         if remember_input:
             self.input_vec = input_vec
         with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
-            weights = tf.get_variable("weights", [input_vec.shape[1], self.output_dim],
-                                      initializer=tf.random_normal_initializer())
-            biases = tf.get_variable("biases", [self.output_dim],
-                                     initializer=tf.constant_initializer())
+            weights =tf.get_variable(
+                "weights", [input_vec.shape[1], self.output_dim], initializer=self.weights_initializer)
+            biases = tf.get_variable("biases", [self.output_dim], initializer=self.biases_initializer)
             return tf.add(tf.matmul(input_vec, weights), biases)
 
     def build_propagate(self, error, gather_stats=True):
@@ -58,7 +61,6 @@ class FullyConnected(WeightLayer):
 
 
 class FullyConnectedManhattan(FullyConnected):
-
     def build_update(self, error, gather_stats=True):
         input_vec = self.restore_input()
         with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):

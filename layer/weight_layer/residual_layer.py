@@ -5,7 +5,6 @@ from layer.weight_layer.weight_layer import WeightLayer
 
 
 class ResidualLayer(WeightLayer):
-
     def __init__(self, sequence, trainable=True, scope="residual_layer"):
         super().__init__(trainable, scope=scope)
         self.propagator = None
@@ -63,3 +62,9 @@ class ResidualLayer(WeightLayer):
                     self.step.append(layer.step)
 
         return error + input_err
+
+    def build_propagate(self, error, gather_stats=False):
+        pass
+
+    def build_update(self, error, gather_stats=False):
+        pass
