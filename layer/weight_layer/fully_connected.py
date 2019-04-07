@@ -52,6 +52,7 @@ class FullyConnected(WeightLayer):
             self.step = (weights, biases)
 
             if gather_stats:
+                tf.summary.histogram("error", error)
                 tf.summary.histogram("weights", weights)
                 tf.summary.histogram("biases", biases)
                 tf.summary.histogram("delta_weights", delta_weights)
@@ -80,6 +81,7 @@ class FullyConnectedManhattan(FullyConnected):
             self.step = (weights, biases)
             if gather_stats:
                 if gather_stats:
+                    tf.summary.histogram("error", error)
                     tf.summary.histogram("weights", weights)
                     tf.summary.histogram("biases", biases)
                     tf.summary.histogram("manhattan", manhattan)

@@ -34,17 +34,18 @@ class ActivationLayer(Layer):
         if remember_input:
             self.input_vec = input_vec
         with tf.variable_scope(self.scope, tf.AUTO_REUSE):
-            return self.func(input_vec)
+            activated = self.func(input_vec)
+            if gather_stats:
+                tf.summary.histogram("activated", activated, family=self.scope)
+            return activated
 
     def build_backward(self, error, gather_stats=False):
         input_vec = self.restore_input()
         with tf.variable_scope(self.scope):
-            activated =  self.func_prime(input_vec)
-            result = tf.multiply(error, activated)
+            result = tf.multiply(error, self.func_prime(input_vec))
             if gather_stats:
-                tf.summary.histogram("input", input_vec)
-                tf.summary.histogram("activated", activated)
-                tf.summary.histogram("propagated_error", result)
+                tf.summary.histogram("input", input_vec, family=self.scope)
+                tf.summary.histogram("propagated_error", result, family=self.scope)
             return result
 
 
@@ -60,16 +61,14 @@ class Sigmoid(ActivationLayer):
         input_vec = self.restore_input()
         with tf.variable_scope(self.scope):
             if gather_stats:
-                tf.summary.histogram("input", input_vec)
+                tf.summary.histogram("input", input_vec, family=self.scope)
             if self.sigmoid_cross_entropy:
                 if gather_stats:
-                     tf.summary.histogram("propagated_error", error)
+                     tf.summary.histogram("propagated_error", error, family=self.scope)
                 return error
-            activated = self.func_prime(input_vec)
-            result = tf.multiply(error, activated)
+            result = tf.multiply(error, self.func_prime(input_vec))
             if gather_stats:
-                tf.summary.histogram("activated", activated)
-                tf.summary.histogram("propagated_error", result)
+                tf.summary.histogram("propagated_error", result, family=self.scope)
             return result
 
 

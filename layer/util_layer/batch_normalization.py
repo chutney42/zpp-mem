@@ -25,19 +25,13 @@ class BatchNormalization(Layer):
             beta = tf.get_variable("beta", input_shape, initializer=tf.zeros_initializer())
             batch_mean, batch_var = tf.nn.moments(input_vec, [0])
 
-            tf.nn.batch_normalization(input_vec, batch_mean, batch_var, beta, gamma, self.epsilon, "batch_n")
-
-            input_act_normalized = (input_vec - batch_mean) / tf.sqrt(batch_var + self.epsilon)
-            input_act_normalized = gamma * input_act_normalized + beta
-
-            if gather_stats:
-                print(f"ahaha {input_vec}")
-                tf.summary.histogram("for_input_not_normalized", input_vec)
-                tf.summary.histogram("for_var", batch_var)
-                tf.summary.histogram("for_mean", batch_mean)
-                tf.summary.histogram("for_input_normalized", input_act_normalized)
+            input_act_normalized = tf.nn.batch_normalization(input_vec, batch_mean, batch_var, beta, gamma, self.epsilon, "batch_n")
 
             self.output = input_act_normalized
+
+            if gather_stats:
+                tf.summary.histogram("mean", batch_mean, family=self.scope)
+                tf.summary.histogram("var", batch_var, family=self.scope)
 
             return input_act_normalized
 
@@ -55,13 +49,12 @@ class BatchNormalization(Layer):
             self.step = (update_beta, update_gamma)
 
             if gather_stats:
-                print(f"ahaha {input_vec}")
-                tf.summary.histogram("input_not_normalized", input_vec)
-                tf.summary.histogram("gamma", gamma)
-                tf.summary.histogram("beta", beta)
-                tf.summary.histogram("input_normalized", self.output)
-                tf.summary.histogram("d_gamma", grads[1])
-                tf.summary.histogram("d_beta", grads[2])
-                tf.summary.histogram("output_error", grads[0])
+                tf.summary.histogram("input_not_normalized", input_vec, family=self.scope)
+                tf.summary.histogram("gamma", gamma, family=self.scope)
+                tf.summary.histogram("beta", beta, family=self.scope)
+                tf.summary.histogram("input_normalized", self.output, family=self.scope)
+                tf.summary.histogram("d_gamma", grads[1], family=self.scope)
+                tf.summary.histogram("d_beta", grads[2], family=self.scope)
+                tf.summary.histogram("output_error", grads[0], family=self.scope)
 
             return grads[0]

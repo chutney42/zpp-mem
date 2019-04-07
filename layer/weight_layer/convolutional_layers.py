@@ -74,8 +74,8 @@ class ConvolutionalLayerManhattan(ConvolutionalLayer):
             filters = tf.assign(filters, filters - self.learning_rate * delta_filters)
             self.step = filters
             if gather_stats:
-                tf.summary.image(f"delta", delta_filters)
-                tf.summary.image(f"manhattan", manhattan)
-                tf.summary.image(f"filters", filters)
+                tf.summary.histogram(f"delta", delta_filters)
+                tf.summary.histogram(f"manhattan", manhattan)
+                tf.summary.histogram(f"filters", filters)
                 tf.summary.histogram("inputs", input_vec)
             return
