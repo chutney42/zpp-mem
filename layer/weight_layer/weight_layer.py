@@ -8,13 +8,13 @@ class WeightLayer(Layer):
         self.learning_rate = learning_rate
         self.momentum = momentum
 
-    def build_propagate(self, error, gather_stats=True):
+    def build_propagate(self, error, gather_stats=False):
         raise NotImplementedError("This method should be implemented in subclass")
 
-    def build_update(self, error, gather_stats=True):
+    def build_update(self, error, gather_stats=False):
         raise NotImplementedError("This method should be implemented in subclass")
 
-    def build_backward(self, error, gather_stats=True):
+    def build_backward(self, error, gather_stats=False):
         if not self.propagator:
             raise AttributeError("The propagator should be specified")
         propagated_error = self.build_propagate(error, gather_stats)

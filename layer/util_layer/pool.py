@@ -6,10 +6,12 @@ from layer.layer import Layer
 class Pool(Layer):
     def __init__(self, pooling_function, kernel_size, strides, padding="VALID", data_format='NHWC', scope="pool_layer"):
         super().__init__(trainable=False, scope=scope)
-        self.kernel_size = [1] + kernel_size + [1]
+        self.kernel_size = None
+        if kernel_size is not None:
+            self.kernel_size = [1] + kernel_size + [1]
+            if len(self.kernel_size) > 4:
+                self.kernel_size = kernel_size
         self.strides = [1] + strides + [1]
-        if len(self.kernel_size) > 4:
-            self.kernel_size = kernel_size
         if len(self.strides) > 4:
             self.strides = strides
         self.padding = padding
@@ -20,14 +22,16 @@ class Pool(Layer):
     def __str__(self):
         return f"{self.pooling_function_name}({self.kernel_size}, {self.strides}, {self.padding})"
 
-    def build_forward(self, input_vec, remember_input=True, gather_stats=True):
+    def build_forward(self, input_vec, remember_input=True, gather_stats=False):
         if remember_input:
             self.input_vec = input_vec
         with tf.variable_scope(self.scope, tf.AUTO_REUSE):
+            if self.kernel_size is None:
+                self.kernel_size = [1] + list(map(lambda x: x.value, input_vec.shape[1:-1])) + [1]
             output = self.pooling_function(input_vec, self.kernel_size, self.strides, self.padding, self.data_format)
             return output
 
-    def build_backward(self, error, gather_stats=True):
+    def build_backward(self, error, gather_stats=False):
         with tf.variable_scope(self.scope):
             pre_pool = self.restore_input()
             post_pool = self.pooling_function(pre_pool, self.kernel_size, self.strides, self.padding, self.data_format)
@@ -36,12 +40,12 @@ class Pool(Layer):
 
 
 class MaxPool(Pool):
-    def __init__(self, *args):
-        super().__init__(tf.nn.max_pool, scope="max_pool", *args)
+    def __init__(self, kernel_size, strides, padding="VALID", data_format='NHWC', scope="max_pool_layer"):
+        super().__init__(tf.nn.max_pool, kernel_size, strides, padding, data_format, scope)
         self.pooling_function_name = "MaxPool"
 
 
 class AveragePool(Pool):
-    def __init__(self, *args):
-        super().__init__(tf.nn.avg_pool, scope="average_pool", *args)
+    def __init__(self, kernel_size, strides, padding="VALID", data_format='NHWC', scope="avg_pool_layer"):
+        super().__init__(tf.nn.avg_pool, kernel_size, strides, padding, data_format, scope)
         self.pooling_function_name = "AveragePool"

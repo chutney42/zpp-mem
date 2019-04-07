@@ -6,10 +6,10 @@ from layer.weight_layer.weight_layer import WeightLayer
 
 
 class ConvolutionalLayer(WeightLayer):
-    def __init__(self, filter_dim, stride=[1, 1, 1, 1], number_of_filters=1, padding="SAME", trainable=True,
+    def __init__(self, filter_dim, stride=[1, 1], number_of_filters=1, padding="SAME", trainable=True,
                  learning_rate=0.5, momentum=0.0, scope="convoluted_layer"):
         super().__init__(learning_rate, momentum, scope)
-        self.stride = stride
+        self.stride = [1] + stride + [1]
         self.filter_dim = filter_dim
         self.number_of_filters = number_of_filters
         self.trainable = trainable
@@ -20,7 +20,7 @@ class ConvolutionalLayer(WeightLayer):
     def __str__(self):
         return f"ConvolutionalLayer({self.filter_dim} {self.number_of_filters} {self.stride})"
 
-    def build_forward(self, input_vec, remember_input=True, gather_stats=True):
+    def build_forward(self, input_vec, remember_input=True, gather_stats=False):
         with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
             self.save_shape(input_vec)
             self.input_flat_shape = int(
@@ -37,14 +37,14 @@ class ConvolutionalLayer(WeightLayer):
             self.output_shape = tf.shape(output)
             return output
 
-    def build_propagate(self, error, gather_stats=True):
+    def build_propagate(self, error, gather_stats=False):
         if not self.propagator:
             raise AttributeError("The propagator should be specified")
         with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
             backprop_error = self.propagator.propagate_conv(self, error)
             return self.restore_shape(backprop_error)
 
-    def build_update(self, error, gather_stats=True):
+    def build_update(self, error, gather_stats=False):
         input_vec = self.restore_input()
         with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
             filters = tf.get_variable("filters")
@@ -62,7 +62,7 @@ class ConvolutionalLayer(WeightLayer):
 
 
 class ConvolutionalLayerManhattan(ConvolutionalLayer):
-    def build_update(self, error, gather_stats=True):
+    def build_update(self, error, gather_stats=False):
         input_vec = self.restore_input()
         with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
             filters = tf.get_variable("filters")

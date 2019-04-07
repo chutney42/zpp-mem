@@ -10,14 +10,14 @@ class Softmax(Layer):
     def __str__(self):
         return "Softmax()"
 
-    def build_forward(self, input_vec, remember_input=True, gather_stats=True):
+    def build_forward(self, input_vec, remember_input=True, gather_stats=False):
         if remember_input:
             self.input_vec = input_vec
         return tf.nn.softmax(input_vec, name=self.scope)
 
-    def build_backward(self, error, gather_stats=True):
+    def build_backward(self, error, gather_stats=False):
         input_vec = self.restore_input()
         with tf.name_scope(self.scope):
             if self.softmax_cross_entropy:
                 return error
-            return tf.gradients(input_vec, tf.nn.softmax(input_vec), error)
+            return tf.gradients(tf.nn.softmax(input_vec), input_vec, error)[0]

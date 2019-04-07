@@ -12,7 +12,7 @@ class FullyConnected(WeightLayer):
     def __str__(self):
         return f"FullyConnected({self.output_dim})"
 
-    def build_forward(self, input_vec, remember_input=True, gather_stats=True):
+    def build_forward(self, input_vec, remember_input=True, gather_stats=False):
         self.save_shape(input_vec)
         if self.flatten:
             input_vec = tf.layers.Flatten()(input_vec)
@@ -25,7 +25,7 @@ class FullyConnected(WeightLayer):
                                      initializer=tf.constant_initializer())
             return tf.add(tf.matmul(input_vec, weights), biases)
 
-    def build_propagate(self, error, gather_stats=True):
+    def build_propagate(self, error, gather_stats=False):
         if not self.propagator:
             raise AttributeError("The propagator should be specified")
         with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
@@ -34,7 +34,7 @@ class FullyConnected(WeightLayer):
                 backprop_error = tf.reshape(backprop_error, self.input_shape)
             return backprop_error
 
-    def build_update(self, error, gather_stats=True):
+    def build_update(self, error, gather_stats=False):
         input_vec = self.restore_input()
         with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
             weights = tf.get_variable("weights")
@@ -61,7 +61,7 @@ class FullyConnected(WeightLayer):
 
 class FullyConnectedManhattan(FullyConnected):
 
-    def build_update(self, error, gather_stats=True):
+    def build_update(self, error, gather_stats=False):
         input_vec = self.restore_input()
         with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
             weights = tf.get_variable("weights")

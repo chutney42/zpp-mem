@@ -17,10 +17,10 @@ class Layer(object):
         self.input_vec = None
         return input_vec
 
-    def build_forward(self, input_vec, remember_input=True, gather_stats=True):
+    def build_forward(self, input_vec, remember_input=True, gather_stats=False):
         raise NotImplementedError("This method should be implemented in subclass")
 
-    def build_backward(self, error, gather_stats=True):
+    def build_backward(self, error, gather_stats=False):
         raise NotImplementedError("This method should be implemented in subclass")
 
     def save_shape(self, input_vec):

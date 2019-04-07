@@ -1,12 +1,5 @@
-from layer.activation.activation_layer import Sigmoid, ReLu
-from layer.block import Block
-from layer.util_layer.batch_normalization import BatchNormalization
-from layer.util_layer.max_pool import MaxPool
-from layer.weight_layer.fully_connected import FullyConnected, FullyConnectedManhattan
-from layer.weight_layer.convolutional_layers import ConvolutionalLayer, ConvolutionalLayerManhattan
-from layer.weight_layer.fully_connected import FullyConnected
-from layer.util_layer.softmax import Softmax
-
+from definition.resnet import *
+from layer import *
 
 def fc1(output_size):
     return [Block([FullyConnected(50, flatten=True), BatchNormalization(), Sigmoid()]),
@@ -85,3 +78,24 @@ def long_conv(output_size):
               range(30)]
     blocks.append(Block([FullyConnected(output_size, flatten=True), Sigmoid()]))
     return blocks
+
+
+def resnet_18(output_size):
+    return build_resnet(output_size, [2, 2, 2, 2], batch_relu_conv)
+
+
+def resnet_34(output_size):
+    return build_resnet(output_size, [3, 4, 6, 3], batch_relu_conv)
+
+
+def resnet_50(output_size):
+    return build_resnet(output_size, [3, 4, 6, 3], batch_relu_conv_3)
+
+
+def resnet_101(output_size):
+    return build_resnet(output_size, [3, 4, 23, 3], batch_relu_conv_3)
+
+
+def resnet_152(output_size):
+    return build_resnet(output_size, [3, 8, 36, 3], batch_relu_conv_3)
+

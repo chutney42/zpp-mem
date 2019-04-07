@@ -30,7 +30,7 @@ class ActivationLayer(Layer):
         self.func = func
         self.func_prime = func_prime
 
-    def build_forward(self, input_vec, remember_input=False, gather_stats=True):
+    def build_forward(self, input_vec, remember_input=False, gather_stats=False):
         if remember_input:
             self.input_vec = input_vec
         with tf.variable_scope(self.scope, tf.AUTO_REUSE):
@@ -56,7 +56,7 @@ class Sigmoid(ActivationLayer):
     def __str__(self):
         return "Sigmoid()"
 
-    def build_backward(self, error, gather_stats=True):
+    def build_backward(self, error, gather_stats=False):
         input_vec = self.restore_input()
         with tf.variable_scope(self.scope):
             if gather_stats:

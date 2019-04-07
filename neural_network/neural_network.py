@@ -9,7 +9,7 @@ file_name = "run_auto_increment"
 
 
 class NeuralNetwork(object):
-    def __init__(self, types, shapes, sequence, cost_function_name, propagator, learning_rate=0.1, scope="main", gather_stats=True,
+    def __init__(self, types, shapes, sequence, cost_function_name, propagator, learning_rate=0.1, scope="main", gather_stats=False,
                  restore_model=False, save_model=False, restore_model_path=None, save_model_path=None):
         print(f"Create {scope} model with learning_rate={learning_rate}")
         self.scope = scope
