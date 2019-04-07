@@ -28,6 +28,7 @@ class Pool(Layer):
         with tf.variable_scope(self.scope, tf.AUTO_REUSE):
             if self.kernel_size is None:
                 self.kernel_size = [1] + list(map(lambda x: x.value, input_vec.shape[1:-1])) + [1]
+
             output = self.pooling_function(input_vec, self.kernel_size, self.strides, self.padding, self.data_format)
             return output
 

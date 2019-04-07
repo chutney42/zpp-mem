@@ -27,7 +27,7 @@ def get_id_and_name_from_arguments():
     parser.add_argument('-learning_rate', type=float, required=False, help='learning rate')
     parser.add_argument('-batch_size', type=int, required=False, help='batch size')
     parser.add_argument('-epochs', type=int, required=False, help='epochs')
-    parser.add_argument('-cost_method', type=str, required=False, help='cost method')
+    parser.add_argument('-cost_function', type=str, required=False, help='cost function')
     parser.add_argument('-dataset', type=str, required=False, help='dataset')
     parser.add_argument('-sequence', type=str, required=False, help='sequence')
     parser.add_argument('-seed', type=int, required=False, help='seed')
@@ -46,7 +46,7 @@ def get_network_definition():
     learning_rate = parser.parse_args().learning_rate
     batch_size = parser.parse_args().batch_size
     epochs = parser.parse_args().epochs
-    cost_method = parser.parse_args().cost_method
+    cost_function = parser.parse_args().cost_function
     dataset = parser.parse_args().dataset
     sequence = parser.parse_args().sequence
     gather_stats = parser.parse_args().gather_stats
@@ -71,10 +71,10 @@ def get_network_definition():
         network_definition.update({"batch_size": batch_size})
     if epochs is not None:
         network_definition.update({"epochs": epochs})
-    if cost_method is not None:
-        network_definition.update({"cost_function": cost_method})
+    if cost_function is not None:
+        network_definition.update({"cost_function": cost_function})
     if dataset is not None:
-        network_definition.update({"dataset": dataset})
+        network_definition.update({"dataset_name": dataset})
     if sequence is not None:
         network_definition.update({"sequence": sequence})
     if gather_stats is not None:
@@ -122,7 +122,8 @@ def train_network(neural_network, training, test, network):
                          epochs=network['epochs'],
                          eval_period=network['eval_period'],
                          stat_period=network['stat_period'],
-                         memory_only=network['memory_only'])
+                         memory_only=network['memory_only'],
+                         minimum_accuracy=network['minimum_accuracy'])
     print(f"learning process took {time.time() - start_learning_time} seconds (realtime)")
 
 
@@ -134,3 +135,4 @@ if __name__ == '__main__':
     training_set, test_set = datasets_dict[network_def['dataset_name']]()
     neural_net = create_network(network_def, training_set.output_types, training_set.output_shapes)
     train_network(neural_net, training_set, test_set, network_def)
+    # return 0

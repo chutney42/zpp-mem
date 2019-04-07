@@ -1,8 +1,8 @@
 import os
-from layer.layer import *
+
 from layer.activation.activation_layer import Sigmoid
+from layer.layer import *
 from layer.util_layer.softmax import Softmax
-import numpy as np
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'  # hacked by Adam
 
@@ -11,8 +11,8 @@ file_name = "run_auto_increment"
 
 class NeuralNetwork(object):
     def __init__(self, types, shapes, sequence, cost_function_name, propagator, learning_rate=0.1, scope="main",
-                 gather_stats=False,
-                 restore_model=False, save_model=False, restore_model_path=None, save_model_path=None):
+                 gather_stats=False, restore_model=False, save_model=False, restore_model_path=None,
+                 save_model_path=None):
         print(f"Create {scope} model with learning_rate={learning_rate}")
         self.scope = scope
         self.sequence = sequence
@@ -109,12 +109,12 @@ class NeuralNetwork(object):
         self.build_backward(error)
 
     def train(self, training_set, validation_set, batch_size=20, epochs=2, eval_period=1000, stat_period=100,
-              memory_only=False):
+              memory_only=False, minimum_accuracy=[]):
         self.memory_only = memory_only
         print(f"batch_size: {batch_size} epochs: {epochs} eval_per: {eval_period} stat_per: {stat_period}")
         training_set = training_set.shuffle(200).batch(batch_size)
 
-        with tf.variable_scope("itarators", reuse=tf.AUTO_REUSE):
+        with tf.variable_scope("iterators_handlers", reuse=tf.AUTO_REUSE):
             self.training_it = training_set.make_initializable_iterator()
             self.validation_it = validation_set.batch(batch_size).make_initializable_iterator()
             self.mini_validation_it = validation_set.batch(batch_size).shuffle(200).take(
@@ -123,9 +123,18 @@ class NeuralNetwork(object):
         config = tf.ConfigProto()
         config.gpu_options.allow_growth = True
         with tf.Session(config=config) as self.sess:
-            self.__train_all_epochs(batch_size, epochs, eval_period, stat_period)
+            self.__train_all_epochs(batch_size, epochs, eval_period, stat_period, minimum_accuracy)
 
-    def __train_all_epochs(self, batch_size, epochs, eval_period, stat_period):
+    def __train_all_epochs(self, batch_size, epochs, eval_period, stat_period,
+                           minimum_accuracy):
+        def should_terminate_training(current_accuracy, minimum_accuracy):
+            for min_acc in minimum_accuracy:
+                if self.epoch + 1 > min_acc[0] and current_accuracy < min_acc[1]:
+                    print(f"Terminating learning process due to insuficcient accuracy\n Expected {min_acc[1]}" +
+                          f" accuracy after {min_acc[0]} epochs, network achieved {current_accuracy} accuracy")
+                    return True
+            return False
+
         writer, val_writer = self.__init_writers()
         training_handle, validation_handle, mini_validation_handle = self.__init_handlers()
         self.__init_global_variables()
@@ -138,6 +147,8 @@ class NeuralNetwork(object):
                                       mini_validation_handle, writer, val_writer, eval_period, stat_period)
             acc, loss = self.__validate(self.validation_it, validation_handle)
             print(f"start epoch {self.epoch}, accuracy: {acc}%, loss:{loss}")
+            if should_terminate_training(acc, minimum_accuracy):
+                break
 
             if self.memory_only:
                 break
