@@ -55,10 +55,10 @@ class ConvolutionalLayer(WeightLayer):
             filters = tf.assign(filters, filters - self.learning_rate * delta_filters)
             self.step = filters
             if gather_stats:
-                tf.summary.histogram("error", error)
-                tf.summary.histogram("delta", delta_filters)
-                tf.summary.histogram("weights", filters)
-                tf.summary.histogram("input", input_vec)
+                tf.summary.histogram("error", error, family=self.scope)
+                tf.summary.histogram("delta", delta_filters, family=self.scope)
+                tf.summary.histogram("weights", filters, family=self.scope)
+                tf.summary.histogram("input", input_vec, family=self.scope)
             return
 
 
@@ -75,9 +75,9 @@ class ConvolutionalLayerManhattan(ConvolutionalLayer):
             filters = tf.assign(filters, filters - self.learning_rate * delta_filters)
             self.step = filters
             if gather_stats:
-                tf.summary.histogram("error", error)
-                tf.summary.histogram("delta", delta_filters)
-                tf.summary.histogram("manhattan", manhattan)
-                tf.summary.histogram("weights", filters)
-                tf.summary.histogram("input", input_vec)
+                tf.summary.histogram("error", error, family=self.scope)
+                tf.summary.histogram("delta", delta_filters, family=self.scope)
+                tf.summary.histogram("manhattan", manhattan, family=self.scope)
+                tf.summary.histogram("weights", filters, family=self.scope)
+                tf.summary.histogram("input", input_vec, family=self.scope)
             return

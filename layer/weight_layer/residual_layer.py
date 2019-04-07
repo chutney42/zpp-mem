@@ -25,9 +25,9 @@ class ResidualLayer(WeightLayer):
 
         with tf.variable_scope(self.scope, tf.AUTO_REUSE):
             for i, layer in enumerate(self.sequence):
+                layer.scope = f"{self.scope}_{i}_{layer.scope}"
                 if isinstance(layer, WeightLayer):
                     layer.propagator = self.propagator
-                layer.scope = f"{self.scope}_{layer.scope}_{i}"
 
             residual = input_vec
             for layer in self.sequence:
@@ -44,7 +44,8 @@ class ResidualLayer(WeightLayer):
                 self.shortcut_conv = ConvolutionalLayer(number_of_filters=res_shape[3],
                                   filter_dim=(1, 1),
                                   stride=[stride_width, stride_height],
-                                  padding="VALID", scope=f"{self.scope}_convoluted_shortcut")
+                                  padding="VALID",
+                                  scope=f"{self.scope}_{len(self.sequence)}_shortcut_convolution")
                 self.shortcut_conv.propagator = self.propagator
                 input_vec = self.shortcut_conv.build_forward(input_vec)
 

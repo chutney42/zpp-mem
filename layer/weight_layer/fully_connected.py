@@ -52,11 +52,11 @@ class FullyConnected(WeightLayer):
             self.step = (weights, biases)
 
             if gather_stats:
-                tf.summary.histogram("error", error)
-                tf.summary.histogram("weights", weights)
-                tf.summary.histogram("biases", biases)
-                tf.summary.histogram("delta_weights", delta_weights)
-                tf.summary.histogram("delta_biases", delta_biases)
+                tf.summary.histogram("error", error, family=self.scope)
+                tf.summary.histogram("weights", weights, family=self.scope)
+                tf.summary.histogram("biases", biases, family=self.scope)
+                tf.summary.histogram("delta_weights", delta_weights, family=self.scope)
+                tf.summary.histogram("delta_biases", delta_biases, family=self.scope)
             return
 
 
@@ -81,11 +81,11 @@ class FullyConnectedManhattan(FullyConnected):
             self.step = (weights, biases)
             if gather_stats:
                 if gather_stats:
-                    tf.summary.histogram("input", input_vec)
-                    tf.summary.histogram("error", error)
-                    tf.summary.histogram("weights", weights)
-                    tf.summary.histogram("biases", biases)
-                    tf.summary.histogram("manhattan", manhattan)
-                    tf.summary.histogram("delta_weights", delta_weights)
-                    tf.summary.histogram("delta_biases", delta_biases)
+                    tf.summary.histogram("input", input_vec, family=self.scope)
+                    tf.summary.histogram("error", error, family=self.scope)
+                    tf.summary.histogram("weights", weights, family=self.scope)
+                    tf.summary.histogram("biases", biases, family=self.scope)
+                    tf.summary.histogram("manhattan", manhattan, family=self.scope)
+                    tf.summary.histogram("delta_weights", delta_weights, family=self.scope)
+                    tf.summary.histogram("delta_biases", delta_biases, family=self.scope)
             return

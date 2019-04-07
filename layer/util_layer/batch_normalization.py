@@ -24,34 +24,32 @@ class BatchNormalization(Layer):
             beta = tf.get_variable("beta", input_shape, initializer=tf.zeros_initializer())
             batch_mean, batch_var = tf.nn.moments(input_vec, [0])
 
-            input_act_normalized = tf.nn.batch_normalization(input_vec, batch_mean, batch_var, beta, gamma, self.epsilon, "batch_n")
-
-            self.output = input_act_normalized
+            self.output = tf.nn.batch_normalization(input_vec, batch_mean, batch_var, beta, gamma, self.epsilon, "batch_n")
 
             if gather_stats:
+                tf.summary.histogram("input", input_vec, family=self.scope)
                 tf.summary.histogram("mean", batch_mean, family=self.scope)
                 tf.summary.histogram("var", batch_var, family=self.scope)
+                tf.summary.histogram("gamma", gamma, family=self.scope)
+                tf.summary.histogram("beta", beta, family=self.scope)
+                tf.summary.histogram("input_normalized", self.output, family=self.scope)
 
-            return input_act_normalized
+            return self.output
 
     def build_backward(self, error, gather_stats=False):
         with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
             input_vec = self.restore_input()
 
-            gamma = tf.get_variable("gamma")
-            beta = tf.get_variable("beta")
+            self.gamma = gamma = tf.get_variable("gamma")
+            self.beta = beta = tf.get_variable("beta")
 
-            grads = tf.gradients(self.output, [input_vec, gamma, beta], error)
+            self.grads = grads = tf.gradients(self.output, [input_vec, gamma, beta], error)
 
-            update_gamma = tf.assign(gamma, tf.subtract(gamma, tf.multiply(grads[1], self.learning_rate)))
-            update_beta = tf.assign(beta, tf.subtract(beta, tf.multiply(grads[2], self.learning_rate)))
-            self.step = (update_beta, update_gamma)
+            gamma = tf.assign(gamma, tf.subtract(gamma, tf.multiply(self.learning_rate, grads[1])))
+            beta = tf.assign(beta, tf.subtract(beta, tf.multiply(self.learning_rate, grads[2])))
+            self.step = [gamma, beta]
 
             if gather_stats:
-                tf.summary.histogram("input", input_vec, family=self.scope)
-                tf.summary.histogram("gamma", gamma, family=self.scope)
-                tf.summary.histogram("beta", beta, family=self.scope)
-                tf.summary.histogram("input_normalized", self.output, family=self.scope)
                 tf.summary.histogram("delta_gamma", grads[1], family=self.scope)
                 tf.summary.histogram("delta_beta", grads[2], family=self.scope)
                 tf.summary.histogram("output_error", grads[0], family=self.scope)

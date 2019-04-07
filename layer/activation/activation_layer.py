@@ -30,7 +30,7 @@ class ActivationLayer(Layer):
         self.func = func
         self.func_prime = func_prime
 
-    def build_forward(self, input_vec, remember_input=False, gather_stats=False):
+    def build_forward(self, input_vec, remember_input=True, gather_stats=False):
         if remember_input:
             self.input_vec = input_vec
         with tf.variable_scope(self.scope, tf.AUTO_REUSE):

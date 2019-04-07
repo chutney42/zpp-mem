@@ -3,10 +3,10 @@ from numpy.random import randint
 default_network = {
     "type": "BP",
     "dataset_name": "mnist",
-    "sequence": "long_fc",
+    "sequence": "resnet_18",
     "cost_function": "mean_squared_error",
     "learning_rate": 0.1,
-    "gather_stats": False,
+    "gather_stats": True,
     "restore_model": False,
     "save_model": False,
     "restore_model_path": None,
@@ -16,7 +16,7 @@ default_network = {
     "eval_period": 1000,
     "stat_period": 100,
     "memory_only": False,
-    "seed": randint(1, 100000000),
+    "seed": 16219482, #randint(1, 100000000),
     "device": "/cpu:0"
 }
 
