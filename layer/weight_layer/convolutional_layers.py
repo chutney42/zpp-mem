@@ -1,7 +1,9 @@
 from functools import reduce
 
 import tensorflow as tf
-
+from layer.block import Block
+from layer.activation import ReLu
+from layer.util_layer import BatchNormalization, MaxPool
 from layer.weight_layer.weight_layer import WeightLayer
 
 
@@ -82,7 +84,6 @@ class ConvolutionalLayerManhattan(ConvolutionalLayer):
 
 
 def put_kernels_on_grid(kernel, grid_Y=None, grid_X=None, pad=1):
-
     def factorization(n):
         from numpy.ma import sqrt
         for i in range(int(sqrt(float(n))), 0, -1):

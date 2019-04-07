@@ -14,8 +14,8 @@ class BatchNormalization(Layer):
         return "BatchNormalization()"
 
     def build_forward(self, input_vec, remember_input=True, gather_stats=True):
-        self.save_shape(input_vec)
         with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
+            self.save_shape(input_vec)
             if remember_input:
                 self.input_vec = input_vec
             input_shape=input_vec.get_shape()[1:]
