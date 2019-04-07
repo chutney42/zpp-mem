@@ -8,7 +8,7 @@ def cifar100():
         feature = tf.reshape(feature, [32,32,3])
         label = label[0]
         label = tf.one_hot(label, 100)
-        feature = (tf.to_float(feature) - 128.0 / 255.0)
+        feature = (tf.to_float(feature) - 128.0) / 255.0
         return feature, label
 
     train_data_set = tf.data.Dataset.from_tensor_slices(training).map(transform)
@@ -24,7 +24,7 @@ def cifar10():
         feature = tf.reshape(feature, [32,32,3])
         label = label[0]
         label = tf.one_hot(label, 10)
-        feature = tf.to_float(feature) - 128.0 / 255.0
+        feature = (tf.to_float(feature) - 128.0) / 255.0
         return feature, label
 
     train_data_set = tf.data.Dataset.from_tensor_slices(training).map(transform)
@@ -39,7 +39,7 @@ def mnist():
     def transform(feature, label):
         feature = tf.reshape(feature, [28, 28, 1])
         label = tf.one_hot(label, 10)
-        feature = tf.to_float(feature) - 128.0 / 255.0
+        feature = (tf.to_float(feature) - 128.0) / 255.0
         return feature, label
 
     train_data_set = tf.data.Dataset.from_tensor_slices(training).map(transform)

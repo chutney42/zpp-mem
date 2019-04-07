@@ -54,7 +54,7 @@ class NeuralNetwork(object):
             self.cost_function = MeanSquaredError
         else:
             raise NotImplementedError(f"Cost function {cost_function_name} is not recognized.")
-        
+
     def __init_run_number(self):
         if not os.path.isfile(file_name):
             with open(file_name, 'w+') as file:
@@ -91,9 +91,13 @@ class NeuralNetwork(object):
 
     def __build_test(self, a):
         self.acc, self.acc_update = tf.metrics.accuracy(tf.argmax(self.labels, 1), tf.argmax(a, 1), name="accuracy_metric")
+        self.loss, self.loss_update = tf.metrics.mean(self.cost_function.cost(a, self.labels), name="loss_metric")
+
         self.running_vars = tf.get_collection(tf.GraphKeys.LOCAL_VARIABLES, scope="accuracy_metric")
+        self.running_vars += tf.get_collection(tf.GraphKeys.LOCAL_VARIABLES, scope="loss_metric")
         self.running_vars_initializer = tf.variables_initializer(var_list=self.running_vars)
         self.acc_summary = tf.summary.scalar("accuracy", self.acc)
+        self.loss_summary = tf.summary.scalar("loss", self.loss)
 
     def build(self):
         self.result = self.build_forward()
@@ -109,7 +113,7 @@ class NeuralNetwork(object):
 
         with tf.variable_scope("itarators", reuse=tf.AUTO_REUSE):
             training_it = training_set.make_initializable_iterator()
-            validation_it = validation_set.batch(batch_size).make_initializable_iterator()
+            validation_it = validation_set.batch(batch_size).take(2000).make_initializable_iterator()
 
         config = tf.ConfigProto()
         config.gpu_options.allow_growth = True
@@ -125,15 +129,15 @@ class NeuralNetwork(object):
         self.epoch = 0
         print(f"start training for epochs={epochs} with batch_size={batch_size}")
         for _ in range(epochs):
-            res = self.__validate(validation_it, validation_handle)
-            print(f"start epoch {self.epoch}, accuracy: {res}%")
+            acc, loss = self.__validate(validation_it, validation_handle)
+            print(f"start epoch {self.epoch}, accuracy: {acc}%, loss:{loss}")
             self.__train_single_epoch(training_it, validation_it, training_handle, validation_handle, writer,
                                       val_writer, eval_period, stat_period)
             if self.memory_only:
                 break
 
-        res = self.__validate(validation_it, validation_handle)
-        print(f"total accuracy: {res}% iterations: {self.counter}")
+        acc, loss = self.__validate(validation_it, validation_handle)
+        print(f"total accuracy: {acc}%, loss: {loss}, acc iterations: {self.counter}")
         self.__close_writers(writer, val_writer)
         self.__maybe_save_model()
 
@@ -181,7 +185,7 @@ class NeuralNetwork(object):
                 if self.memory_only or (self.gather_stats and self.counter % stat_period is 0):
                     run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
                     run_metadata = tf.RunMetadata()
-                    summary, _, _ = self.sess.run([self.merged_summary, self.step, self.acc_update], feed_dict, run_options, run_metadata)
+                    summary, _, _, _ = self.sess.run([self.merged_summary, self.step, self.acc_update, self.loss_update], feed_dict, run_options, run_metadata)
                     writer.add_run_metadata(run_metadata, f"step_{self.counter}")
                     writer.add_summary(summary, self.counter)
                     if self.memory_only or self.counter is stat_period:
@@ -189,11 +193,11 @@ class NeuralNetwork(object):
                         if self.memory_only:
                             break
                 else:
-                    self.sess.run([self.step, self.acc_update], feed_dict)
+                    self.sess.run([self.step, self.acc_update, self.acc_update], feed_dict)
 
                 if self.counter % eval_period is 0:
-                    res = self.__validate(validation_it, validation_handle, val_writer)
-                    print(f"iteration: {self.counter}, accuracy: {res}%")
+                    acc, loss = self.__validate(validation_it, validation_handle, val_writer)
+                    print(f"iteration: {self.counter}, accuracy: {acc}%, loss: {loss}")
 
                 self.counter += 1
             except tf.errors.OutOfRangeError:
@@ -207,16 +211,17 @@ class NeuralNetwork(object):
         while True:
             try:
                 feed_dict = {self.handle: validation_handle}
-                self.sess.run(self.acc_update, feed_dict)
+                self.sess.run([self.acc_update, self.loss_update], feed_dict)
             except tf.errors.OutOfRangeError:
                 break
         if writer is None:
-            res = self.sess.run(self.acc)
+            acc, loss = self.sess.run([self.acc, self.loss])
         else:
-            summary, res = self.sess.run([self.acc_summary, self.acc])
-            writer.add_summary(summary, self.counter)
+            summary_acc, acc, summary_loss, loss = self.sess.run([self.acc_summary, self.acc, self.loss_summary, self.loss])
+            writer.add_summary(summary_acc, self.counter)
+            writer.add_summary(summary_loss, self.counter)
         self.__switch_context()
-        return res * 100
+        return acc * 100, loss
 
     def __gather_memory_usage(self, run_metadata):
         print(f"gather memory stats in file ./memory_usage/data_{self.scope}_{self.run_number}")

@@ -1,5 +1,4 @@
 import tensorflow as tf
-from functools import reduce
 
 from layer.layer import Layer
 
@@ -7,7 +6,7 @@ from layer.layer import Layer
 class BatchNormalization(Layer):
     def __init__(self, learning_rate=0.5, scope="batch_normalization_layer"):
         super().__init__(trainable=True, scope=scope)
-        self.epsilon = 0.0000001
+        self.epsilon = 0.000001
         self.learning_rate = learning_rate
 
     def __str__(self):
@@ -42,19 +41,19 @@ class BatchNormalization(Layer):
             gamma = tf.get_variable("gamma")
             beta = tf.get_variable("beta")
 
-            grads = tf.gradients(self.output, [input_vec,gamma, beta], error)
+            grads = tf.gradients(self.output, [input_vec, gamma, beta], error)
 
-            update_beta = tf.assign(beta, tf.subtract(beta, tf.multiply(grads[2], self.learning_rate)))
             update_gamma = tf.assign(gamma, tf.subtract(gamma, tf.multiply(grads[1], self.learning_rate)))
+            update_beta = tf.assign(beta, tf.subtract(beta, tf.multiply(grads[2], self.learning_rate)))
             self.step = (update_beta, update_gamma)
 
             if gather_stats:
-                tf.summary.histogram("input_not_normalized", input_vec, family=self.scope)
+                tf.summary.histogram("input", input_vec, family=self.scope)
                 tf.summary.histogram("gamma", gamma, family=self.scope)
                 tf.summary.histogram("beta", beta, family=self.scope)
                 tf.summary.histogram("input_normalized", self.output, family=self.scope)
-                tf.summary.histogram("d_gamma", grads[1], family=self.scope)
-                tf.summary.histogram("d_beta", grads[2], family=self.scope)
+                tf.summary.histogram("delta_gamma", grads[1], family=self.scope)
+                tf.summary.histogram("delta_beta", grads[2], family=self.scope)
                 tf.summary.histogram("output_error", grads[0], family=self.scope)
 
             return grads[0]

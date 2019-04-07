@@ -63,8 +63,8 @@ class FullyConnected(WeightLayer):
 class FullyConnectedManhattan(FullyConnected):
 
     def build_update(self, error, gather_stats=False):
-        input_vec = self.restore_input()
         with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
+            input_vec = self.restore_input()
             weights = tf.get_variable("weights")
             biases = tf.get_variable("biases")
             delta_weights = tf.get_variable("delta_weights", weights.shape, initializer=tf.zeros_initializer())
@@ -81,6 +81,7 @@ class FullyConnectedManhattan(FullyConnected):
             self.step = (weights, biases)
             if gather_stats:
                 if gather_stats:
+                    tf.summary.histogram("input", input_vec)
                     tf.summary.histogram("error", error)
                     tf.summary.histogram("weights", weights)
                     tf.summary.histogram("biases", biases)
