@@ -1,7 +1,6 @@
 from functools import reduce
 
 import tensorflow as tf
-
 from tensorflow.initializers import he_normal
 from layer.weight_layer.weight_layer import WeightLayer
 
@@ -82,7 +81,6 @@ class ConvolutionalLayerManhattan(ConvolutionalLayer):
 
 
 def put_kernels_on_grid(kernel, grid_Y=None, grid_X=None, pad=1):
-
     def factorization(n):
         from numpy.ma import sqrt
         for i in range(int(sqrt(float(n))), 0, -1):
