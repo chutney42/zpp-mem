@@ -10,8 +10,8 @@ file_name = "run_auto_increment"
 
 class NeuralNetwork(object):
     def __init__(self, types, shapes, sequence, cost_function_name, propagator, learning_rate=0.1, scope="main",
-                 gather_stats=True,
-                 restore_model=False, save_model=False, restore_model_path=None, save_model_path=None):
+                 gather_stats=True, restore_model=False, save_model=False, restore_model_path=None,
+                 save_model_path=None):
         print(f"Create {scope} model with learning_rate={learning_rate}")
         self.scope = scope
         self.sequence = sequence
@@ -104,7 +104,7 @@ class NeuralNetwork(object):
         self.build_backward(error)
 
     def train(self, training_set, validation_set, batch_size=20, epochs=2, eval_period=1000, stat_period=100,
-              memory_only=False, minimun_accuracy=[]):
+              memory_only=False, minimum_accuracy=[]):
         self.memory_only = memory_only
         print(f"batch_size: {batch_size} epochs: {epochs} eval_per: {eval_period} stat_per: {stat_period}")
         training_set = training_set.shuffle(200).batch(batch_size)
@@ -117,7 +117,7 @@ class NeuralNetwork(object):
         config.gpu_options.allow_growth = True
         with tf.Session(config=config) as self.sess:
             self.__train_all_epochs(training_it, validation_it, batch_size, epochs, eval_period, stat_period,
-                                    minimun_accuracy)
+                                    minimum_accuracy)
 
     def __train_all_epochs(self, training_it, validation_it, batch_size, epochs, eval_period, stat_period,
                            minimum_accuracy):

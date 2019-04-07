@@ -27,7 +27,7 @@ if __name__ == '__main__':
     output_path = f"hyperparameter_tuner/results/{str(datetime.now()).replace(' ', '')}"
     vgg_16_BP_tuner = run_command_generator([sgen("name", ["vgg_16"]),
                                              sgen("learning_rate", [0.001, 0.005, 0.01, 0.03, 0.07, 0.1, 0.5, 1]),
-                                             sgen("batch_size", [20, 25, 30, 35, 50, 75]),
+                                             sgen("batch_size", [8, 16, 32, 64, 128, 256]),
                                              ], command_prefix="python experiment.py",
                                             output_path=output_path).run_commands()
 

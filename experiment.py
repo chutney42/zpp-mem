@@ -123,7 +123,7 @@ def train_network(neural_network, training, test, network):
                          eval_period=network['eval_period'],
                          stat_period=network['stat_period'],
                          memory_only=network['memory_only'],
-                         minimun_accuracy=network['minimum_accuracy'])
+                         minimum_accuracy=network['minimum_accuracy'])
     print(f"learning process took {time.time() - start_learning_time} seconds (realtime)")
 
 
