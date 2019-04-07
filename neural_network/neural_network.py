@@ -113,7 +113,7 @@ class NeuralNetwork(object):
 
         with tf.variable_scope("itarators", reuse=tf.AUTO_REUSE):
             training_it = training_set.make_initializable_iterator()
-            validation_it = validation_set.batch(batch_size).take(2000).make_initializable_iterator()
+            validation_it = validation_set.batch(batch_size).make_initializable_iterator()
 
         config = tf.ConfigProto()
         config.gpu_options.allow_growth = True
