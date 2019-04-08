@@ -6,7 +6,7 @@ default_network = {
     "sequence": "fc1",
     "cost_function": "mean_squared_error",
     "learning_rate": 0.1,
-    "gather_stats": False,
+    "gather_stats": True,
     "restore_model": False,
     "save_model": False,
     "restore_model_path": None,

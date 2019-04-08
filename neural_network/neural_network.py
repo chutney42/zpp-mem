@@ -164,6 +164,7 @@ class NeuralNetwork(object):
         if self.gather_stats or self.memory_only:
             writer = tf.summary.FileWriter(f"./demo/{self.scope}_{self.run_number}", self.sess.graph)
             val_writer = tf.summary.FileWriter(f"./demo/val_{self.scope}_{self.run_number}", self.sess.graph)
+            exit(0)
             return writer, val_writer
         else:
             return None, None

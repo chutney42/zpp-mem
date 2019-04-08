@@ -1,5 +1,5 @@
 import os
-
+import keras
 from keras.datasets import cifar100
 from keras.layers import Conv2D, MaxPooling2D, BatchNormalization
 from keras.layers import Dense, Flatten
@@ -61,6 +61,9 @@ if __name__ == '__main__':
 
     m.add(Dense(100, activation='softmax'))
 
+    tbCallBack = keras.callbacks.TensorBoard(log_dir='./demo', histogram_freq=0, write_graph=True, write_images=True)
+
+
     m.compile(loss='categorical_crossentropy', optimizer=SGD(lr=0.005, momentum=0.9), metrics=['accuracy'])
     m.summary()
     gen = ImageDataGenerator()
@@ -68,4 +71,4 @@ if __name__ == '__main__':
     train_generator = gen.flow(X_train, Y_train, batch_size=256)
     test_generator = test_gen.flow(X_test, Y_test, batch_size=256)
     m.fit_generator(train_generator, steps_per_epoch=50000 // 256, epochs=20, validation_data=test_generator,
-                    validation_steps=10000 // 256)
+                    validation_steps=10000 // 256, callbacks=[tbCallBack])
