@@ -99,7 +99,7 @@ def create_network(network_definition, output_types, output_shapes):
     else:
         raise NotImplementedError(f"Model {model} is not recognized.")
 
-    sequence = blocks_dict[network_definition['sequence']](output_shapes[1][0].value)
+    sequence = blocks_dict[network_definition['sequence']](output_shapes[1][1].value)
 
     return Network(output_types,
                    output_shapes,
@@ -132,7 +132,8 @@ if __name__ == '__main__':
     if network_def['seed'] is not None:
         tf.set_random_seed(network_def['seed'])
 
-    training_set, test_set = datasets_dict[network_def['dataset_name']]()
+    training_set, test_set = datasets_dict[network_def['dataset_name']](network_def['batch_size'])
+    print(training_set.output_shapes)
     neural_net = create_network(network_def, training_set.output_types, training_set.output_shapes)
     train_network(neural_net, training_set, test_set, network_def)
     # return 0

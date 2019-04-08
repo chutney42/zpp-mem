@@ -2,7 +2,7 @@ from numpy.random import randint
 
 default_network = {
     "type": "BP",
-    "dataset_name": "mnist",
+    "dataset_name": "cifar100",
     "sequence": "fc1",
     "cost_function": "mean_squared_error",
     "learning_rate": 0.1,

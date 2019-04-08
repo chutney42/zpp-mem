@@ -22,7 +22,7 @@ class NeuralNetwork(object):
         self.handle = tf.placeholder(tf.string, shape=[], name="handle")
         with tf.variable_scope("iterator"):
             self.iterator = tf.data.Iterator.from_string_handle(self.handle, types, tuple(
-                [tf.TensorShape([None] + shape.as_list()) for shape in shapes]))
+                [tf.TensorShape([None] + shape.as_list()[1:]) for shape in shapes]))
             self.features, self.labels = self.iterator.get_next()
         self.result = None
         self.gather_stats = gather_stats
@@ -112,13 +112,12 @@ class NeuralNetwork(object):
               memory_only=False, minimum_accuracy=[]):
         self.memory_only = memory_only
         print(f"batch_size: {batch_size} epochs: {epochs} eval_per: {eval_period} stat_per: {stat_period}")
-        training_set = training_set.shuffle(200).batch(batch_size)
+        training_set = training_set
 
         with tf.variable_scope("iterators_handlers", reuse=tf.AUTO_REUSE):
             self.training_it = training_set.make_initializable_iterator()
-            self.validation_it = validation_set.batch(batch_size).make_initializable_iterator()
-            self.mini_validation_it = validation_set.batch(batch_size).shuffle(200).take(
-                1000).make_initializable_iterator()
+            self.validation_it = validation_set.make_initializable_iterator()
+            self.mini_validation_it = validation_set.take(1000).make_initializable_iterator()
 
         config = tf.ConfigProto()
         config.gpu_options.allow_growth = True
