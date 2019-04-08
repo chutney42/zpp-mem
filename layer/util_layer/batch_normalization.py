@@ -7,7 +7,7 @@ from layer.layer import Layer
 class BatchNormalization(Layer):
     def __init__(self, learning_rate=0.5, scope="batch_normalization_layer"):
         super().__init__(trainable=True, scope=scope)
-        self.epsilon = 0.0000001
+        self.epsilon = 0.001
         self.learning_rate = learning_rate
 
     def __str__(self):
