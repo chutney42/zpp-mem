@@ -3,6 +3,7 @@ import time
 import tensorflow as tf
 from inspect import getmembers, isfunction
 from definition import blocks_definitions
+from definition import propagator_initializer_definitions
 from definition import dataset_definitions
 from definition import network_definitions
 
@@ -28,7 +29,7 @@ def get_id_and_name_from_arguments():
     parser.add_argument('-batch_size', type=int, required=False, help='batch size')
     parser.add_argument('-epochs', type=int, required=False, help='epochs')
     parser.add_argument('-cost_function', type=str, required=False, help='cost function')
-    parser.add_argument('-dataset', type=str, required=False, help='dataset')
+    parser.add_argument('-dataset_name', type=str, required=False, help='dataset name')
     parser.add_argument('-sequence', type=str, required=False, help='sequence')
     parser.add_argument('-seed', type=int, required=False, help='seed')
     parser.add_argument('-memory_only', type=bool, required=False, help='memory only')
@@ -47,7 +48,7 @@ def get_network_definition():
     batch_size = parser.parse_args().batch_size
     epochs = parser.parse_args().epochs
     cost_function = parser.parse_args().cost_function
-    dataset = parser.parse_args().dataset
+    dataset_name = parser.parse_args().dataset_name
     sequence = parser.parse_args().sequence
     gather_stats = parser.parse_args().gather_stats
     memory_only = parser.parse_args().memory_only
@@ -73,8 +74,8 @@ def get_network_definition():
         network_definition.update({"epochs": epochs})
     if cost_function is not None:
         network_definition.update({"cost_function": cost_function})
-    if dataset is not None:
-        network_definition.update({"dataset_name": dataset})
+    if dataset_name is not None:
+        network_definition.update({"dataset_name": dataset_name})
     if sequence is not None:
         network_definition.update({"sequence": sequence})
     if gather_stats is not None:
@@ -135,4 +136,3 @@ if __name__ == '__main__':
     training_set, test_set = datasets_dict[network_def['dataset_name']]()
     neural_net = create_network(network_def, training_set.output_types, training_set.output_shapes)
     train_network(neural_net, training_set, test_set, network_def)
-    # return 0

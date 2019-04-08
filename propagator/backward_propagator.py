@@ -12,8 +12,7 @@ class BackwardPropagator(Propagator):
     def propagate_conv(self, layer, error):
         filters = tf.get_variable("filters")
         filters = self.get_filter(filters)
-        backprop_error = tf.nn.conv2d_backprop_input(layer.input_shape, filters, error, layer.stride,
-                                                     layer.padding)
+        backprop_error = tf.nn.conv2d_backprop_input(layer.input_shape, filters, error, layer.stride, layer.padding)
         return backprop_error
 
 

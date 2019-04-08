@@ -1,8 +1,7 @@
 import os
 
 from hyperparameter_tuner.run_command_generator import run_command_generator
-from hyperparameter_tuner.single_parameter_generator import \
-    single_parameter_generator as sgen
+from hyperparameter_tuner.single_parameter_generator import single_parameter_generator as sgen
 from datetime import datetime
 import time
 
