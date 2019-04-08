@@ -1,3 +1,5 @@
+from definition.propagator_initializer_definitions import *
+
 default_network = {
     "type": "BP",
     "dataset_name": "mnist",
@@ -9,6 +11,7 @@ default_network = {
     "save_model": False,
     "restore_model_path": None,
     "save_model_path": None,
+    "propagator_initializer": "uniform",
 
     "minimum_accuracy": [],
     "batch_size": 10,
