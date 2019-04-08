@@ -6,11 +6,13 @@ from layer.weight_layer.weight_layer import WeightLayer
 
 class ResidualLayer(WeightLayer):
 
-    def __init__(self, sequence, trainable=True, scope="residual_layer"):
+    def __init__(self, sequence, trainable=True, learning_rate=None, scope="residual_layer"):
         super().__init__(trainable, scope=scope)
         self.propagator = None
         self.sequence = sequence
         self.shortcut_conv = None
+        self.learning_rate = learning_rate
+
 
     def __str__(self):
         s = f"ResidualLayer["
@@ -19,19 +21,20 @@ class ResidualLayer(WeightLayer):
         s = s + "]"
         return s
 
-    def build_forward(self, input_vec, remember_input=False, gather_stats=True):
+    def build_forward(self, input_vec, remember_input=False, gather_stats=False):
         if remember_input:
             self.input_vec = input_vec
 
         with tf.variable_scope(self.scope, tf.AUTO_REUSE):
             for i, layer in enumerate(self.sequence):
+                layer.scope = f"{self.scope}_{i}_{layer.scope}"
+                layer.set_lr(self.learning_rate)
                 if isinstance(layer, WeightLayer):
                     layer.propagator = self.propagator
-                layer.scope = f"{self.scope}_{layer.scope}_{i}"
 
             residual = input_vec
             for layer in self.sequence:
-                residual = layer.build_forward(residual, remember_input=True)
+                residual = layer.build_forward(residual, remember_input=True, gather_stats=gather_stats)
 
             res_shape = residual.shape
             input_shape = input_vec.shape
@@ -44,22 +47,24 @@ class ResidualLayer(WeightLayer):
                 self.shortcut_conv = ConvolutionalLayer(number_of_filters=res_shape[3],
                                   filter_dim=(1, 1),
                                   stride=[stride_width, stride_height],
-                                  padding="VALID", scope=f"{self.scope}_convoluted_shortcut")
+                                  padding="VALID",
+                                  learning_rate=self.learning_rate,
+                                  scope=f"{self.scope}_{len(self.sequence)}_shortcut_convolution")
                 self.shortcut_conv.propagator = self.propagator
                 input_vec = self.shortcut_conv.build_forward(input_vec)
 
             return input_vec + residual
 
-    def build_backward(self, error, gather_stats=True):
+    def build_backward(self, error, gather_stats=False):
         input_err = 1
         self.step = []
         with tf.variable_scope(self.scope, tf.AUTO_REUSE):
             if self.shortcut_conv is not None:
-                input_err = self.shortcut_conv.build_backward(error)
+                input_err = self.shortcut_conv.build_backward(error, gather_stats=gather_stats)
                 self.step.append(self.shortcut_conv.step)
             for layer in reversed(self.sequence):
-                error = layer.build_backward(error)
+                error = layer.build_backward(error, gather_stats=gather_stats)
                 if layer.trainable:
                     self.step.append(layer.step)
 
-        return error + input_err
+            return error + input_err

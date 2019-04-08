@@ -1,3 +1,5 @@
+from numpy.random import randint
+
 default_network = {
     "type": "BP",
     "dataset_name": "mnist",
@@ -10,13 +12,13 @@ default_network = {
     "restore_model_path": None,
     "save_model_path": None,
 
-    "minimum_accuracy": [],
+    "minimum_accuracy": [(1, 99)],
     "batch_size": 10,
     "epochs": 4,
     "eval_period": 1000,
     "stat_period": 100,
     "memory_only": False,
-    "seed": None,
+    "seed": randint(1, 100000000),
     "device": "/cpu:0"
 }
 

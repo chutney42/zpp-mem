@@ -2,7 +2,7 @@ from layer.layer import Layer
 
 
 class WeightLayer(Layer):
-    def __init__(self, learning_rate=0.5, momentum=0.9, scope="weight_layer"):
+    def __init__(self, learning_rate=None, momentum=0.9, scope="weight_layer"):
         super().__init__(trainable=True, scope=scope)
         self.propagator = None
         self.learning_rate = learning_rate
