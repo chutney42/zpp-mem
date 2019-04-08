@@ -1,6 +1,6 @@
 import os
 
-from hyperparameter_tuner.run_command_generator import run_command_generator
+from hyperparameter_tuner.run_command_generator import run_command_generator as cmd_generator
 from hyperparameter_tuner.single_parameter_generator import \
     single_parameter_generator as sgen
 from datetime import datetime
@@ -26,7 +26,7 @@ def extract_to_csv(path):
 
 if __name__ == '__main__':
     output_path = f"hyperparameter_tuner/results/{str(datetime.now()).replace(' ', '')}"
-    vgg_16_BP_tuner = run_command_generator([sgen("name", ["vgg_16"]),
+    vgg_16_BP_tuner = cmd_generator([sgen("name", ["vgg_16"]),
                                              sgen("batch_size", [16, 32, 64]),
                                              sgen("learning_rate", [0.01, 0.05, 0.5, 1.5]),
                                              sgen("learning_type", ["BP", "DFA"]),
@@ -35,12 +35,12 @@ if __name__ == '__main__':
                                             output_path=output_path).run_commands()
 
     os.system(f"mkdir {output_path}")
-    extract_to_csv(output_path)
+    os.system(f"touch {output_path}/summarise.csv")
 
     for command in vgg_16_BP_tuner:
         print(command)
         os.system(command)
-        os.system(f"rm {output_path}/*.csv")
+        os.system(f"rm {output_path}/summarise.csv")
 
         extract_to_csv(output_path)
         print("\n\n\n")
