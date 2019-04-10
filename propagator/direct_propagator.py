@@ -23,6 +23,9 @@ class DirectFixedRandom(DirectPropagator):
 
         return layer.restore_shape(tf.matmul(error, filters))
 
+    def propagate_dewpth_wise_seperable_conv(self, layer, error):
+        return layer.dw_conv.build_propagate(error)
+
     def get_weights(self, weights):
         return tf.get_variable("direct_random_weights", shape=[self.output_error_dim, weights.shape[0]],
                                initializer=self.initializer)

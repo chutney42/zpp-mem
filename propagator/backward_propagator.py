@@ -13,8 +13,14 @@ class BackwardPropagator(Propagator):
         filters = tf.get_variable("filters")
         filters = self.get_filter(filters)
         backprop_error = layer.propagate_function()(layer.input_shape, filters, error, layer.stride,
-                                                     layer.padding)
+                                                    layer.padding)
         return backprop_error
+
+    def propagate_dewpth_wise_seperable_conv(self, layer, error):
+        error_from_pw = layer.pw_conv.build_propagate(error)
+        error_from_dw = layer.dw_conv.build_propagate(error_from_pw)
+        return error_from_dw
+
 
 
 class Backpropagator(BackwardPropagator):

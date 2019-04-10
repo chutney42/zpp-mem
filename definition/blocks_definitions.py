@@ -49,6 +49,13 @@ def conv1(output_size):
         Block([FullyConnected(30, flatten=True), BatchNormalization(), Sigmoid()]),
         Block([FullyConnected(output_size), Sigmoid()])]
 
+def conv1prim(output_size):
+    return [Block(
+        [DepthWiseSeperableConv((5, 5), number_of_filters=10), BatchNormalization(), Sigmoid()]),
+        Block([DepthWiseSeperableConv((5, 5), number_of_filters=10), BatchNormalization(), Sigmoid()]),
+        Block([FullyConnected(30, flatten=True), BatchNormalization(), Sigmoid()]),
+        Block([FullyConnected(output_size), Sigmoid()])]
+
 
 def conv2(output_size):
     return [Block(
