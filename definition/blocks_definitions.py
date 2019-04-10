@@ -44,26 +44,26 @@ def fc3_relu(output_size):
 
 def conv1(output_size):
     return [Block(
-        [ConvolutionalLayer((5, 5), number_of_filters=10), BatchNormalization(), Sigmoid()]),
-        Block([ConvolutionalLayer((5, 5), number_of_filters=10), BatchNormalization(), Sigmoid()]),
+        [Conv((5, 5), number_of_filters=10), BatchNormalization(), Sigmoid()]),
+        Block([Conv((5, 5), number_of_filters=10), BatchNormalization(), Sigmoid()]),
         Block([FullyConnected(30, flatten=True), BatchNormalization(), Sigmoid()]),
         Block([FullyConnected(output_size), Sigmoid()])]
 
 
 def conv2(output_size):
     return [Block(
-        [ConvolutionalLayer((5, 5), number_of_filters=10), BatchNormalization(), MaxPool([4, 4], [2, 2]), Sigmoid()]),
-        Block([ConvolutionalLayer((5, 5), number_of_filters=10), BatchNormalization(), MaxPool([4, 4], [2, 2]),
+        [Conv((5, 5), number_of_filters=10), BatchNormalization(), MaxPool([4, 4], [2, 2]), Sigmoid()]),
+        Block([Conv((5, 5), number_of_filters=10), BatchNormalization(), MaxPool([4, 4], [2, 2]),
                Sigmoid()]),
         Block([FullyConnected(output_size, flatten=True), Sigmoid()])]
 
 
 def conv3(output_size):
     return [Block(
-        [ConvolutionalLayer((5, 5), number_of_filters=15), BatchNormalization(), MaxPool([4, 4], [2, 2]), Sigmoid()]),
-        Block([ConvolutionalLayer((5, 5), number_of_filters=15), BatchNormalization(), MaxPool([4, 4], [2, 2]),
+        [Conv((5, 5), number_of_filters=15), BatchNormalization(), MaxPool([4, 4], [2, 2]), Sigmoid()]),
+        Block([Conv((5, 5), number_of_filters=15), BatchNormalization(), MaxPool([4, 4], [2, 2]),
                Sigmoid()]),
-        Block([ConvolutionalLayer((5, 5), number_of_filters=15), BatchNormalization(), MaxPool([4, 4], [2, 2]),
+        Block([Conv((5, 5), number_of_filters=15), BatchNormalization(), MaxPool([4, 4], [2, 2]),
                Sigmoid()]),
         Block([FullyConnected(output_size, flatten=True), Sigmoid()])]
 
@@ -75,7 +75,7 @@ def long_fc(output_size):
 
 
 def long_conv(output_size):
-    blocks = [Block([ConvolutionalLayer((5, 5), number_of_filters=5), BatchNormalization(), Sigmoid()]) for i in
+    blocks = [Block([Conv((5, 5), number_of_filters=5), BatchNormalization(), Sigmoid()]) for i in
               range(30)]
     blocks.append(Block([FullyConnected(output_size, flatten=True), Sigmoid()]))
     return blocks
@@ -104,10 +104,10 @@ def resnet_152(output_size):
 def vgg_16(output_size):
     def convolutional_layer_block(filter_dim, number_of_filters, stride=[1, 1], with_pooling=False):
         if with_pooling == False:
-            return Block([ConvolutionalLayer(filter_dim, stride=stride, number_of_filters=number_of_filters),
+            return Block([Conv(filter_dim, stride=stride, number_of_filters=number_of_filters),
                           BatchNormalization(), ReLu()])
         else:
-            return Block([ConvolutionalLayer(filter_dim, stride=stride, number_of_filters=number_of_filters),
+            return Block([Conv(filter_dim, stride=stride, number_of_filters=number_of_filters),
                           BatchNormalization(), ReLu(), MaxPool([2, 2], [2, 2], padding="SAME")])
 
     return [
@@ -137,10 +137,10 @@ def vgg_16(output_size):
 def vgg_16_without_BN(output_size):
     def convolutional_layer_block(filter_dim, number_of_filters, stride=[1, 1], with_pooling=False):
         if with_pooling == False:
-            return Block([ConvolutionalLayer(filter_dim, stride=stride, number_of_filters=number_of_filters),
+            return Block([Conv(filter_dim, stride=stride, number_of_filters=number_of_filters),
                           ReLu()])
         else:
-            return Block([ConvolutionalLayer(filter_dim, stride=stride, number_of_filters=number_of_filters),
+            return Block([Conv(filter_dim, stride=stride, number_of_filters=number_of_filters),
                           ReLu(), MaxPool([2, 2], [2, 2], padding="SAME")])
 
     return [
@@ -165,3 +165,6 @@ def vgg_16_without_BN(output_size):
         Block([FullyConnected(4096), BatchNormalization(), ReLu()]),
         Block([FullyConnected(output_size), Softmax()])
     ]
+
+# def mobile_net(output_size):
+#

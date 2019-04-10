@@ -3,9 +3,10 @@ from functools import reduce
 import tensorflow as tf
 
 from layer.weight_layer.weight_layer import WeightLayer
+from propagator.backward_propagator import Backpropagator
 
 
-class ConvolutionalLayer(WeightLayer):
+class Conv(WeightLayer):
     def __init__(self, filter_dim, stride=[1, 1], number_of_filters=1, padding="SAME", trainable=True,
                  learning_rate=None, momentum=0.0, scope="convoluted_layer"):
         super().__init__(learning_rate, momentum, scope)
@@ -16,6 +17,15 @@ class ConvolutionalLayer(WeightLayer):
         self.padding = padding
         self.output_shape = None
         self.input_flat_shape = None
+
+    def forward_function(self):
+        return tf.nn.conv2d
+
+    def update_function(self):
+        return tf.nn.conv2d_backprop_filter
+
+    def propagate_function(self):
+        return tf.nn.conv2d_backprop_input
 
     def __str__(self):
         return f"ConvolutionalLayer({self.filter_dim} {self.number_of_filters} {self.stride})"
@@ -33,7 +43,8 @@ class ConvolutionalLayer(WeightLayer):
                             self.number_of_filters]
             filters = tf.get_variable("filters", filter_shape,
                                       initializer=tf.random_normal_initializer())
-            output = tf.nn.conv2d(input_vec, filters, strides=self.stride, padding=self.padding, name="Convolution")
+            output = self.forward_function()(input_vec, filters, strides=self.stride, padding=self.padding,
+                                             name="Convolution")
             self.output_shape = tf.shape(output)
 
             if gather_stats:
@@ -55,7 +66,7 @@ class ConvolutionalLayer(WeightLayer):
             filters = tf.get_variable("filters")
             delta_filters = tf.get_variable("delta_weight", filters.shape, initializer=tf.zeros_initializer())
 
-            raw_delta = tf.nn.conv2d_backprop_filter(input_vec, tf.shape(filters), error, self.stride, self.padding)
+            raw_delta = self.update_function()(input_vec, tf.shape(filters), error, self.stride, self.padding)
             delta_filters = tf.assign(delta_filters, raw_delta + tf.multiply(self.momentum, delta_filters))
             filters = tf.assign(filters, filters - self.learning_rate * delta_filters)
             self.step = filters
@@ -66,7 +77,54 @@ class ConvolutionalLayer(WeightLayer):
             return
 
 
-class ConvolutionalLayerManhattan(ConvolutionalLayer):
+class DepthWiseConv(Conv):
+    def forward_function(self):
+        return tf.nn.depthwise_conv2d
+
+    def update_function(self):
+        return tf.nn.depthwise_conv2d_native_backprop_filter
+
+    def propagate_function(self):
+        return tf.nn.depthwise_conv2d_native_backprop_input
+
+
+class DepthWiseSeperableConv(Conv):
+    def __init__(self, filter_dim, stride=[1, 1], number_of_filters=1, padding="SAME", trainable=True,
+                 learning_rate=None, momentum=0.0, scope="convoluted_layer"):
+        # super().__init__(learning_rate, momentum, scope)
+        self.stride = [1] + stride + [1]
+        self.filter_dim = filter_dim
+        self.number_of_filters = number_of_filters
+        self.trainable = trainable
+        self.padding = padding
+        self.output_shape = None
+        self.input_flat_shape = None
+        self.dw_conv = DepthWiseConv(filter_dim, stride, 1, padding, trainable, learning_rate, momentum, scope)
+        self.pw_conv = Conv([1, 1], [1, 1], number_of_filters, padding, trainable, learning_rate, momentum, scope)
+        self.pw_conv.propagator=Backpropagator()
+
+    def build_forward(self, input_vec, remember_input=True, gather_stats=False):
+        with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
+            input_after_depthwise = self.dw_conv.build_forward(input_vec, remember_input, gather_stats)
+            output = self.pw_conv.build_forward(input_after_depthwise, remember_input, gather_stats)
+            return output
+
+    def build_propagate(self, error, gather_stats=False):
+        with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
+            self.
+            pointwise_error = self.pw_conv.build_propagate(error, gather_stats)
+            error = self.dw_conv.build_propagate(pointwise_error, gather_stats)
+
+    def build_update(self, error, gather_stats=False):
+        with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
+            error
+
+
+class PointWiseConv(Conv):
+    pass
+
+
+class ConvManhattan(Conv):
     def build_update(self, error, gather_stats=False):
         input_vec = self.restore_input()
         with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):

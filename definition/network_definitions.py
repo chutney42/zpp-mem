@@ -12,7 +12,7 @@ default_network = {
     "restore_model_path": None,
     "save_model_path": None,
 
-    "minimum_accuracy": [(1, 99)],
+    "minimum_accuracy": [],
     "batch_size": 10,
     "epochs": 4,
     "eval_period": 1000,

@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from layer.weight_layer.convolutional_layers import ConvolutionalLayer
+from layer.weight_layer.convolutional_layers import Conv
 from layer.weight_layer.weight_layer import WeightLayer
 
 
@@ -44,12 +44,12 @@ class ResidualLayer(WeightLayer):
 
             equal_channels = input_shape[3].value == res_shape[3].value
             if stride_width > 1 or stride_height > 1 or not equal_channels:
-                self.shortcut_conv = ConvolutionalLayer(number_of_filters=res_shape[3],
-                                  filter_dim=(1, 1),
-                                  stride=[stride_width, stride_height],
-                                  padding="VALID",
-                                  learning_rate=self.learning_rate,
-                                  scope=f"{self.scope}_{len(self.sequence)}_shortcut_convolution")
+                self.shortcut_conv = Conv(number_of_filters=res_shape[3],
+                                          filter_dim=(1, 1),
+                                          stride=[stride_width, stride_height],
+                                          padding="VALID",
+                                          learning_rate=self.learning_rate,
+                                          scope=f"{self.scope}_{len(self.sequence)}_shortcut_convolution")
                 self.shortcut_conv.propagator = self.propagator
                 input_vec = self.shortcut_conv.build_forward(input_vec)
 

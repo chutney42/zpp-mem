@@ -2,7 +2,7 @@ import argparse
 
 from layer.block import Block
 from layer.util_layer.batch_normalization import BatchNormalization
-from layer.weight_layer.convolutional_layers import ConvolutionalLayer
+from layer.weight_layer.convolutional_layers import Conv
 from layer.weight_layer.fully_connected import FullyConnected
 from layer.activation.activation_layer import *
 from util.options import parse
@@ -34,7 +34,7 @@ def define_network(output_types, output_shapes, options):
         raise NotImplementedError(f"Model {model} is not recognized.")
 
     return Network(output_types, output_shapes,
-                   [Block([ConvolutionalLayer((3,3), number_of_filters=10), BatchNormalization(), Sigmoid()]),
+                   [Block([Conv((3, 3), number_of_filters=10), BatchNormalization(), Sigmoid()]),
                     Block([FullyConnected(30,flatten=True), BatchNormalization(), Sigmoid()]),
                     Block([FullyConnected(output_shapes[1][0].value), Sigmoid()])],
                    learning_rate=options['training_parameters']['learning_rate'],
