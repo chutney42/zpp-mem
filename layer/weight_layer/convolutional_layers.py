@@ -7,7 +7,7 @@ from layer.weight_layer.weight_layer import WeightLayer
 
 class ConvolutionalLayer(WeightLayer):
     def __init__(self, filter_dim, stride=[1, 1], number_of_filters=1, padding="SAME", trainable=True,
-                 learning_rate=None, momentum=0.0, scope="convoluted_layer", filters_initializer=he_normal):
+                 learning_rate=None, momentum=0.0, scope="convoluted_layer", filters_initializer=he_normal()):
         super().__init__(learning_rate, momentum, scope)
         self.filters_initializer = filters_initializer
         self.stride = [1] + stride + [1]
