@@ -38,7 +38,7 @@ class NeuralNetwork(object):
         for i, block in enumerate(self.sequence):
             block.head.propagator = self.propagator
             for j, layer in enumerate(block):
-                layer.scope = f"{i}_{j}_{self.scope}_{layer.scope}"
+                layer.scope = f"{i}_{j}_{layer.scope}"
                 layer.set_lr(self.learning_rate)
                 layer.set_momentum(self.momentum)
         if cost_function_name == "sigmoid_cross_entropy":
