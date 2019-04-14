@@ -110,7 +110,7 @@ def create_network(network_definition, output_types, output_shapes):
         raise NotImplementedError(f"Model {model} is not recognized.")
 
     sequence = blocks_dict[network_definition['sequence']](output_shapes[1][0].value)
-    propagator_initializer = propagator_initializers_dict[network_definition['propagator_initializer']]
+    propagator_initializer = propagator_initializers_dict[network_definition['propagator_initializer']]()
 
     return Network(output_types,
                    output_shapes,
