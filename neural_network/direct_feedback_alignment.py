@@ -1,14 +1,12 @@
 import tensorflow as tf
 from neural_network.neural_network import NeuralNetwork
-from propagator.direct_propagator import DirectFixedRandom, DirectPropagator
+from propagator.direct_propagator import DirectFixedRandom
 
 
 class DirectFeedbackAlignment(NeuralNetwork):
-    def __init__(self, types, shapes, sequence, cost_function_name, propagator=None, *args, **kwargs):
-        if not propagator:
-            propagator = DirectFixedRandom(shapes[1][0].value)
-        elif not isinstance(propagator, DirectPropagator):
-            raise TypeError("propagator for DirectFeedbackAlignment must be instance of DirectPropagator")
+    def __init__(self, types, shapes, sequence, cost_function_name,
+                 propagator_initializer=tf.random_normal_initializer(), *args, **kwargs):
+        propagator = DirectFixedRandom(shapes[1][0].value, propagator_initializer)
         super().__init__(types, shapes, sequence, cost_function_name, propagator, *args, **kwargs)
 
     def build_forward(self):
