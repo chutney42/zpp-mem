@@ -3,7 +3,7 @@ from numpy.random import randint
 default_network = {
     "type": "BP",
     "dataset_name": "mnist",
-    "sequence": "fc0",
+    "sequence": "conv0",
     "cost_function": "mean_squared_error",
     "learning_rate": 0.5,
     "gather_stats": False,

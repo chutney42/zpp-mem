@@ -49,8 +49,14 @@ def fc3_relu(output_size):
             FullyConnected(output_size), Sigmoid()]
 
 
+def conv0(output_size):
+    return [ConvolutionalLayer(filter_dim=(5, 5), num_of_filters=10, strides=[1, 1, 1, 1], padding="SAME"), Sigmoid(),
+            ConvolutionalLayer(filter_dim=(5, 5), num_of_filters=10, strides=[1, 1, 1, 1], padding="SAME"), Sigmoid(),
+            FullyConnected(30, flatten=True), Sigmoid(),
+            FullyConnected(output_size), Sigmoid()]
+
 def conv1(output_size):
-    return [ConvolutionalLayer((5, 5), number_of_filters=10), BatchNormalization(), Sigmoid(),
+    return [ConvolutionalLayer((5, 5), 10, [1, 1, 1, 1], "SAME"), BatchNormalization(), Sigmoid(),
             ConvolutionalLayer((5, 5), number_of_filters=10), BatchNormalization(), Sigmoid(),
             FullyConnected(30, flatten=True), BatchNormalization(), Sigmoid(),
             FullyConnected(output_size), Sigmoid()]
