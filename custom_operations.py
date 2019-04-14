@@ -2,8 +2,8 @@ import tensorflow as tf
 import numpy
 
 
-def feedback_alignment_fc(input, weights, initializer=tf.initializers.he_normal(), name="fa_fc"):
-    random = tf.get_variable("random", shape=reversed(weights.get_shape.as_list()),
+def feedback_alignment_fc(input, weights, random_initializer=tf.initializers.he_normal(), name="fa_fc"):
+    random = tf.get_variable("random", shape=reversed(weights.get_shape().as_list()),
                              initializer=random_initializer, use_resource=True, trainable=False)
     @tf.custom_gradient
     def func(x):
@@ -18,11 +18,11 @@ def feedback_alignment_fc(input, weights, initializer=tf.initializers.he_normal(
 def feedback_alignment_conv(input, weights, strides, padding, use_cudnn_on_gpu=True, data_format='NHWC',
                             dilations=[1, 1, 1, 1], random_initializer=tf.initializers.he_normal(),
                             name="fa_conv"):
-    random = tf.get_variable("random", shape=weights.get_shape().as_list(), initializer=initializer, use_resource=True, trainable=False)
+    random = tf.get_variable("random", shape=weights.get_shape().as_list(), initializer=random_initializer, use_resource=True, trainable=False)
     @tf.custom_gradient
     def func(x):
         def grad(dy, variables=[weights]):
-            dx = tf.nn.conv2d_backprop_input(x.get_shape(), random, dy, strides, padding, use_cudnn_on_gpu,
+            dx = tf.nn.conv2d_backprop_input(tf.shape(x), random, dy, strides, padding, use_cudnn_on_gpu,
                                              data_format, dilations)
             dw = tf.nn.conv2d_backprop_filter(x, weights.get_shape(), dy, strides, padding, use_cudnn_on_gpu,
                                              data_format, dilations)

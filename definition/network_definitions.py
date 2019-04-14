@@ -1,7 +1,7 @@
 from numpy.random import randint
 
 default_network = {
-    "type": "BP",
+    "type": "FA",
     "dataset_name": "mnist",
     "sequence": "conv0",
     "cost_function": "mean_squared_error",
@@ -11,7 +11,6 @@ default_network = {
     "save_model": False,
     "restore_model_path": None,
     "save_model_path": None,
-    "propagator_initializer": "uniform",
     "momentum": 0.9,
 
     "minimum_accuracy": [(1, 99)],

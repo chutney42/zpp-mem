@@ -7,10 +7,11 @@ from custom_operations import feedback_alignment_fc, feedback_alignment_conv
 
 
 class FeedbackAlignment(BackwardPropagation):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for layer in self.sequence:
+    def __init__(self, types, shapes, sequence, *args, **kwargs):
+        for layer in sequence:
             if isinstance(layer, ConvolutionalLayer):
                 layer.func = feedback_alignment_conv
             elif isinstance(layer, FullyConnected):
                 layer.func = feedback_alignment_fc
+        super().__init__(types, shapes, sequence, *args, **kwargs)
+        

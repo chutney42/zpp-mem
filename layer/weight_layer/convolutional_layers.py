@@ -29,11 +29,11 @@ class ConvolutionalLayer(WeightLayer):
         with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
             filter_shape = [self.filter_dim[0], self.filter_dim[1], input.shape[3], self.num_of_filters]
             filters = tf.get_variable("filters", filter_shape,
-                                      initializer=self.filters_initializer())
+                                      initializer=self.filters_initializer(), use_resource=True)
             self.variables.append(filters)
             output = self.func(input, filters, strides=self.strides, padding=self.padding, use_cudnn_on_gpu=self.use_cudnn_on_gpu, data_format=self.data_format, dilations=self.dilations)
             if self.add_biases:
-                biases = tf.get_variable("biases", output.shape[1:], initializer=self.biases_initializer())
+                biases = tf.get_variable("biases", output.shape[1:], initializer=self.biases_initializer(), use_resource=True)
             return output
 
     def gather_stats_backward(self, gradients):

@@ -30,12 +30,12 @@ class FullyConnected(WeightLayer):
             if self.flatten:
                 input = tf.layers.flatten(input)
             weights = tf.get_variable("weights", [input.shape[1], self.output_dim],
-                                      initializer=self.weights_initializer())
+                                      initializer=self.weights_initializer(), use_resource=True)
             self.variables.append(weights)
             output = self.func(input, weights)
             if self.add_biases:
                 biases = tf.get_variable("biases", [self.output_dim],
-                                         initializer=self.biases_initializer())
+                                         initializer=self.biases_initializer(), use_resource=True)
                 self.variables.append(biases)
                 output = tf.add(output, biases)
             if gather_stats:
