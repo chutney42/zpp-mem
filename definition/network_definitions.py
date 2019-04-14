@@ -6,7 +6,7 @@ default_network = {
     "sequence": "fc1",
     "cost_function": "mean_squared_error",
     "learning_rate": 0.1,
-    "gather_stats": True,
+    "gather_stats": False,
     "restore_model": False,
     "save_model": False,
     "restore_model_path": None,
@@ -26,21 +26,21 @@ default_network = {
 
 main_network_1 = dict(default_network)
 main_network_1.update({
+    "cost_function": "softmax_cross_entropy",
     "dataset_name": "cifar10",
-    "sequence": "vgg_16_without_BN",
-    "batch_size": 128,
-    "minimum_accuracy": [(20, 15)]
+    "batch_size": 256,
+    "minimum_accuracy": [(10, 15)]
 })
 
 main_network_2 = dict(main_network_1)
 main_network_2.update({
-    "sequence": "conv3"
+    "batch_size": 128
 })
 
 first_dfa_1 = dict(main_network_1)
 first_dfa_1.update({
-    "learning_rate": 0.001,
-    "epochs": 70,
+    "learning_rate": 0.003,
+    "epochs": 30,
     "type": "DFA",
     "save_model": True,
     "save_model_path": "./saved/model.ckpt"
@@ -48,21 +48,21 @@ first_dfa_1.update({
 
 then_bp_1 = dict(main_network_1)
 then_bp_1.update({
-    "learning_rate": 0.0005,
-    "epochs": 30,
+    "learning_rate": 0.001,
+    "epochs": 10,
     "restore_model": True,
     "restore_model_path": "./saved/model.ckpt"
 })
 
 just_dfa_1 = dict(first_dfa_1)
 just_dfa_1.update({
-    "epochs": 100,
+    "epochs": 40,
     "save_model": False
 })
 
 just_bp_1 = dict(then_bp_1)
 just_bp_1.update({
-    "epochs": 100,
+    "epochs": 40,
     "restore_model": False
 })
 
