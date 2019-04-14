@@ -1,14 +1,15 @@
 from functools import reduce
 
 import tensorflow as tf
-
+from tensorflow.initializers import he_normal
 from layer.weight_layer.weight_layer import WeightLayer
 
 
 class ConvolutionalLayer(WeightLayer):
     def __init__(self, filter_dim, stride=[1, 1], number_of_filters=1, padding="SAME", trainable=True,
-                 learning_rate=None, momentum=0.0, scope="convoluted_layer"):
+                 learning_rate=None, momentum=0.0, scope="convoluted_layer", filters_initializer=he_normal):
         super().__init__(learning_rate, momentum, scope)
+        self.filters_initializer = filters_initializer
         self.stride = [1] + stride + [1]
         self.filter_dim = filter_dim
         self.number_of_filters = number_of_filters
@@ -29,10 +30,8 @@ class ConvolutionalLayer(WeightLayer):
             if remember_input:
                 self.input_vec = input_vec
             (width, length, depth) = input_vec.shape[1], input_vec.shape[2], input_vec.shape[3]
-            filter_shape = [self.filter_dim[0], self.filter_dim[1], depth,
-                            self.number_of_filters]
-            filters = tf.get_variable("filters", filter_shape,
-                                      initializer=tf.random_normal_initializer())
+            filter_shape = [self.filter_dim[0], self.filter_dim[1], depth, self.number_of_filters]
+            filters = tf.get_variable("filters", filter_shape, initializer=self.filters_initializer)
             output = tf.nn.conv2d(input_vec, filters, strides=self.stride, padding=self.padding, name="Convolution")
             self.output_shape = tf.shape(output)
 

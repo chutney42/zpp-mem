@@ -1,7 +1,6 @@
 from definition.resnet import *
 from layer import *
 
-
 def fc1(output_size):
     return [Block([FullyConnected(50, flatten=True), BatchNormalization(axis=[0]), Sigmoid()]),
             Block([FullyConnected(30), BatchNormalization(axis=[0]), Sigmoid()]),
