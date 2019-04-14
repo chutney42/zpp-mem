@@ -1,7 +1,14 @@
 from neural_network.backward_propagation import BackwardPropagation
-from propagator.backward_propagator import FixedRandom
+from layer.weight_layer.convolutional_layers import ConvolutionalLayer
+from layer.weight_layer.fully_connected import FullyConnected
+from custom_operations import feedback_alignment_fc, feedback_alignment_conv
 
 
 class FeedbackAlignment(BackwardPropagation):
-    def __init__(self, types, shapes, sequence, cost_function_name, propagator=FixedRandom(), *args, **kwargs):
-            super().__init__(types, shapes, sequence, cost_function_name, propagator, *args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for layer in self.sequence:
+            if isinstance(layer, ConvolutionalLayer):
+                layer.func = feedback_alignment_conv
+            elif isinstance(layer, FullyConnected):
+                layer.func = feedback_alignment_fc

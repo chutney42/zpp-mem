@@ -10,3 +10,5 @@ saved_model_*/*
 memory_usage/data_*
 network_metadata/*
 *__pycache__*
+*~
+\#*\#

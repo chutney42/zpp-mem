@@ -2,11 +2,11 @@ import argparse
 import time
 import tensorflow as tf
 from inspect import getmembers, isfunction
-from definition import blocks_definitions
+from definition import sequence_definitions
 from definition import dataset_definitions
 from definition import network_definitions
 
-blocks_dict = dict(getmembers(blocks_definitions, isfunction))
+sequences_dict = dict(getmembers(sequence_definitions, isfunction))
 datasets_dict = dict(getmembers(dataset_definitions, isfunction))
 networks_dict = {
     network_name: network_definition for network_name, network_definition in getmembers(network_definitions)
@@ -99,13 +99,21 @@ def create_network(network_definition, output_types, output_shapes):
     else:
         raise NotImplementedError(f"Model {model} is not recognized.")
 
-    sequence = blocks_dict[network_definition['sequence']](output_shapes[1][0].value)
+    cost_func_name = network_definition['cost_function']
+    if cost_func_name == 'mean_squared_error':
+        cost_func = tf.losses.mean_squared_error
+    elif cost_func_name == 'sigmoid_cross_entropy':
+        cost_func = tf.losses.sigmoid_cross_entropy # Do not use any activation in last layer.
+    elif cost_func_name == 'softmax_cross_entropy':
+        cost_func = tf.losses.softmax_cross_entropy # Do not use any activation in last layer.
+
+    sequence = sequences_dict[network_definition['sequence']](output_shapes[1][0].value)
 
     return Network(output_types,
                    output_shapes,
                    sequence,
-                   network_definition['cost_function'],
-                   learning_rate=network_definition['learning_rate'],
+                   cost_func,
+                   tf.train.GradientDescentOptimizer(network_definition["learning_rate"]), # TODO
                    scope=model,
                    gather_stats=network_definition['gather_stats'],
                    # restore_model_path=network['restore_model_path'],

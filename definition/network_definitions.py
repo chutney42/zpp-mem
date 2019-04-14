@@ -1,9 +1,12 @@
+import tensorflow as tf
+
+
 default_network = {
     "type": "BP",
     "dataset_name": "mnist",
-    "sequence": "resnet_18",
+    "sequence": "fc0",
     "cost_function": "mean_squared_error",
-    "learning_rate": 0.1,
+    "learning_rate": 0.5,
     "gather_stats": False,
     "restore_model": False,
     "save_model": False,
@@ -16,7 +19,4 @@ default_network = {
     "stat_period": 100,
     "memory_only": False,
     "seed": None,
-    "device": "/cpu:0"
 }
-
-
