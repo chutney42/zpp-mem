@@ -6,7 +6,7 @@ from hyperparameter_tuner.single_parameter_generator import single_parameter_gen
 from datetime import datetime
 import time
 
-result_regexp = re.compile(r'(total accuracy.*)\n')
+result_regexp = re.compile(r'.*(total accuracy.*)\n')
 
 
 def extract_to_csv(path):
