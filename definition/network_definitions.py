@@ -6,7 +6,7 @@ default_network = {
     "sequence": "fc1",
     "cost_function": "mean_squared_error",
     "learning_rate": 0.1,
-    "gather_stats": False,
+    "gather_stats": True,
     "restore_model": False,
     "save_model": False,
     "restore_model_path": None,
@@ -23,6 +23,20 @@ default_network = {
     "seed": randint(1, 100000000),
     "device": "/cpu:0"
 }
+
+first_dfa = dict(default_network)
+first_dfa.update({
+    "type": "DFA",
+    "propagator_initializer": "he_uniform",
+    "save_model": True,
+    "save_model_path": "./saved/model.ckpt"
+})
+
+then_bp = dict(default_network)
+then_bp.update({
+    "restore_model": True,
+    "restore_model_path": "./saved/model.ckpt"
+})
 
 vgg_16 = dict(default_network)
 vgg_16.update({
