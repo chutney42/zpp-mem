@@ -26,10 +26,10 @@ class Layer(object):
     def gather_stats_backward(self, gradients):
         raise NotImplementedError("This method should be implemented in subclass")
     
-    def build_forward(self, input, remember_input=False, gather_stats=True):
+    def build_forward(self, input, remember_input=False, gather_stats=False):
         raise NotImplementedError("This method should be implemented in subclass")
 
-    def build_backward(self, error, output, optimizer, gather_stats=True):
+    def build_backward(self, error, output, optimizer, gather_stats=False):
         variables = [self.restore_input()] + self.variables
         gradients = tf.gradients(output, variables, error)
         if self.variables: 

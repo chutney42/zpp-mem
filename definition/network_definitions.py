@@ -1,9 +1,9 @@
 from numpy.random import randint
 
 default_network = {
-    "type": "FA",
+    "type": "DFA",
     "dataset_name": "mnist",
-    "sequence": "conv0",
+    "sequence": "fc0",
     "cost_function": "mean_squared_error",
     "learning_rate": 0.5,
     "gather_stats": False,

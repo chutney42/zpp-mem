@@ -65,7 +65,7 @@ class NeuralNetwork(object):
     def build_backward(self, error):
         raise NotImplementedError("This method should be implemented in subclass")
 
-    def __build_test(self, a):
+    def build_test(self, a):
         self.acc, self.acc_update = tf.metrics.accuracy(tf.argmax(self.labels, 1), tf.argmax(a, 1),
                                                         name="accuracy_metric")
         self.loss, self.loss_update = tf.metrics.mean(self.cost, name="loss_metric")
@@ -79,7 +79,7 @@ class NeuralNetwork(object):
     def build(self):
         self.result = self.build_forward()
         self.cost = self.cost_function(self.labels, self.result)
-        self.__build_test(self.result)
+        self.build_test(self.result)
         self.step = self.optimizer.minimize(self.cost)
 
     def train(self, training_set, validation_set, batch_size=20, epochs=2, eval_period=1000, stat_period=100,
@@ -108,7 +108,7 @@ class NeuralNetwork(object):
                           f" accuracy after {min_acc[0]} epochs, network achieved {current_accuracy} accuracy")
                     return True
             return False
-
+        
         writer, val_writer = self.__init_writers()
         training_handle, validation_handle, mini_validation_handle = self.__init_handlers()
         self.__init_global_variables()
@@ -120,9 +120,9 @@ class NeuralNetwork(object):
             self.__train_single_epoch(self.training_it, self.mini_validation_it, training_handle,
                                       mini_validation_handle, writer, val_writer, eval_period, stat_period)
             acc, loss = self.__validate(self.validation_it, validation_handle)
-            print(f"start epoch {self.epoch}, accuracy: {acc}%, loss:{loss}")
-            if should_terminate_training(acc, minimum_accuracy):
-                break
+            print(f"finished epoch {self.epoch}, accuracy: {acc}%, loss:{loss}")
+            #if should_terminate_training(acc, minimum_accuracy):
+            #    break
 
             if self.memory_only:
                 break
