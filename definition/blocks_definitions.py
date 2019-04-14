@@ -3,42 +3,42 @@ from layer import *
 
 
 def fc1(output_size):
-    return [Block([FullyConnected(50, flatten=True), BatchNormalization(), Sigmoid()]),
-            Block([FullyConnected(30), BatchNormalization(), Sigmoid()]),
+    return [Block([FullyConnected(50, flatten=True), BatchNormalization(axis=[0]), Sigmoid()]),
+            Block([FullyConnected(30), BatchNormalization(axis=[0]), Sigmoid()]),
             Block([FullyConnected(output_size), Sigmoid()])]
 
 
 def fc2(output_size):
-    return [Block([FullyConnected(100, flatten=True), BatchNormalization(), Sigmoid()]),
-            Block([FullyConnected(200), BatchNormalization(), Sigmoid()]),
-            Block([FullyConnected(50), BatchNormalization(), Sigmoid()]),
+    return [Block([FullyConnected(100, flatten=True), BatchNormalization(axis=[0]), Sigmoid()]),
+            Block([FullyConnected(200), BatchNormalization(axis=[0]), Sigmoid()]),
+            Block([FullyConnected(50), BatchNormalization(axis=[0]), Sigmoid()]),
             Block([FullyConnected(output_size), Sigmoid()])]
 
 
 def fc3(output_size):
-    return [Block([FullyConnected(200, flatten=True), BatchNormalization(), Sigmoid()]),
-            Block([FullyConnected(1000), BatchNormalization(), Sigmoid()]),
-            Block([FullyConnected(100), BatchNormalization(), Sigmoid()]),
+    return [Block([FullyConnected(200, flatten=True), BatchNormalization(axis=[0]), Sigmoid()]),
+            Block([FullyConnected(1000), BatchNormalization(axis=[0]), Sigmoid()]),
+            Block([FullyConnected(100), BatchNormalization(axis=[0]), Sigmoid()]),
             Block([FullyConnected(output_size), Sigmoid()])]
 
 
 def fc1_relu(output_size):
-    return [Block([FullyConnected(50, flatten=True), BatchNormalization(), ReLu()]),
-            Block([FullyConnected(30), BatchNormalization(), ReLu()]),
+    return [Block([FullyConnected(50, flatten=True), BatchNormalization(axis=[0]), ReLu()]),
+            Block([FullyConnected(30), BatchNormalization(axis=[0]), ReLu()]),
             Block([FullyConnected(output_size), Sigmoid()])]
 
 
 def fc2_relu(output_size):
-    return [Block([FullyConnected(100, flatten=True), BatchNormalization(), ReLu()]),
-            Block([FullyConnected(200), BatchNormalization(), ReLu()]),
-            Block([FullyConnected(50), BatchNormalization(), ReLu()]),
+    return [Block([FullyConnected(100, flatten=True), BatchNormalization(axis=[0]), ReLu()]),
+            Block([FullyConnected(200), BatchNormalization(axis=[0]), ReLu()]),
+            Block([FullyConnected(50), BatchNormalization(axis=[0]), ReLu()]),
             Block([FullyConnected(output_size), Sigmoid()])]
 
 
 def fc3_relu(output_size):
-    return [Block([FullyConnected(200, flatten=True), BatchNormalization(), ReLu()]),
-            Block([FullyConnected(1000), BatchNormalization(), ReLu()]),
-            Block([FullyConnected(100), BatchNormalization(), ReLu()]),
+    return [Block([FullyConnected(200, flatten=True), BatchNormalization(axis=[0]), ReLu()]),
+            Block([FullyConnected(1000), BatchNormalization(axis=[0]), ReLu()]),
+            Block([FullyConnected(100), BatchNormalization(axis=[0]), ReLu()]),
             Block([FullyConnected(output_size), Sigmoid()])]
 
 
@@ -46,7 +46,7 @@ def conv1(output_size):
     return [Block(
         [ConvolutionalLayer((5, 5), number_of_filters=10), BatchNormalization(), Sigmoid()]),
         Block([ConvolutionalLayer((5, 5), number_of_filters=10), BatchNormalization(), Sigmoid()]),
-        Block([FullyConnected(30, flatten=True), BatchNormalization(), Sigmoid()]),
+        Block([FullyConnected(30, flatten=True), BatchNormalization(axis=[0]), Sigmoid()]),
         Block([FullyConnected(output_size), Sigmoid()])]
 
 
@@ -69,7 +69,7 @@ def conv3(output_size):
 
 
 def long_fc(output_size):
-    blocks = [Block([FullyConnected(500, flatten=(i == 0)), BatchNormalization(), Sigmoid()]) for i in range(30)]
+    blocks = [Block([FullyConnected(500, flatten=(i == 0)), BatchNormalization(axis=[0]), Sigmoid()]) for i in range(30)]
     blocks.append(Block([FullyConnected(output_size), Sigmoid()]))
     return blocks
 
@@ -128,8 +128,8 @@ def vgg_16(output_size):
         convolutional_layer_block((3, 3), number_of_filters=512),
         convolutional_layer_block((3, 3), number_of_filters=512, with_pooling=True),
 
-        Block([FullyConnected(4096, flatten=True), BatchNormalization(), ReLu()]),
-        Block([FullyConnected(4096), BatchNormalization(), ReLu()]),
+        Block([FullyConnected(4096, flatten=True), BatchNormalization(axis=[0]), ReLu()]),
+        Block([FullyConnected(4096), BatchNormalization(axis=[0]), ReLu()]),
         Block([FullyConnected(output_size), Softmax()])
     ]
 
@@ -161,7 +161,7 @@ def vgg_16_without_BN(output_size):
         convolutional_layer_block((3, 3), number_of_filters=512),
         convolutional_layer_block((3, 3), number_of_filters=512, with_pooling=True),
 
-        Block([FullyConnected(4096, flatten=True), BatchNormalization(), ReLu()]),
-        Block([FullyConnected(4096), BatchNormalization(), ReLu()]),
+        Block([FullyConnected(4096, flatten=True), BatchNormalization(axis=[0]), ReLu()]),
+        Block([FullyConnected(4096), BatchNormalization(axis=[0]), ReLu()]),
         Block([FullyConnected(output_size), Softmax()])
     ]

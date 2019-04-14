@@ -4,10 +4,11 @@ from layer.layer import Layer
 
 
 class BatchNormalization(Layer):
-    def __init__(self, learning_rate=None, scope="batch_normalization_layer"):
+    def __init__(self, learning_rate=None, axis=[0,1,2], scope="batch_normalization_layer"):
         super().__init__(trainable=True, scope=scope)
         self.epsilon = 0.0001
         self.learning_rate = learning_rate
+        self.axis = axis
 
     def __str__(self):
         return "BatchNormalization()"
@@ -21,7 +22,7 @@ class BatchNormalization(Layer):
 
             gamma = tf.get_variable("gamma", input_shape, initializer=tf.ones_initializer())
             beta = tf.get_variable("beta", input_shape, initializer=tf.zeros_initializer())
-            batch_mean, batch_var = tf.nn.moments(input_vec, [0])
+            batch_mean, batch_var = tf.nn.moments(input_vec, self.axis)
             self.output = tf.nn.batch_normalization(input_vec, batch_mean, batch_var, beta, gamma, self.epsilon,
                                                     "batch_n")
 
