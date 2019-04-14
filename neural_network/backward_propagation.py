@@ -6,5 +6,5 @@ class BackwardPropagation(NeuralNetwork):
     def build_forward(self):
         a = self.features
         for layer in self.sequence:
-            a = layer.build_forward(a, remember_input=False)
+            a = layer.build_forward(a, remember_input=False, gather_stats=self.gather_stats)
         return a

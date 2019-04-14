@@ -10,6 +10,8 @@ class Layer(object):
         self.scope = scope
         self.input = None
         self.input_shape = None
+        self.learning_rate = None
+        self.momentum = None
 
     def save_input(self, input):
         self.input = input

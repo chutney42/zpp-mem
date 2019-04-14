@@ -1,3 +1,5 @@
+import tensorflow as tf
+
 from neural_network.backward_propagation import BackwardPropagation
 from layer.weight_layer.convolutional_layers import ConvolutionalLayer
 from layer.weight_layer.fully_connected import FullyConnected

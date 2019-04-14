@@ -27,12 +27,13 @@ def get_id_and_name_from_arguments():
     parser.add_argument('-learning_rate', type=float, required=False, help='learning rate')
     parser.add_argument('-batch_size', type=int, required=False, help='batch size')
     parser.add_argument('-epochs', type=int, required=False, help='epochs')
-    parser.add_argument('-cost_method', type=str, required=False, help='cost method')
-    parser.add_argument('-dataset', type=str, required=False, help='dataset')
+    parser.add_argument('-cost_function', type=str, required=False, help='cost function')
+    parser.add_argument('-dataset_name', type=str, required=False, help='dataset name')
     parser.add_argument('-sequence', type=str, required=False, help='sequence')
     parser.add_argument('-seed', type=int, required=False, help='seed')
     parser.add_argument('-memory_only', type=bool, required=False, help='memory only')
     parser.add_argument('-gather_stats', type=bool, required=False, help='gather stats')
+    parser.add_argument('-momentum', type=float, required=False, help='momentum')
 
     network_id = parser.parse_args().id
     network_name = parser.parse_args().name
@@ -46,12 +47,13 @@ def get_network_definition():
     learning_rate = parser.parse_args().learning_rate
     batch_size = parser.parse_args().batch_size
     epochs = parser.parse_args().epochs
-    cost_method = parser.parse_args().cost_method
-    dataset = parser.parse_args().dataset
+    cost_function = parser.parse_args().cost_function
+    dataset_name = parser.parse_args().dataset_name
     sequence = parser.parse_args().sequence
     gather_stats = parser.parse_args().gather_stats
     memory_only = parser.parse_args().memory_only
     seed = parser.parse_args().seed
+    momentum = parser.parse_args().momentum
 
     if network_id is not None:
         print(f"running network with id={network_id}")
@@ -71,10 +73,10 @@ def get_network_definition():
         network_definition.update({"batch_size": batch_size})
     if epochs is not None:
         network_definition.update({"epochs": epochs})
-    if cost_method is not None:
-        network_definition.update({"cost_function": cost_method})
-    if dataset is not None:
-        network_definition.update({"dataset": dataset})
+    if cost_function is not None:
+        network_definition.update({"cost_function": cost_function})
+    if dataset_name is not None:
+        network_definition.update({"dataset_name": dataset_name})
     if sequence is not None:
         network_definition.update({"sequence": sequence})
     if gather_stats is not None:
@@ -83,6 +85,8 @@ def get_network_definition():
         network_definition.update({"memory_only": memory_only})
     if seed is not None:
         network_definition.update({"seed": seed})
+    if momentum is not None:
+        network_definition.update({"momentum": momentum})
 
     print(network_definition)
     return network_definition
@@ -130,7 +134,8 @@ def train_network(neural_network, training, test, network):
                          epochs=network['epochs'],
                          eval_period=network['eval_period'],
                          stat_period=network['stat_period'],
-                         memory_only=network['memory_only'])
+                         memory_only=network['memory_only'],
+                         minimum_accuracy=network['minimum_accuracy'])
     print(f"learning process took {time.time() - start_learning_time} seconds (realtime)")
 
 

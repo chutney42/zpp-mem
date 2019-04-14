@@ -7,7 +7,7 @@ file_name = "run_auto_increment"
 
 
 class NeuralNetwork(object):
-    def __init__(self, types, shapes, sequence, cost_function, optimizer, scope="main", gather_stats=True,
+    def __init__(self, types, shapes, sequence, cost_function, optimizer, scope="main", gather_stats=False,
                  restore_model=False, save_model=False, restore_model_path=None, save_model_path=None):
         print(f"Create {scope} model")
         self.scope = scope
@@ -66,10 +66,15 @@ class NeuralNetwork(object):
         raise NotImplementedError("This method should be implemented in subclass")
 
     def __build_test(self, a):
-        self.acc, self.acc_update = tf.metrics.accuracy(tf.argmax(self.labels, 1), tf.argmax(a, 1), name="accuracy_metric")
+        self.acc, self.acc_update = tf.metrics.accuracy(tf.argmax(self.labels, 1), tf.argmax(a, 1),
+                                                        name="accuracy_metric")
+        self.loss, self.loss_update = tf.metrics.mean(self.cost, name="loss_metric")
+
         self.running_vars = tf.get_collection(tf.GraphKeys.LOCAL_VARIABLES, scope="accuracy_metric")
+        self.running_vars += tf.get_collection(tf.GraphKeys.LOCAL_VARIABLES, scope="loss_metric")
         self.running_vars_initializer = tf.variables_initializer(var_list=self.running_vars)
         self.acc_summary = tf.summary.scalar("accuracy", self.acc)
+        self.loss_summary = tf.summary.scalar("loss", self.loss)
 
     def build(self):
         self.result = self.build_forward()
@@ -78,38 +83,52 @@ class NeuralNetwork(object):
         self.step = self.optimizer.minimize(self.cost)
 
     def train(self, training_set, validation_set, batch_size=20, epochs=2, eval_period=1000, stat_period=100,
-            memory_only=False):
+              memory_only=False, minimum_accuracy=[]):
         self.memory_only = memory_only
         print(f"batch_size: {batch_size} epochs: {epochs} eval_per: {eval_period} stat_per: {stat_period}")
         training_set = training_set.shuffle(200).batch(batch_size)
 
-        with tf.variable_scope("itarators", reuse=tf.AUTO_REUSE):
-            training_it = training_set.make_initializable_iterator()
-            validation_it = validation_set.batch(batch_size).make_initializable_iterator()
+        with tf.variable_scope("iterators_handlers", reuse=tf.AUTO_REUSE):
+            self.training_it = training_set.make_initializable_iterator()
+            self.validation_it = validation_set.batch(batch_size).make_initializable_iterator()
+            self.mini_validation_it = validation_set.batch(batch_size).shuffle(200).take(
+                1000).make_initializable_iterator()
 
         config = tf.ConfigProto()
         config.gpu_options.allow_growth = True
         with tf.Session(config=config) as self.sess:
-            self.__train_all_epochs(training_it, validation_it, batch_size, epochs, eval_period, stat_period)
+            self.__train_all_epochs(batch_size, epochs, eval_period, stat_period, minimum_accuracy)
 
-    def __train_all_epochs(self, training_it, validation_it, batch_size, epochs, eval_period, stat_period):
+    def __train_all_epochs(self, batch_size, epochs, eval_period, stat_period,
+                           minimum_accuracy):
+        def should_terminate_training(current_accuracy, minimum_accuracy):
+            for min_acc in minimum_accuracy:
+                if self.epoch + 1 > min_acc[0] and current_accuracy < min_acc[1]:
+                    print(f"Terminating learning process due to insuficcient accuracy\n Expected {min_acc[1]}" +
+                          f" accuracy after {min_acc[0]} epochs, network achieved {current_accuracy} accuracy")
+                    return True
+            return False
+
         writer, val_writer = self.__init_writers()
-        training_handle, validation_handle = self.__init_handlers(training_it, validation_it)
+        training_handle, validation_handle, mini_validation_handle = self.__init_handlers()
         self.__init_global_variables()
         self.sess.run(self.running_vars_initializer)
         self.counter = 0
         self.epoch = 0
         print(f"start training for epochs={epochs} with batch_size={batch_size}")
         for _ in range(epochs):
-            res = self.__validate(validation_it, validation_handle)
-            print(f"start epoch {self.epoch}, accuracy: {res}%")
-            self.__train_single_epoch(training_it, validation_it, training_handle, validation_handle, writer,
-                                      val_writer, eval_period, stat_period)
+            self.__train_single_epoch(self.training_it, self.mini_validation_it, training_handle,
+                                      mini_validation_handle, writer, val_writer, eval_period, stat_period)
+            acc, loss = self.__validate(self.validation_it, validation_handle)
+            print(f"start epoch {self.epoch}, accuracy: {acc}%, loss:{loss}")
+            if should_terminate_training(acc, minimum_accuracy):
+                break
+
             if self.memory_only:
                 break
 
-        res = self.__validate(validation_it, validation_handle)
-        print(f"total accuracy: {res}% iterations: {self.counter}")
+        acc, loss = self.__validate(self.validation_it, validation_handle)
+        print(f"total accuracy: {acc}%, loss: {loss}, acc iterations: {self.counter}")
         self.__close_writers(writer, val_writer)
         self.__maybe_save_model()
 
@@ -126,10 +145,12 @@ class NeuralNetwork(object):
             writer.close()
             val_writer.close()
 
-    def __init_handlers(self, training_it, validation_it):
-        training_handle = self.sess.run(training_it.string_handle())
-        validation_handle = self.sess.run(validation_it.string_handle())
-        return training_handle, validation_handle
+    def __init_handlers(self):
+        training_handle = self.sess.run(self.training_it.string_handle())
+        validation_handle = self.sess.run(self.validation_it.string_handle())
+        mini_validation_handle = self.sess.run(self.mini_validation_it.string_handle())
+
+        return training_handle, validation_handle, mini_validation_handle
 
     def __init_global_variables(self):
         if self.restore_model:
@@ -157,7 +178,9 @@ class NeuralNetwork(object):
                 if self.memory_only or (self.gather_stats and self.counter % stat_period is 0):
                     run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
                     run_metadata = tf.RunMetadata()
-                    summary, _, _ = self.sess.run([self.merged_summary, self.step, self.acc_update], feed_dict, run_options, run_metadata)
+                    summary, _, _, _ = self.sess.run(
+                        [self.merged_summary, self.step, self.acc_update, self.loss_update], feed_dict, run_options,
+                        run_metadata)
                     writer.add_run_metadata(run_metadata, f"step_{self.counter}")
                     writer.add_summary(summary, self.counter)
                     if self.memory_only or self.counter is stat_period:
@@ -165,11 +188,10 @@ class NeuralNetwork(object):
                         if self.memory_only:
                             break
                 else:
-                    self.sess.run([self.step, self.acc_update], feed_dict)
-
+                    self.sess.run([self.step, self.acc_update, self.acc_update], feed_dict)
                 if self.counter % eval_period is 0:
-                    res = self.__validate(validation_it, validation_handle, val_writer)
-                    print(f"iteration: {self.counter}, accuracy: {res}%")
+                    acc, loss = self.__validate(validation_it, validation_handle, val_writer)
+                    print(f"iteration: {self.counter}, accuracy: {acc}%, loss: {loss}")
 
                 self.counter += 1
             except tf.errors.OutOfRangeError:
@@ -183,16 +205,18 @@ class NeuralNetwork(object):
         while True:
             try:
                 feed_dict = {self.handle: validation_handle}
-                self.sess.run(self.acc_update, feed_dict)
+                self.sess.run([self.acc_update, self.loss_update], feed_dict)
             except tf.errors.OutOfRangeError:
                 break
         if writer is None:
-            res = self.sess.run(self.acc)
+            acc, loss = self.sess.run([self.acc, self.loss])
         else:
-            summary, res = self.sess.run([self.acc_summary, self.acc])
-            writer.add_summary(summary, self.counter)
+            summary_acc, acc, summary_loss, loss = self.sess.run(
+                [self.acc_summary, self.acc, self.loss_summary, self.loss])
+            writer.add_summary(summary_acc, self.counter)
+            writer.add_summary(summary_loss, self.counter)
         self.__switch_context()
-        return res * 100
+        return acc * 100, loss
 
     def __gather_memory_usage(self, run_metadata):
         print(f"gather memory stats in file ./memory_usage/data_{self.scope}_{self.run_number}")

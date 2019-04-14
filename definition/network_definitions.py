@@ -1,5 +1,4 @@
-import tensorflow as tf
-
+from numpy.random import randint
 
 default_network = {
     "type": "BP",
@@ -12,11 +11,32 @@ default_network = {
     "save_model": False,
     "restore_model_path": None,
     "save_model_path": None,
+    "propagator_initializer": "uniform",
+    "momentum": 0.9,
 
+    "minimum_accuracy": [(1, 99)],
     "batch_size": 10,
     "epochs": 4,
     "eval_period": 1000,
     "stat_period": 100,
     "memory_only": False,
-    "seed": None,
+    "seed": randint(1, 100000000),
 }
+
+vgg_16 = dict(default_network)
+vgg_16.update({
+    "minimum_accuracy": [(10, 12), (50, 20)],
+    "type": "BP",
+    "sequence": "vgg_16",
+    "epochs": 100,
+    "cost_function": "softmax_cross_entropy",
+    "dataset_name": "cifar10"
+
+})
+
+vgg_16_DFA = dict(vgg_16)
+vgg_16_DFA.update({
+    "type": "DFA",
+    "minimum_accuracy": [(20, 20), (50, 40)],
+
+})

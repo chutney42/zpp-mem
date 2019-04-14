@@ -1,5 +1,5 @@
 import tensorflow as tf
-
+from tensorflow.initializers import he_normal
 from layer.weight_layer.weight_layer import WeightLayer
 
 
@@ -22,7 +22,7 @@ class ConvolutionalLayer(WeightLayer):
     def __str__(self):
         return f"ConvolutionalLayer({self.filter_dim} {self.stride})"
 
-    def build_forward(self, input, remember_input=False, gather_stats=True):
+    def build_forward(self, input, remember_input=False, gather_stats=False):
         if remember_input:
             self.save_input(input)
         with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):

@@ -7,18 +7,19 @@ class ActivationLayer(Layer):
         super().__init__(trainable=False, scope=scope)
         self.func = func
 
-    def build_forward(self, input, remember_input=False, gather_stats=True):
+    def build_forward(self, input, remember_input=False, gather_stats=False):
         if remember_input:
             self.save_input(input)
+
         with tf.name_scope(self.scope):
             output = self.func(input)
         if gather_stats:
-            tf.summary.histogram("pre_activation", input)
-            tf.summary.histogram("post_activation", output)
+            tf.summary.histogram("input", input, family=self.scope)
+            tf.summary.histogram("output", output, family=self.scope)
         return output
 
     def gather_stats_backward(self, gradients):
-        pass
+        tf.summary.histogram("propagated_error", gradients[0], family=self.scope)
 
 
 class Sigmoid(ActivationLayer):
@@ -28,7 +29,7 @@ class Sigmoid(ActivationLayer):
     def __str__(self):
         return "Sigmoid()"
 
-    
+
 class Tanh(ActivationLayer):
     def __init__(self, scope="tanh_layer"):
         super().__init__(tf.tanh, scope=scope)

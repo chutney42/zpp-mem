@@ -1,5 +1,6 @@
 import tensorflow as tf
 
+from tensorflow.initializers import he_normal
 from layer.weight_layer.weight_layer import WeightLayer
 
 
@@ -37,4 +38,11 @@ class FullyConnected(WeightLayer):
                                          initializer=self.biases_initializer())
                 self.variables.append(biases)
                 output = tf.add(output, biases)
+            if gather_stats:
+                tf.summary.histogram("input", input_vec, family=self.scope)
+                tf.summary.histogram("weights", weights, family=self.scope)
+                if self.add_biases:
+                    tf.summary.histogram("biases", biases, family=self.scope)
+                tf.summary.histogram("output", output, family=self.scope)
+
             return output

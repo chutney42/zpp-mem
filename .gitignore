@@ -12,3 +12,6 @@ network_metadata/*
 *__pycache__*
 *~
 \#*\#
+keras_experiments.py
+datasets/*
+hyperparameter_tuner/results/*
