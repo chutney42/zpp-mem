@@ -21,7 +21,7 @@ class ConvolutionalLayer(WeightLayer):
         self.biases_initializer = biases_initializer
 
     def __str__(self):
-        return f"ConvolutionalLayer({self.filter_dim} {self.strides})"
+        return f"ConvolutionalLayer({self.filter_dim}, {self.num_of_filters}, {self.strides}, {self.padding})"
 
     def build_forward(self, input, remember_input=False, gather_stats=False):
         if remember_input:

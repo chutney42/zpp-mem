@@ -3,7 +3,7 @@ from numpy.random import randint
 default_network = {
     "type": "DFA",
     "dataset_name": "mnist",
-    "sequence": "fc0",
+    "sequence": "conv0",
     "cost_function": "mean_squared_error",
     "learning_rate": 0.5,
     "gather_stats": False,
@@ -11,7 +11,6 @@ default_network = {
     "save_model": False,
     "restore_model_path": None,
     "save_model_path": None,
-    "momentum": 0.9,
 
     "minimum_accuracy": [(1, 99)],
     "batch_size": 10,

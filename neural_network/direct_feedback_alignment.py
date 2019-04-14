@@ -7,6 +7,28 @@ from layer.weight_layer.fully_connected import FullyConnected
 from custom_operations import direct_feedback_alignment_fc, direct_feedback_alignment_conv
 
 
+class DirectFeedbackAlignment(BackwardPropagation):
+    def __init__(self, types, shapes, sequence, *args, **kwargs):
+        self.error_container = []
+        for layer in sequence:
+            if isinstance(layer, ConvolutionalLayer):
+                layer.func = partial(direct_feedback_alignment_conv,
+                                     output_dim=shapes[1][0].value,
+                                     error_container=self.error_container)
+            elif isinstance(layer, FullyConnected):
+                layer.func = partial(direct_feedback_alignment_fc,
+                                     output_dim=shapes[1][0].value,
+                                     error_container=self.error_container)
+        super().__init__(types, shapes, sequence, *args, **kwargs)
+        
+    def build(self):
+        self.result = self.build_forward()
+        self.cost = self.cost_function(self.labels, self.result)
+        self.build_test(self.result)
+        self.error_container.append(tf.gradients(self.cost, self.result, name="error")[0])
+        self.step = self.optimizer.minimize(self.cost)
+
+
 class DirectFeedbackAlignmentMem(NeuralNetwork): # TODO
     def __init__(self, types, shapes, sequence, cost_function_name,
                  propagator_initializer=tf.random_normal_initializer(), *args, **kwargs):
@@ -36,25 +58,3 @@ class DirectFeedbackAlignmentMem(NeuralNetwork): # TODO
                     self.step.append(layer.step)
             block.head.build_update(error, gather_stats=self.gather_stats)
             self.step.append(block.head.step)
-
-
-class DirectFeedbackAlignment(BackwardPropagation):
-    def __init__(self, types, shapes, sequence, *args, **kwargs):
-        self.error_container = []
-        for layer in sequence:
-            if isinstance(layer, ConvolutionalLayer):
-                layer.func = partial(direct_feedback_alignment_conv,
-                                     output_dim=shapes[1][0].value,
-                                     error_container=self.error_container)
-            elif isinstance(layer, FullyConnected):
-                layer.func = partial(direct_feedback_alignment_fc,
-                                     output_dim=shapes[1][0].value,
-                                     error_container=self.error_container)
-        super().__init__(types, shapes, sequence, *args, **kwargs)
-        
-    def build(self):
-        self.result = self.build_forward()
-        self.cost = self.cost_function(self.labels, self.result)
-        self.build_test(self.result)
-        self.error_container.append(tf.gradients(self.cost, self.result, name="error")[0])
-        self.step = self.optimizer.minimize(self.cost)
