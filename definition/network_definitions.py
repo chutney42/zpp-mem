@@ -24,18 +24,41 @@ default_network = {
     "device": "/cpu:0"
 }
 
-first_dfa = dict(default_network)
+main_network = dict(default_network)
+main_network.update({
+    "dataset_name": "cifar10",
+    "batch_size": 128,
+    "minimum_accuracy": [],
+
+})
+
+first_dfa = dict(main_network)
 first_dfa.update({
+    "learning_rate": 0.001,
+    "epochs": 7,
     "type": "DFA",
-    "propagator_initializer": "he_uniform",
     "save_model": True,
     "save_model_path": "./saved/model.ckpt"
 })
 
-then_bp = dict(default_network)
+then_bp = dict(main_network)
 then_bp.update({
+    "learning_rate": 0.0005,
+    "epochs": 3,
     "restore_model": True,
     "restore_model_path": "./saved/model.ckpt"
+})
+
+just_dfa = dict(first_dfa)
+just_dfa.update({
+    "epochs": 10,
+    "save_model": False
+})
+
+just_bp = dict(then_bp)
+just_bp.update({
+    "epochs": 10,
+    "restore_model": False
 })
 
 vgg_16 = dict(default_network)
