@@ -24,40 +24,45 @@ default_network = {
     "device": "/cpu:0"
 }
 
-main_network = dict(default_network)
-main_network.update({
+main_network_1 = dict(default_network)
+main_network_1.update({
     "dataset_name": "cifar10",
+    "sequence": "vgg_16_without_BN",
     "batch_size": 128,
-    "minimum_accuracy": [],
-
+    "minimum_accuracy": [(20, 15)]
 })
 
-first_dfa = dict(main_network)
-first_dfa.update({
+main_network_2 = dict(main_network_1)
+main_network_2.update({
+    "sequence": "conv3"
+})
+
+first_dfa_1 = dict(main_network_1)
+first_dfa_1.update({
     "learning_rate": 0.001,
-    "epochs": 7,
+    "epochs": 70,
     "type": "DFA",
     "save_model": True,
     "save_model_path": "./saved/model.ckpt"
 })
 
-then_bp = dict(main_network)
-then_bp.update({
+then_bp_1 = dict(main_network_1)
+then_bp_1.update({
     "learning_rate": 0.0005,
-    "epochs": 3,
+    "epochs": 30,
     "restore_model": True,
     "restore_model_path": "./saved/model.ckpt"
 })
 
-just_dfa = dict(first_dfa)
-just_dfa.update({
-    "epochs": 10,
+just_dfa_1 = dict(first_dfa_1)
+just_dfa_1.update({
+    "epochs": 100,
     "save_model": False
 })
 
-just_bp = dict(then_bp)
-just_bp.update({
-    "epochs": 10,
+just_bp_1 = dict(then_bp_1)
+just_bp_1.update({
+    "epochs": 100,
     "restore_model": False
 })
 
