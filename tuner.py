@@ -6,7 +6,7 @@ from hyperparameter_tuner.single_parameter_generator import single_parameter_gen
 from datetime import datetime
 import time
 
-result_regexp = re.compile(r'.*(total accuracy.*)\n')
+result_regexp = re.compile(r'(total accuracy.*)')
 
 
 def extract_to_csv(path):
@@ -17,12 +17,13 @@ def extract_to_csv(path):
             filename = os.fsdecode(file)
             if not filename.endswith(".csv"):
                 with open(f"{path}/{filename}", "r") as input_file:
-                    text = input_file.read()
-                    matcher = result_regexp.match(text)
-                    if matcher is not None:
-                        result = f"file:{filename};result:{matcher.group(1)}"
-                        output_file.write(result)
-                        print(result)
+                    for line in input_file:
+                        matcher = result_regexp.match(line)
+                        if matcher is not None:
+                            result = f"file:{filename};result:{matcher.group(1)}"
+                            output_file.write(result)
+                            print(result)
+                            break
 
 
 if __name__ == '__main__':
