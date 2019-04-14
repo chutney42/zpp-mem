@@ -4,10 +4,11 @@ from layer.layer import Layer
 
 
 class BatchNormalization(Layer):
-    def __init__(self, learning_rate=None, axis=[0,1,2], scope="batch_normalization_layer"):
+    def __init__(self, learning_rate=None, momentum=None, axis=[0,1,2], scope="batch_normalization_layer"):
         super().__init__(trainable=True, scope=scope)
         self.epsilon = 0.0001
         self.learning_rate = learning_rate
+        self.momentum = momentum
         self.axis = axis
 
     def __str__(self):
@@ -41,11 +42,15 @@ class BatchNormalization(Layer):
             input_vec = self.restore_input()
             gamma = tf.get_variable("gamma")
             beta = tf.get_variable("beta")
+            delta_gamma = tf.get_variable("delta_beta", gamma.shape, initializer=tf.zeros_initializer())
+            delta_beta = tf.get_variable("delta_beta", beta.shape, initializer=tf.zeros_initializer())
 
             grads = tf.gradients(self.output, [input_vec, gamma, beta], error)
+            delta_gamma = tf.assign(delta_gamma, grads[1] + tf.multiply(self.momentum, delta_gamma))
+            delta_beta = tf.assign(delta_gamma, grads[2] + tf.multiply(self.momentum, delta_beta))
 
-            gamma = tf.assign(gamma, tf.subtract(gamma, tf.multiply(self.learning_rate, grads[1])))
-            beta = tf.assign(beta, tf.subtract(beta, tf.multiply(self.learning_rate, grads[2])))
+            gamma = tf.assign(gamma, tf.subtract(gamma, tf.multiply(self.learning_rate, delta_gamma)))
+            beta = tf.assign(beta, tf.subtract(beta, tf.multiply(self.learning_rate, delta_beta)))
             self.step = [gamma, beta]
 
             if gather_stats:

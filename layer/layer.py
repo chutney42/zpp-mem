@@ -10,6 +10,7 @@ class Layer(object):
         self.input_vec = None
         self.input_shape = None
         self.learning_rate = None
+        self.momentum = None
 
     def restore_input(self):
         if self.input_vec is None:
@@ -36,3 +37,7 @@ class Layer(object):
     def set_lr(self, learning_rate):
         if self.learning_rate is None:
             self.learning_rate = learning_rate
+
+    def set_momentum(self, momentum):
+        if self.momentum is None:
+            self.momentum = momentum
