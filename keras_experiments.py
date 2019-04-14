@@ -1,11 +1,11 @@
 import os
-
+import keras
 from keras.datasets import cifar10
 from keras.layers import Conv2D
 from keras.layers import Dense, Activation, Flatten
 from keras.layers.normalization import BatchNormalization
 from keras.models import Sequential
-from keras.optimizers import Adam
+from keras.optimizers import Adam, SGD
 from keras.preprocessing.image import ImageDataGenerator
 from keras.utils import np_utils
 
@@ -41,7 +41,7 @@ if __name__ == '__main__':
     model.add(Activation('relu'))
     model.add(Dense(10))
     model.add(Activation('softmax'))
-    model.compile(loss='categorical_crossentropy', optimizer=Adam(), metrics=['accuracy'])
+    model.compile(loss='categorical_crossentropy', optimizer=SGD(), metrics=['accuracy'])
     gen = ImageDataGenerator(rotation_range=8, width_shift_range=0.08, shear_range=0.3,
                              height_shift_range=0.08, zoom_range=0.08)
     test_gen = ImageDataGenerator()
