@@ -22,7 +22,7 @@ class Pool(Layer):
     def __str__(self):
         return f"{self.pooling_function_name}({self.kernel_size}, {self.strides}, {self.padding})"
 
-    def build_forward(self, input_vec, remember_input=True, gather_stats=True):
+    def build_forward(self, input_vec, remember_input=True, gather_stats=False):
         if remember_input:
             self.input_vec = input_vec
         with tf.variable_scope(self.scope, tf.AUTO_REUSE):
@@ -32,7 +32,7 @@ class Pool(Layer):
             output = self.pooling_function(input_vec, self.kernel_size, self.strides, self.padding, self.data_format)
             return output
 
-    def build_backward(self, error, gather_stats=True):
+    def build_backward(self, error, gather_stats=False):
         with tf.variable_scope(self.scope):
             pre_pool = self.restore_input()
             post_pool = self.pooling_function(pre_pool, self.kernel_size, self.strides, self.padding, self.data_format)

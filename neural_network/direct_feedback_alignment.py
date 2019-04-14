@@ -13,7 +13,7 @@ class DirectFeedbackAlignment(NeuralNetwork):
         a = self.features
         for block in self.sequence:
             for layer in block:
-                a = layer.build_forward(a, remember_input=False)
+                a = layer.build_forward(a, remember_input=False, gather_stats=self.gather_stats)
         return a
 
     def build_backward(self, output_error):
@@ -21,14 +21,14 @@ class DirectFeedbackAlignment(NeuralNetwork):
         a = self.features
         for i, block in enumerate(self.sequence):
             for layer in block:
-                a = layer.build_forward(a, remember_input=True)
+                a = layer.build_forward(a, remember_input=True, gather_stats=self.gather_stats)
             if i + 1 < len(self.sequence):
-                error = self.sequence[i + 1].head.build_propagate(output_error)
+                error = self.sequence[i + 1].head.build_propagate(output_error, gather_stats=self.gather_stats)
             else:
                 error = output_error
             for layer in reversed(block.tail):
-                error = layer.build_backward(error)
+                error = layer.build_backward(error, gather_stats=self.gather_stats)
                 if layer.trainable:
                     self.step.append(layer.step)
-            block.head.build_update(error)
+            block.head.build_update(error, gather_stats=self.gather_stats)
             self.step.append(block.head.step)

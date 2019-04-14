@@ -1,3 +1,4 @@
+from numpy.random import randint
 from definition.propagator_initializer_definitions import *
 
 default_network = {
@@ -13,13 +14,13 @@ default_network = {
     "save_model_path": None,
     "propagator_initializer": "uniform",
 
-    "minimum_accuracy": [],
+    "minimum_accuracy": [(1, 99)],
     "batch_size": 10,
     "epochs": 4,
     "eval_period": 1000,
     "stat_period": 100,
     "memory_only": False,
-    "seed": None,
+    "seed": randint(1, 100000000),
     "device": "/cpu:0"
 }
 

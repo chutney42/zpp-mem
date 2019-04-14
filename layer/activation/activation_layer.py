@@ -30,20 +30,23 @@ class ActivationLayer(Layer):
         self.func = func
         self.func_prime = func_prime
 
-    def build_forward(self, input_vec, remember_input=True, gather_stats=True):
+    def build_forward(self, input_vec, remember_input=True, gather_stats=False):
         if remember_input:
             self.input_vec = input_vec
         with tf.variable_scope(self.scope, tf.AUTO_REUSE):
             activated = self.func(input_vec)
             if gather_stats:
-                tf.summary.histogram("pre_activation", input_vec)
-                tf.summary.histogram("post_activation", activated)
+                tf.summary.histogram("activated", activated, family=self.scope)
             return activated
 
-    def build_backward(self, error, gather_stats=True):
+    def build_backward(self, error, gather_stats=False):
         input_vec = self.restore_input()
         with tf.variable_scope(self.scope):
-            return tf.multiply(error, self.func_prime(input_vec))
+            result = tf.multiply(error, self.func_prime(input_vec))
+            if gather_stats:
+                tf.summary.histogram("input", input_vec, family=self.scope)
+                tf.summary.histogram("propagated_error", result, family=self.scope)
+            return result
 
 
 class Sigmoid(ActivationLayer):
@@ -54,13 +57,19 @@ class Sigmoid(ActivationLayer):
     def __str__(self):
         return "Sigmoid()"
 
-    def build_backward(self, error, gather_stats=True):
+    def build_backward(self, error, gather_stats=False):
         input_vec = self.restore_input()
         with tf.variable_scope(self.scope):
+            if gather_stats:
+                tf.summary.histogram("input", input_vec, family=self.scope)
             if self.sigmoid_cross_entropy:
+                if gather_stats:
+                     tf.summary.histogram("propagated_error", error, family=self.scope)
                 return error
-
-            return tf.multiply(error, self.func_prime(input_vec))
+            result = tf.multiply(error, self.func_prime(input_vec))
+            if gather_stats:
+                tf.summary.histogram("propagated_error", result, family=self.scope)
+            return result
 
 
 class Tanh(ActivationLayer):
