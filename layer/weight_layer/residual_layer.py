@@ -5,12 +5,13 @@ from layer.weight_layer.weight_layer import WeightLayer
 
 
 class ResidualLayer(WeightLayer):
-    def __init__(self, sequence, trainable=True, learning_rate=None, scope="residual_layer"):
+    def __init__(self, sequence, trainable=True, learning_rate=None, momentum=None, scope="residual_layer"):
         super().__init__(trainable, scope=scope)
         self.propagator = None
         self.sequence = sequence
         self.shortcut_conv = None
         self.learning_rate = learning_rate
+        self.momentum = momentum
 
 
     def __str__(self):
@@ -28,6 +29,7 @@ class ResidualLayer(WeightLayer):
             for i, layer in enumerate(self.sequence):
                 layer.scope = f"{self.scope}_{i}_{layer.scope}"
                 layer.set_lr(self.learning_rate)
+                layer.set_momentum(self.momentum)
                 if isinstance(layer, WeightLayer):
                     layer.propagator = self.propagator
 

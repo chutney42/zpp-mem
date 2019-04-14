@@ -1,5 +1,4 @@
 from numpy.random import randint
-from definition.propagator_initializer_definitions import *
 
 default_network = {
     "type": "BP",
@@ -13,6 +12,7 @@ default_network = {
     "restore_model_path": None,
     "save_model_path": None,
     "propagator_initializer": "uniform",
+    "momentum": 0.9,
 
     "minimum_accuracy": [(1, 99)],
     "batch_size": 10,

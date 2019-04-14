@@ -36,6 +36,7 @@ def get_id_and_name_from_arguments():
     parser.add_argument('-memory_only', type=bool, required=False, help='memory only')
     parser.add_argument('-gather_stats', type=bool, required=False, help='gather stats')
     parser.add_argument('-propagator_initializer', type=str, required=False, help='propagator initializer')
+    parser.add_argument('-momentum', type=float, required=False, help='momentum')
 
     network_id = parser.parse_args().id
     network_name = parser.parse_args().name
@@ -56,6 +57,7 @@ def get_network_definition():
     memory_only = parser.parse_args().memory_only
     seed = parser.parse_args().seed
     propagator_initializer = parser.parse_args().propagator_initializer
+    momentum = parser.parse_args().momentum
 
     if network_id is not None:
         print(f"running network with id={network_id}")
@@ -89,6 +91,8 @@ def get_network_definition():
         network_definition.update({"seed": seed})
     if propagator_initializer is not None:
         network_definition.update({"propagator_initializer": propagator_initializer})
+    if momentum is not None:
+        network_definition.update({"momentum": momentum})
 
     print(network_definition)
     return network_definition
@@ -113,6 +117,7 @@ def create_network(network_definition, output_types, output_shapes):
                    sequence,
                    network_definition['cost_function'],
                    learning_rate=network_definition['learning_rate'],
+                   momentum=network_definition['momentum'],
                    scope=model,
                    gather_stats=network_definition['gather_stats'],
                    # restore_model_path=network['restore_model_path'],

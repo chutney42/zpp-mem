@@ -10,7 +10,7 @@ file_name = "run_auto_increment"
 
 
 class NeuralNetwork(object):
-    def __init__(self, types, shapes, sequence, cost_function_name, propagator, learning_rate=0.1, scope="main",
+    def __init__(self, types, shapes, sequence, cost_function_name, propagator, learning_rate=0.1, momentum=0.9, scope="main",
                  gather_stats=False, restore_model=False, save_model=False, restore_model_path=None,
                  save_model_path=None):
         print(f"Create {scope} model with learning_rate={learning_rate}")
@@ -18,6 +18,7 @@ class NeuralNetwork(object):
         self.sequence = sequence
         self.propagator = propagator
         self.learning_rate = learning_rate
+        self.momentum = momentum
         self.__prepare_sequence(cost_function_name)
         self.handle = tf.placeholder(tf.string, shape=[], name="handle")
         with tf.variable_scope("iterator"):
@@ -39,6 +40,7 @@ class NeuralNetwork(object):
             for j, layer in enumerate(block):
                 layer.scope = f"{i}_{j}_{self.scope}_{layer.scope}"
                 layer.set_lr(self.learning_rate)
+                layer.set_momentum(self.momentum)
         if cost_function_name == "sigmoid_cross_entropy":
             assert isinstance(self.sequence[-1][-1], Sigmoid), \
                 "Sigmoid cross entropy should be used along with sigmoid activation in the last layer!"
