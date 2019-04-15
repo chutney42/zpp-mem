@@ -66,6 +66,40 @@ just_bp_1.update({
     "restore_model": False
 })
 
+main_network_3 = dict(main_network_2)
+main_network_3.update({
+    "seed": 53220922,
+    "sequence": "vgg_16",
+})
+
+first_bp_2 = dict(main_network_3)
+first_bp_2.update({
+    "learning_rate": 0.001,
+    "save_model": True,
+    "save_model_path": "./saved_2/model.ckpt",
+    "epochs": 40
+})
+
+then_bp_2 = dict(main_network_3)
+then_bp_2.update({
+    "learning_rate": 0.0001,
+    "restore_model": True,
+    "restore_model_path": "./saved_2/model.ckpt",
+    "epochs": 40
+})
+
+just_bp_2_1 = dict(main_network_3)
+just_bp_2_1.update({
+    "learning_rate": 0.001,
+    "epochs": 80
+})
+
+just_bp_2_2 = dict(main_network_3)
+just_bp_2_2.update({
+    "learning_rate": 0.0001,
+    "epochs": 80
+})
+
 vgg_16 = dict(default_network)
 vgg_16.update({
     "minimum_accuracy": [(10, 12), (50, 20)],
