@@ -30,7 +30,7 @@ class DirectFeedbackAlignment(BackwardPropagation):
                                      output_dim=shapes[1][0].value,
                                      error_container=self.error_container)
 
-                self._initialize_custom_gradients(layer.sequence)
+                self._initialize_custom_gradients(layer.sequence, shapes)
 
     def build(self):
         self.result = self.build_forward()

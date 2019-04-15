@@ -1,7 +1,7 @@
 from numpy.random import randint
 
 default_network = {
-    "type": "BP",
+    "type": "DFA",
     "dataset_name": "mnist",
     "sequence": "conv0",
     "cost_function": "softmax_cross_entropy",
@@ -42,7 +42,7 @@ vgg_16_DFA.update({
 
 resnet = dict(default_network)
 resnet.update({
-    "type": "BP",
+    "type": "DFA",
     "dataset_name": "cifar10",
     "sequence": "resnet_18",
     "minimum_accuracy": [(10, 20)],
