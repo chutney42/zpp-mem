@@ -36,36 +36,13 @@ class ConvolutionalLayer(WeightLayer):
                 biases = tf.get_variable("biases", output.shape[1:], initializer=self.biases_initializer(), use_resource=True)
                 self.variables.append(biases)
                 output = tf.add(output, biases)
+
+            if gather_stats:
+                tf.summary.histogram(f"filters", filters, family=self.scope)
+
             return output
 
     def gather_stats_backward(self, gradients):
-        delta_input = gradients[0]
-        delta_filters = gradients[1]
-        filters = self.variables[0]
-        tf.summary.image(f"delta_input", put_kernels_on_grid(delta_input), 1)
-        tf.summary.image(f"delta_filters", put_kernels_on_grid(delta_filters), 1)
-        tf.summary.image(f"filters", put_kernels_on_grid(filters), 1)
+        tf.summary.histogram("delta_input", gradients[0], family=self.scope)
+        tf.summary.histogram("delta_filters", gradients[1], family=self.scope)
 
-
-def put_kernels_on_grid(kernel, grid_Y=None, grid_X=None, pad=1):                                         
-    def factorization(n):
-        from numpy.ma import sqrt
-        for i in range(int(sqrt(float(n))), 0, -1):
-            if n % i == 0:
-                return i, int(n / i)
-    if grid_Y is None:
-        (grid_Y, grid_X) = factorization(kernel.get_shape()[3].value)
-    x_min = tf.reduce_min(kernel)
-    x_max = tf.reduce_max(kernel)
-    kernel = (kernel - x_min) / (x_max - x_min)
-    x = tf.pad(kernel, tf.constant([[pad, pad], [pad, pad], [0, 0], [0, 0]]), mode='CONSTANT')
-    Y = kernel.get_shape()[0] + 2 * pad
-    X = kernel.get_shape()[1] + 2 * pad
-    channels = kernel.get_shape()[2]
-    x = tf.transpose(x, (3, 0, 1, 2))
-    x = tf.reshape(x, tf.stack([grid_X, Y * grid_Y, X, channels]))
-    x = tf.transpose(x, (0, 2, 1, 3))
-    x = tf.reshape(x, tf.stack([1, X * grid_X, Y * grid_Y, channels]))
-    x = tf.transpose(x, (2, 1, 3, 0))
-    x = tf.transpose(x, (2, 0, 1, 3))
-    return tf.image.convert_image_dtype(x, dtype=tf.uint8)

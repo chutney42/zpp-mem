@@ -1,11 +1,11 @@
 from numpy.random import randint
 
 default_network = {
-    "type": "DFA",
+    "type": "BP",
     "dataset_name": "mnist",
     "sequence": "conv0",
-    "cost_function": "mean_squared_error",
-    "learning_rate": 0.5,
+    "cost_function": "softmax_cross_entropy",
+    "learning_rate": 0.001,
     "gather_stats": False,
     "restore_model": False,
     "save_model": False,
@@ -37,4 +37,16 @@ vgg_16_DFA.update({
     "type": "DFA",
     "minimum_accuracy": [(20, 20), (50, 40)],
 
+})
+
+
+resnet = dict(default_network)
+resnet.update({
+    "type": "BP",
+    "dataset_name": "cifar10",
+    "sequence": "resnet_18",
+    "minimum_accuracy": [(10, 20)],
+    "epochs": 50,
+    "batch_size": 64,
+    "cost_function": "softmax_cross_entropy",
 })

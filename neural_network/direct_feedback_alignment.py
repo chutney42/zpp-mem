@@ -1,5 +1,7 @@
 import tensorflow as tf
 from functools import partial
+
+from layer import ResidualLayer
 from neural_network.neural_network import NeuralNetwork
 from neural_network.backward_propagation import BackwardPropagation
 from layer.weight_layer.convolutional_layers import ConvolutionalLayer
@@ -10,6 +12,10 @@ from custom_operations import direct_feedback_alignment_fc, direct_feedback_alig
 class DirectFeedbackAlignment(BackwardPropagation):
     def __init__(self, types, shapes, sequence, *args, **kwargs):
         self.error_container = []
+        self._initialize_custom_gradients(sequence, shapes)
+        super().__init__(types, shapes, sequence, *args, **kwargs)
+
+    def _initialize_custom_gradients(self, sequence, shapes):
         for layer in sequence:
             if isinstance(layer, ConvolutionalLayer):
                 layer.func = partial(direct_feedback_alignment_conv,
@@ -19,8 +25,13 @@ class DirectFeedbackAlignment(BackwardPropagation):
                 layer.func = partial(direct_feedback_alignment_fc,
                                      output_dim=shapes[1][0].value,
                                      error_container=self.error_container)
-        super().__init__(types, shapes, sequence, *args, **kwargs)
-        
+            elif isinstance(layer, ResidualLayer):
+                layer.conv_func = partial(direct_feedback_alignment_conv,
+                                     output_dim=shapes[1][0].value,
+                                     error_container=self.error_container)
+
+                self._initialize_custom_gradients(layer.sequence)
+
     def build(self):
         self.result = self.build_forward()
         self.cost = self.cost_function(self.labels, self.result)

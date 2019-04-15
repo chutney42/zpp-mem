@@ -16,7 +16,7 @@ class NeuralNetwork(object):
         self.cost_function = cost_function
         self.training_mode = tf.placeholder(tf.bool)
         for i, layer in enumerate(self.sequence):
-            layer.scope = f"{self.scope}_{layer.scope}_{i}"
+            layer.scope = f"{i}_{self.scope}_{layer.scope}"
             layer.training_mode = self.training_mode
 
         self.handle = tf.placeholder(tf.string, shape=[], name="handle")

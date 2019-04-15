@@ -22,6 +22,8 @@ class FullyConnected(WeightLayer):
     def gather_stats_backward(self, gradients):
         weights = self.variables[0]
         tf.summary.image(f"weights_{self.scope}", tf.reshape(weights, (1, weights.shape[0], weights.shape[1], 1)))
+        tf.summary.histogram("delta_input", gradients[0], family=self.scope)
+
 
     def build_forward(self, input, remember_input=False, gather_stats=False):
         with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
