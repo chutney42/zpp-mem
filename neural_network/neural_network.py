@@ -14,8 +14,10 @@ class NeuralNetwork(object):
         self.sequence = sequence
         self.optimizer = optimizer
         self.cost_function = cost_function
+        self.training_mode = tf.placeholder(tf.bool)
         for i, layer in enumerate(self.sequence):
             layer.scope = f"{self.scope}_{layer.scope}_{i}"
+            layer.training_mode = self.training_mode
 
         self.handle = tf.placeholder(tf.string, shape=[], name="handle")
         with tf.variable_scope("iterator"):

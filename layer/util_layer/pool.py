@@ -23,9 +23,9 @@ class Pool(Layer):
         return f"{self.pooling_function_name}({self.kernel_size}, {self.strides}, {self.padding})"
 
     def build_forward(self, input, remember_input=False, gather_stats=False):
-        if remember_input:
-            self.save_input(input)
         with tf.name_scope(self.scope):
+            if remember_input:
+                self.save_input(input)
             if self.kernel_size is None:
                 self.kernel_size = [1] + list(map(lambda x: x.value, input.shape[1:-1])) + [1]
             output = self.pooling_function(input, self.kernel_size, self.strides, self.padding, self.data_format)

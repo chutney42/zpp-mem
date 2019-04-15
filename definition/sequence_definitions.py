@@ -1,4 +1,3 @@
-import tensorflow as tf
 from definition.resnet import *
 from layer import *
 
@@ -56,22 +55,22 @@ def conv0(output_size):
             FullyConnected(output_size), Sigmoid()]
 
 def conv1(output_size):
-    return [ConvolutionalLayer((5, 5), 10, [1, 1, 1, 1], "SAME"), BatchNormalization(), Sigmoid(),
-            ConvolutionalLayer((5, 5), number_of_filters=10), BatchNormalization(), Sigmoid(),
+    return [ConvolutionalLayer((5, 5), 10, [1, 1, 1, 1]), BatchNormalization(), Sigmoid(),
+            ConvolutionalLayer((5, 5), num_of_filters=10), BatchNormalization(), Sigmoid(),
             FullyConnected(30, flatten=True), BatchNormalization(), Sigmoid(),
             FullyConnected(output_size), Sigmoid()]
 
 
 def conv2(output_size):
-    return [ConvolutionalLayer((5, 5), number_of_filters=10), BatchNormalization(), MaxPool([4, 4], [2, 2]), Sigmoid(),
-            ConvolutionalLayer((5, 5), number_of_filters=10), BatchNormalization(), MaxPool([4, 4], [2, 2]), Sigmoid(),
+    return [ConvolutionalLayer((5, 5), num_of_filters=10), BatchNormalization(), MaxPool([4, 4], [2, 2]), Sigmoid(),
+            ConvolutionalLayer((5, 5), num_of_filters=10), BatchNormalization(), MaxPool([4, 4], [2, 2]), Sigmoid(),
             FullyConnected(output_size, flatten=True), Sigmoid()]
 
 
 def conv3(output_size):
-    return [ConvolutionalLayer((5, 5), number_of_filters=15), BatchNormalization(), MaxPool([4, 4], [2, 2]), Sigmoid(),
-            ConvolutionalLayer((5, 5), number_of_filters=15), BatchNormalization(), MaxPool([4, 4], [2, 2]), Sigmoid(),
-            ConvolutionalLayer((5, 5), number_of_filters=15), BatchNormalization(), MaxPool([4, 4], [2, 2]), Sigmoid(),
+    return [ConvolutionalLayer((5, 5), num_of_filters=15), BatchNormalization(), MaxPool([4, 4], [2, 2]), Sigmoid(),
+            ConvolutionalLayer((5, 5), num_of_filters=15), BatchNormalization(), MaxPool([4, 4], [2, 2]), Sigmoid(),
+            ConvolutionalLayer((5, 5), num_of_filters=15), BatchNormalization(), MaxPool([4, 4], [2, 2]), Sigmoid(),
             FullyConnected(output_size, flatten=True), Sigmoid()]
 
 
@@ -86,9 +85,9 @@ def long_fc(output_size):
 def long_conv(output_size):
     sequence = []
     for i in range(30):
-        sequence += [ConvolutionalLayer((5, 5), number_of_filters=5), BatchNormalization(), Sigmoid()]
+        sequence += [ConvolutionalLayer((5, 5), num_of_filters=5), BatchNormalization(), Sigmoid()]
     sequence += [FullyConnected(output_size, flatten=True), Sigmoid()]
-    return blocks
+    return sequence
 
 
 def resnet_18(output_size):

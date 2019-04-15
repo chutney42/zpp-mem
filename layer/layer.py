@@ -12,6 +12,7 @@ class Layer(object):
         self.input_shape = None
         self.learning_rate = None
         self.momentum = None
+        self.traning_mode = None
 
     def save_input(self, input):
         self.input = input

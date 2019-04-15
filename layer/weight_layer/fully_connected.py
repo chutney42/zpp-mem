@@ -24,9 +24,9 @@ class FullyConnected(WeightLayer):
         tf.summary.image(f"weights_{self.scope}", tf.reshape(weights, (1, weights.shape[0], weights.shape[1], 1)))
 
     def build_forward(self, input, remember_input=False, gather_stats=False):
-        if remember_input:
-            self.save_input(input)
         with tf.variable_scope(self.scope, reuse=tf.AUTO_REUSE):
+            if remember_input:
+                self.save_input(input)
             if self.flatten:
                 input = tf.layers.flatten(input)
             weights = tf.get_variable("weights", [input.shape[1], self.output_dim],
@@ -39,7 +39,7 @@ class FullyConnected(WeightLayer):
                 self.variables.append(biases)
                 output = tf.add(output, biases)
             if gather_stats:
-                tf.summary.histogram("input", input_vec, family=self.scope)
+                tf.summary.histogram("input", input, family=self.scope)
                 tf.summary.histogram("weights", weights, family=self.scope)
                 if self.add_biases:
                     tf.summary.histogram("biases", biases, family=self.scope)

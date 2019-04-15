@@ -1,10 +1,10 @@
 import tensorflow as tf
-from tensorflow.initializers import he_normal
+
 from layer.weight_layer.weight_layer import WeightLayer
 
 
 class ConvolutionalLayer(WeightLayer):
-    def __init__(self, filter_dim, num_of_filters, strides, padding, func=tf.nn.conv2d, use_cudnn_on_gpu=True, data_format='NHWC',
+    def __init__(self, filter_dim, num_of_filters, strides=[1,1,1,1], padding="SAME", func=tf.nn.conv2d, use_cudnn_on_gpu=True, data_format='NHWC',
                  dilations=[1, 1, 1, 1], filters_initializer=tf.initializers.he_normal, add_biases=False,
                  biases_initializer=tf.zeros_initializer, scope="convolutional_layer"):
         super().__init__(scope=scope)
@@ -34,6 +34,8 @@ class ConvolutionalLayer(WeightLayer):
             output = self.func(input, filters, strides=self.strides, padding=self.padding, use_cudnn_on_gpu=self.use_cudnn_on_gpu, data_format=self.data_format, dilations=self.dilations)
             if self.add_biases:
                 biases = tf.get_variable("biases", output.shape[1:], initializer=self.biases_initializer(), use_resource=True)
+                self.variables.append(biases)
+                output = tf.add(output, biases)
             return output
 
     def gather_stats_backward(self, gradients):

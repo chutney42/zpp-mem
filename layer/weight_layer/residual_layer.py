@@ -21,7 +21,7 @@ class ResidualLayer(WeightLayer):
         s = s + "]"
         return s
 
-    def build_forward(self, input_vec, remember_input=False, gather_stats=False):
+    def build_forward(self, input, remember_input=False, gather_stats=False):
         if remember_input:
             self.input = input
 
