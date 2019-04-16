@@ -82,7 +82,9 @@ class NeuralNetwork(object):
         self.result = self.build_forward()
         self.cost = self.cost_function(self.labels, self.result)
         self.build_test(self.result)
+        update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
         self.step = self.optimizer.minimize(self.cost)
+        self.step = tf.group([self.step, update_ops])
 
     def train(self, training_set, validation_set, batch_size=20, epochs=2, eval_period=1000, stat_period=100,
               memory_only=False, minimum_accuracy=[]):
@@ -175,7 +177,7 @@ class NeuralNetwork(object):
         while True:
 
             try:
-                feed_dict = {self.handle: training_handle}
+                feed_dict = {self.handle: training_handle, self.training_mode: True}
 
                 if self.memory_only or (self.gather_stats and self.counter % stat_period is 0):
                     run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
@@ -206,7 +208,7 @@ class NeuralNetwork(object):
         self.sess.run(self.running_vars_initializer)
         while True:
             try:
-                feed_dict = {self.handle: validation_handle}
+                feed_dict = {self.handle: validation_handle, self.training_mode: False}
                 self.sess.run([self.acc_update, self.loss_update], feed_dict)
             except tf.errors.OutOfRangeError:
                 break
@@ -237,13 +239,15 @@ class NeuralNetwork(object):
             self.sess.run(tf.assign(var, val))
 
     def infer(self, x):
+        # TODO?
         saver = tf.train.Saver()
         with tf.Session() as sess:
             saver.restore(sess, self.restore_model_path)
-            res = sess.run(self.result, feed_dict={self.features: x})
+            res = sess.run(self.result, feed_dict={self.features: x, self.training_mode: False})
         return res
 
     def test(self, data_set, batch_size=10):
+        # TODO?
         next_batch = data_set.batch(batch_size).make_one_shot_iterator().get_next()
         total_res = 0
         counter = 0
@@ -253,7 +257,7 @@ class NeuralNetwork(object):
             while True:
                 try:
                     batch_xs, batch_ys = sess.run(next_batch)
-                    res = sess.run(self.acc, feed_dict={self.features: batch_xs, self.labels: batch_ys})
+                    res = sess.run(self.acc, feed_dict={self.features: batch_xs, self.labels: batch_ys, self.trainig_mode: False})
                     total_res += res
                     counter += batch_size
                 except tf.errors.OutOfRangeError:

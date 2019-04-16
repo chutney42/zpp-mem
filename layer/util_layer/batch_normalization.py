@@ -23,3 +23,7 @@ class BatchNormalization(Layer):
             tf.summary.histogram("input", input, family=self.scope)
             tf.summary.histogram("output", output, family=self.scope)
 
+        return output
+
+    def __str__(self):
+        return f"BatchNormalization({self.axis}, {self.momentum})"

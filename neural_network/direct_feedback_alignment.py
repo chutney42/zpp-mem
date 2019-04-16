@@ -26,7 +26,9 @@ class DirectFeedbackAlignment(BackwardPropagation):
         self.cost = self.cost_function(self.labels, self.result)
         self.build_test(self.result)
         self.error_container.append(tf.gradients(self.cost, self.result, name="error")[0])
+        update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
         self.step = self.optimizer.minimize(self.cost)
+        self.step = tf.group([self.step, update_ops])
 
 
 class DirectFeedbackAlignmentMem(NeuralNetwork): # TODO
