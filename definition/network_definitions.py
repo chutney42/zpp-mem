@@ -6,7 +6,11 @@ default_network = {
     "sequence": "fc1",
     "cost_function": "mean_squared_error",
     "learning_rate": 0.1,
+
     "gather_stats": False,
+    "save_graph": False,
+    "memory_only": False,
+
     "restore_model": False,
     "save_model": False,
     "restore_model_path": None,
@@ -19,9 +23,7 @@ default_network = {
     "epochs": 4,
     "eval_period": 1000,
     "stat_period": 100,
-    "memory_only": False,
     "seed": randint(1, 100000000),
-    "device": "/cpu:0"
 }
 
 vgg_16 = dict(default_network)
