@@ -49,28 +49,33 @@ def fc3_relu(output_size):
 
 
 def conv0(output_size):
-    return [ConvolutionalLayer(filter_dim=(5, 5), num_of_filters=10, strides=[1, 1, 1, 1], padding="SAME"), Sigmoid(),
-            ConvolutionalLayer(filter_dim=(5, 5), num_of_filters=10, strides=[1, 1, 1, 1], padding="SAME"), Sigmoid(),
+    return [ConvolutionalLayer(filter_dim=(5, 5), num_of_filters=10, strides=[1, 1], padding="SAME"), Sigmoid(),
+            ConvolutionalLayer(filter_dim=(5, 5), num_of_filters=10, strides=[1, 1], padding="SAME"), Sigmoid(),
             FullyConnected(30, flatten=True), Sigmoid(),
-            FullyConnected(output_size), Sigmoid()]
+            FullyConnected(output_size)]
 
 def conv1(output_size):
-    return [ConvolutionalLayer((5, 5), 10, [1, 1, 1, 1]), BatchNormalization(), Sigmoid(),
+    return [ConvolutionalLayer(filter_dim=(5, 5), num_of_filters=10, strides=[1, 1], padding="SAME"), BatchNormalization(), Sigmoid(),
             ConvolutionalLayer((5, 5), num_of_filters=10), BatchNormalization(), Sigmoid(),
             FullyConnected(30, flatten=True), BatchNormalization(), Sigmoid(),
             FullyConnected(output_size), Sigmoid()]
 
 
 def conv2(output_size):
-    return [ConvolutionalLayer((5, 5), num_of_filters=10), BatchNormalization(), MaxPool([4, 4], [2, 2]), Sigmoid(),
-            ConvolutionalLayer((5, 5), num_of_filters=10), BatchNormalization(), MaxPool([4, 4], [2, 2]), Sigmoid(),
+    return [ConvolutionalLayer(filter_dim=(5, 5), num_of_filters=10, strides=[1, 1], padding="SAME"),
+            BatchNormalization(), MaxPool([4, 4], [2, 2]), Sigmoid(),
+            ConvolutionalLayer(filter_dim=(5, 5), num_of_filters=10, strides=[1, 1], padding="SAME"),
+            BatchNormalization(), MaxPool([4, 4], [2, 2]), Sigmoid(),
             FullyConnected(output_size, flatten=True), Sigmoid()]
 
 
 def conv3(output_size):
-    return [ConvolutionalLayer((5, 5), num_of_filters=15), BatchNormalization(), MaxPool([4, 4], [2, 2]), Sigmoid(),
-            ConvolutionalLayer((5, 5), num_of_filters=15), BatchNormalization(), MaxPool([4, 4], [2, 2]), Sigmoid(),
-            ConvolutionalLayer((5, 5), num_of_filters=15), BatchNormalization(), MaxPool([4, 4], [2, 2]), Sigmoid(),
+    return [ConvolutionalLayer(filter_dim=(5, 5), num_of_filters=15, strides=[1, 1], padding="SAME"),
+            BatchNormalization(), MaxPool([4, 4], [2, 2]), Sigmoid(),
+            ConvolutionalLayer(filter_dim=(5, 5), num_of_filters=15, strides=[1, 1], padding="SAME"),
+            BatchNormalization(), MaxPool([4, 4], [2, 2]), Sigmoid(),
+            ConvolutionalLayer(filter_dim=(5, 5), num_of_filters=15, strides=[1, 1], padding="SAME"),
+            BatchNormalization(), MaxPool([4, 4], [2, 2]), Sigmoid(),
             FullyConnected(output_size, flatten=True), Sigmoid()]
 
 
@@ -85,7 +90,7 @@ def long_fc(output_size):
 def long_conv(output_size):
     sequence = []
     for i in range(30):
-        sequence += [ConvolutionalLayer((5, 5), num_of_filters=5), BatchNormalization(), Sigmoid()]
+        sequence += [ConvolutionalLayer(filter_dim=(5, 5), num_of_filters=5, strides=[1, 1], padding="SAME"), BatchNormalization(), Sigmoid()]
     sequence += [FullyConnected(output_size, flatten=True), Sigmoid()]
     return sequence
 
