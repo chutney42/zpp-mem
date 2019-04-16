@@ -6,9 +6,6 @@ default_network = {
     "sequence": "conv1",
     "cost_function": "softmax_cross_entropy",
     "learning_rate": 0.01,
-    "sequence": "fc1",
-    "cost_function": "mean_squared_error",
-    "learning_rate": 0.1,
 
     "gather_stats": False,
     "save_graph": False,
