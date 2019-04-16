@@ -3,9 +3,9 @@ from numpy.random import randint
 default_network = {
     "type": "BP",
     "dataset_name": "mnist",
-    "sequence": "fc1",
-    "cost_function": "mean_squared_error",
-    "learning_rate": 0.1,
+    "sequence": "conv1",
+    "cost_function": "softmax_cross_entropy",
+    "learning_rate": 0.01,
 
     "gather_stats": False,
     "save_graph": False,
@@ -15,10 +15,8 @@ default_network = {
     "save_model": False,
     "restore_model_path": None,
     "save_model_path": None,
-    "propagator_initializer": "uniform",
-    "momentum": 0.9,
 
-    "minimum_accuracy": [(1, 99)],
+    "minimum_accuracy": [(1, 40)],
     "batch_size": 10,
     "epochs": 4,
     "eval_period": 1000,

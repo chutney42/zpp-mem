@@ -1,9 +1,37 @@
 import tensorflow as tf
+from functools import partial
 from neural_network.neural_network import NeuralNetwork
-from propagator.direct_propagator import DirectFixedRandom
+from neural_network.backward_propagation import BackwardPropagation
+from layer.weight_layer.convolutional_layers import ConvolutionalLayer
+from layer.weight_layer.fully_connected import FullyConnected
+from custom_operations import direct_feedback_alignment_fc, direct_feedback_alignment_conv
 
 
-class DirectFeedbackAlignment(NeuralNetwork):
+class DirectFeedbackAlignment(BackwardPropagation):
+    def __init__(self, types, shapes, sequence, *args, **kwargs):
+        self.error_container = []
+        for layer in sequence:
+            if isinstance(layer, ConvolutionalLayer):
+                layer.func = partial(direct_feedback_alignment_conv,
+                                     output_dim=shapes[1][0].value,
+                                     error_container=self.error_container)
+            elif isinstance(layer, FullyConnected):
+                layer.func = partial(direct_feedback_alignment_fc,
+                                     output_dim=shapes[1][0].value,
+                                     error_container=self.error_container)
+        super().__init__(types, shapes, sequence, *args, **kwargs)
+        
+    def build(self):
+        self.result = self.build_forward()
+        self.cost = self.cost_function(self.labels, self.result)
+        self.build_test(self.result)
+        self.error_container.append(tf.gradients(self.cost, self.result, name="error")[0])
+        update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+        self.step = self.optimizer.minimize(self.cost)
+        self.step = tf.group([self.step, update_ops])
+
+
+class DirectFeedbackAlignmentMem(NeuralNetwork): # TODO
     def __init__(self, types, shapes, sequence, cost_function_name,
                  propagator_initializer=tf.random_normal_initializer(), *args, **kwargs):
         propagator = DirectFixedRandom(shapes[1][1].value, propagator_initializer)

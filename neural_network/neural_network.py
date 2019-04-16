@@ -1,8 +1,5 @@
 import os
-
-from layer.activation.activation_layer import Sigmoid
 from layer.layer import *
-from layer.util_layer.softmax import Softmax
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'  # hacked by Adam
 
@@ -10,16 +7,18 @@ file_name = "run_auto_increment"
 
 
 class NeuralNetwork(object):
-    def __init__(self, types, shapes, sequence, cost_function_name, propagator, learning_rate=0.1, momentum=0.9, scope="main",
-                 gather_stats=False, save_graph=False, restore_model=False, save_model=False, restore_model_path=None,
-                 save_model_path=None):
-        print(f"Create {scope} model with learning_rate={learning_rate}")
+    def __init__(self, types, shapes, sequence, cost_function, optimizer, scope="main", gather_stats=False,
+                 save_graph=False, restore_model=False, save_model=False, restore_model_path=None, save_model_path=None):
+        print(f"Create {scope} model")
         self.scope = scope
         self.sequence = sequence
-        self.propagator = propagator
-        self.learning_rate = learning_rate
-        self.momentum = momentum
-        self.__prepare_sequence(cost_function_name)
+        self.optimizer = optimizer
+        self.cost_function = cost_function
+        self.training_mode = tf.placeholder(tf.bool)
+        for i, layer in enumerate(self.sequence):
+            layer.scope = f"{self.scope}_{layer.scope}_{i}"
+            layer.training_mode = self.training_mode
+
         self.handle = tf.placeholder(tf.string, shape=[], name="handle")
         with tf.variable_scope("iterator"):
             self.iterator = tf.data.Iterator.from_string_handle(self.handle, types, tuple(
@@ -34,31 +33,6 @@ class NeuralNetwork(object):
         self.build()
         self.merged_summary = tf.summary.merge_all()
         self.__print_model_metadata(shapes)
-
-    def __prepare_sequence(self, cost_function_name):
-        for i, block in enumerate(self.sequence):
-            block.head.propagator = self.propagator
-            for j, layer in enumerate(block):
-                layer.scope = f"{i}_{j}_{self.scope}_{layer.scope}"
-                layer.set_lr(self.learning_rate)
-                layer.set_momentum(self.momentum)
-        if cost_function_name == "sigmoid_cross_entropy":
-            assert isinstance(self.sequence[-1][-1], Sigmoid), \
-                "Sigmoid cross entropy should be used along with sigmoid activation in the last layer!"
-            self.sequence[-1][-1].sigmoid_cross_entropy = True
-            from cost_function.sigmoid_cross_entropy import SigmoidCrossEntropy
-            self.cost_function = SigmoidCrossEntropy
-        elif cost_function_name == "softmax_cross_entropy":
-            assert isinstance(self.sequence[-1][-1], Softmax), \
-                "Softmax cross entropy should be used along with softmax in the last layer!"
-            self.sequence[-1][-1].softmax_cross_entropy = True
-            from cost_function.softmax_cross_entropy import SoftmaxCrossEntropy
-            self.cost_function = SoftmaxCrossEntropy
-        elif cost_function_name == "mean_squared_error":
-            from cost_function.mean_squared_error import MeanSquaredError
-            self.cost_function = MeanSquaredError
-        else:
-            raise NotImplementedError(f"Cost function {cost_function_name} is not recognized.")
 
     def __init_run_number(self):
         if not os.path.isfile(file_name):
@@ -85,8 +59,8 @@ class NeuralNetwork(object):
     def __print_model_metadata(self, shapes):
         print(f"data_{self.scope}_{self.run_number}")
         print(f"input dims: {[x.value for x in shapes[0]]} output dims: {[x.value for x in shapes[1]]}")
-        for block in self.sequence:
-            print(str(block))
+        for layer in self.sequence:
+            print(str(layer))
 
     def build_forward(self):
         raise NotImplementedError("This method should be implemented in subclass")
@@ -94,10 +68,10 @@ class NeuralNetwork(object):
     def build_backward(self, error):
         raise NotImplementedError("This method should be implemented in subclass")
 
-    def __build_test(self, a):
+    def build_test(self, a):
         self.acc, self.acc_update = tf.metrics.accuracy(tf.argmax(self.labels, 1), tf.argmax(a, 1),
                                                         name="accuracy_metric")
-        self.loss, self.loss_update = tf.metrics.mean(self.cost_function.cost(a, self.labels), name="loss_metric")
+        self.loss, self.loss_update = tf.metrics.mean(self.cost, name="loss_metric")
 
         self.running_vars = tf.get_collection(tf.GraphKeys.LOCAL_VARIABLES, scope="accuracy_metric")
         self.running_vars += tf.get_collection(tf.GraphKeys.LOCAL_VARIABLES, scope="loss_metric")
@@ -107,9 +81,11 @@ class NeuralNetwork(object):
 
     def build(self):
         self.result = self.build_forward()
-        error = self.cost_function.error(self.result, self.labels)
-        self.__build_test(self.result)
-        self.build_backward(error)
+        self.cost = self.cost_function(self.labels, self.result)
+        self.build_test(self.result)
+        update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+        self.step = self.optimizer.minimize(self.cost)
+        self.step = tf.group([self.step, update_ops])
 
     def train(self, training_set, validation_set, epochs=2, eval_period=1000, stat_period=100,
               memory_only=False, minimum_accuracy=[]):
@@ -134,7 +110,7 @@ class NeuralNetwork(object):
                           f" accuracy after {min_acc[0]} epochs, network achieved {current_accuracy} accuracy")
                     return True
             return False
-
+        
         writer, val_writer = self.__init_writers()
         training_handle, validation_handle = self.__init_handlers()
         self.__init_global_variables()
@@ -145,7 +121,7 @@ class NeuralNetwork(object):
         for _ in range(epochs):
             self.__train_single_epoch(self.training_it, training_handle, writer, eval_period, stat_period)
             acc, loss = self.__validate(self.validation_it, validation_handle, val_writer)
-            print(f"start epoch {self.epoch}, accuracy: {acc}%, loss:{loss}")
+            print(f"finished epoch {self.epoch}, accuracy: {acc}%, loss:{loss}")
 
             if self.memory_only or should_terminate_training(acc, minimum_accuracy):
                 break
@@ -194,7 +170,7 @@ class NeuralNetwork(object):
         self.sess.run(training_it.initializer)
         while True:
             try:
-                feed_dict = {self.handle: training_handle}
+                feed_dict = {self.handle: training_handle, self.training_mode: True}
 
                 if self.memory_only or (self.gather_stats and self.counter % stat_period is 0):
                     run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
@@ -230,7 +206,7 @@ class NeuralNetwork(object):
         self.sess.run(self.running_vars_initializer)
         while True:
             try:
-                feed_dict = {self.handle: validation_handle}
+                feed_dict = {self.handle: validation_handle, self.training_mode: False}
                 self.sess.run([self.acc_update, self.loss_update], feed_dict)
             except tf.errors.OutOfRangeError:
                 break
@@ -261,13 +237,15 @@ class NeuralNetwork(object):
             self.sess.run(tf.assign(var, val))
 
     def infer(self, x):
+        # TODO?
         saver = tf.train.Saver()
         with tf.Session() as sess:
             saver.restore(sess, self.restore_model_path)
-            res = sess.run(self.result, feed_dict={self.features: x})
+            res = sess.run(self.result, feed_dict={self.features: x, self.training_mode: False})
         return res
 
     def test(self, data_set, batch_size=10):
+        # TODO?
         next_batch = data_set.batch(batch_size).make_one_shot_iterator().get_next()
         total_res = 0
         counter = 0
@@ -277,7 +255,7 @@ class NeuralNetwork(object):
             while True:
                 try:
                     batch_xs, batch_ys = sess.run(next_batch)
-                    res = sess.run(self.acc, feed_dict={self.features: batch_xs, self.labels: batch_ys})
+                    res = sess.run(self.acc, feed_dict={self.features: batch_xs, self.labels: batch_ys, self.trainig_mode: False})
                     total_res += res
                     counter += batch_size
                 except tf.errors.OutOfRangeError:

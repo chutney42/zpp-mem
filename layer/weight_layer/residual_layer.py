@@ -21,9 +21,9 @@ class ResidualLayer(WeightLayer):
         s = s + "]"
         return s
 
-    def build_forward(self, input_vec, remember_input=False, gather_stats=False):
+    def build_forward(self, input, remember_input=False, gather_stats=False):
         if remember_input:
-            self.input_vec = input_vec
+            self.input = input
 
         with tf.variable_scope(self.scope, tf.AUTO_REUSE):
             for i, layer in enumerate(self.sequence):
@@ -33,12 +33,12 @@ class ResidualLayer(WeightLayer):
                 if isinstance(layer, WeightLayer):
                     layer.propagator = self.propagator
 
-            residual = input_vec
+            residual = input
             for layer in self.sequence:
                 residual = layer.build_forward(residual, remember_input=True, gather_stats=gather_stats)
 
             res_shape = residual.shape
-            input_shape = input_vec.shape
+            input_shape = input.shape
 
             stride_width = int(round(input_shape[1].value / res_shape[1].value))
             stride_height = int(round(input_shape[2].value / res_shape[2].value))
@@ -52,9 +52,9 @@ class ResidualLayer(WeightLayer):
                                   learning_rate=self.learning_rate,
                                   scope=f"{self.scope}_{len(self.sequence)}_shortcut_convolution")
                 self.shortcut_conv.propagator = self.propagator
-                input_vec = self.shortcut_conv.build_forward(input_vec)
+                input = self.shortcut_conv.build_forward(input)
 
-            return input_vec + residual
+            return input + residual
 
     def build_backward(self, error, gather_stats=False):
         input_err = 1

@@ -22,23 +22,14 @@ class Pool(Layer):
     def __str__(self):
         return f"{self.pooling_function_name}({self.kernel_size}, {self.strides}, {self.padding})"
 
-    def build_forward(self, input_vec, remember_input=True, gather_stats=False):
-        if remember_input:
-            self.input_vec = input_vec
-        with tf.variable_scope(self.scope, tf.AUTO_REUSE):
+    def build_forward(self, input, remember_input=False, gather_stats=False):
+        with tf.name_scope(self.scope):
+            if remember_input:
+                self.save_input(input)
             if self.kernel_size is None:
-                self.kernel_size = [1] + list(map(lambda x: x.value, input_vec.shape[1:-1])) + [1]
-
-            output = self.pooling_function(input_vec, self.kernel_size, self.strides, self.padding, self.data_format)
+                self.kernel_size = [1] + list(map(lambda x: x.value, input.shape[1:-1])) + [1]
+            output = self.pooling_function(input, self.kernel_size, self.strides, self.padding, self.data_format)
             return output
-
-    def build_backward(self, error, gather_stats=False):
-        with tf.variable_scope(self.scope):
-            pre_pool = self.restore_input()
-            post_pool = self.pooling_function(pre_pool, self.kernel_size, self.strides, self.padding, self.data_format)
-            backprop_error = tf.gradients(post_pool, pre_pool, error)
-            return backprop_error[0]
-
 
 class MaxPool(Pool):
     def __init__(self, kernel_size, strides, padding="VALID", data_format='NHWC', scope="max_pool_layer"):

@@ -2,14 +2,12 @@ import argparse
 import time
 import tensorflow as tf
 from inspect import getmembers, isfunction
-from definition import blocks_definitions
-from definition import propagator_initializer_definitions
+from definition import sequence_definitions
 from definition import dataset_definitions
 from definition import network_definitions
 
-blocks_dict = dict(getmembers(blocks_definitions, isfunction))
+sequences_dict = dict(getmembers(sequence_definitions, isfunction))
 datasets_dict = dict(getmembers(dataset_definitions, isfunction))
-propagator_initializers_dict = dict(getmembers(propagator_initializer_definitions, isfunction))
 networks_dict = {
     network_name: network_definition for network_name, network_definition in getmembers(network_definitions)
     if isinstance(network_definition, dict) and network_name != "__builtins__"
@@ -35,7 +33,6 @@ def get_id_and_name_from_arguments():
     parser.add_argument('-seed', type=int, required=False, help='seed')
     parser.add_argument('-memory_only', type=bool, required=False, help='memory only')
     parser.add_argument('-gather_stats', type=bool, required=False, help='gather stats')
-    parser.add_argument('-propagator_initializer', type=str, required=False, help='propagator initializer')
     parser.add_argument('-momentum', type=float, required=False, help='momentum')
 
     network_id = parser.parse_args().id
@@ -56,7 +53,6 @@ def get_network_definition():
     gather_stats = parser.parse_args().gather_stats
     memory_only = parser.parse_args().memory_only
     seed = parser.parse_args().seed
-    propagator_initializer = parser.parse_args().propagator_initializer
     momentum = parser.parse_args().momentum
 
     if network_id is not None:
@@ -89,8 +85,6 @@ def get_network_definition():
         network_definition.update({"memory_only": memory_only})
     if seed is not None:
         network_definition.update({"seed": seed})
-    if propagator_initializer is not None:
-        network_definition.update({"propagator_initializer": propagator_initializer})
     if momentum is not None:
         network_definition.update({"momentum": momentum})
 
@@ -109,23 +103,28 @@ def create_network(network_definition, output_types, output_shapes):
     else:
         raise NotImplementedError(f"Model {model} is not recognized.")
 
-    sequence = blocks_dict[network_definition['sequence']](output_shapes[1][1].value)
-    propagator_initializer = propagator_initializers_dict[network_definition['propagator_initializer']]()
+    cost_func_name = network_definition['cost_function']
+    if cost_func_name == 'mean_squared_error':
+        cost_func = tf.losses.mean_squared_error
+    elif cost_func_name == 'sigmoid_cross_entropy':
+        cost_func = tf.losses.sigmoid_cross_entropy # Do not use any activation in last layer.
+    elif cost_func_name == 'softmax_cross_entropy':
+        cost_func = tf.losses.softmax_cross_entropy # Do not use any activation in last layer.
+
+    sequence = sequences_dict[network_definition['sequence']](output_shapes[1][1].value)
 
     return Network(output_types,
                    output_shapes,
                    sequence,
-                   network_definition['cost_function'],
-                   learning_rate=network_definition['learning_rate'],
-                   momentum=network_definition['momentum'],
+                   cost_func,
+                   tf.train.GradientDescentOptimizer(network_definition["learning_rate"]), # TODO
                    scope=model,
                    gather_stats=network_definition['gather_stats'],
                    save_graph=network_definition['save_graph'],
                    # restore_model_path=network['restore_model_path'],
                    # save_model_path=network['save_model_path'],
                    restore_model=network_definition['restore_model'],
-                   save_model=network_definition['save_model'],
-                   propagator_initializer=propagator_initializer)
+                   save_model=network_definition['save_model'])
 
 
 def train_network(neural_network, training, test, network):

@@ -1,11 +1,17 @@
 import tensorflow as tf
 
 from neural_network.backward_propagation import BackwardPropagation
-from propagator.backward_propagator import FixedRandom
+from layer.weight_layer.convolutional_layers import ConvolutionalLayer
+from layer.weight_layer.fully_connected import FullyConnected
+from custom_operations import feedback_alignment_fc, feedback_alignment_conv
 
 
 class FeedbackAlignment(BackwardPropagation):
-    def __init__(self, types, shapes, sequence, cost_function_name,
-                 propagator_initializer=tf.random_normal_initializer(), *args, **kwargs):
-            propagator = FixedRandom(propagator_initializer)
-            super().__init__(types, shapes, sequence, cost_function_name, propagator, *args, **kwargs)
+    def __init__(self, types, shapes, sequence, *args, **kwargs):
+        for layer in sequence:
+            if isinstance(layer, ConvolutionalLayer):
+                layer.func = feedback_alignment_conv
+            elif isinstance(layer, FullyConnected):
+                layer.func = feedback_alignment_fc
+        super().__init__(types, shapes, sequence, *args, **kwargs)
+        
