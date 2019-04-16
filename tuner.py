@@ -15,7 +15,7 @@ def extract_to_csv(path):
     with open(f"{path}/summarise.csv", "w+") as output_file:
         for file in os.listdir(directory):
             filename = os.fsdecode(file)
-            if not filename.endswith(".csv"):
+            if filename.endswith(".out"):
                 with open(f"{path}/{filename}", "r") as input_file:
                     for line in input_file:
                         matcher = result_regexp.match(line)
