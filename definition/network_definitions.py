@@ -6,6 +6,32 @@ default_network = {
     "sequence": "conv1",
     "cost_function": "softmax_cross_entropy",
     "learning_rate": 0.01,
+    "momentum": 0.9,
+    
+    "gather_stats": False,
+    "save_graph": False,
+    "memory_only": False,
+
+    "restore_model": False,
+    "save_model": False,
+    "restore_model_path": None,
+    "save_model_path": None,
+
+    "minimum_accuracy": [(1, 40)],
+    "batch_size": 10,
+    "epochs": 4,
+    "eval_period": 1000,
+    "stat_period": 100,
+    "seed": randint(1, 100000000),
+}
+
+liao_network = {
+    "type": "BP",
+    "dataset_name": "cifar10",
+    "sequence": "liao_cifar",
+    "cost_function": "softmax_cross_entropy",
+    "learning_rate": 0.01,
+    "momentum": 0.9,
 
     "gather_stats": False,
     "save_graph": False,
@@ -23,6 +49,7 @@ default_network = {
     "stat_period": 100,
     "seed": randint(1, 100000000),
 }
+
 
 vgg_16 = dict(default_network)
 vgg_16.update({
