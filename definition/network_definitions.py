@@ -44,7 +44,7 @@ resnet = dict(default_network)
 resnet.update({
     "type": "DFA",
     "dataset_name": "cifar10",
-    "sequence": "resnet_18",
+    "sequence": "conv0",
     "minimum_accuracy": [(10, 20)],
     "epochs": 50,
     "batch_size": 64,

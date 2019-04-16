@@ -52,7 +52,7 @@ def conv0(output_size):
     return [ConvolutionalLayer(filter_dim=(5, 5), num_of_filters=10, strides=[1, 1, 1, 1], padding="SAME"), Sigmoid(),
             ConvolutionalLayer(filter_dim=(5, 5), num_of_filters=10, strides=[1, 1, 1, 1], padding="SAME"), Sigmoid(),
             FullyConnected(30, flatten=True), Sigmoid(),
-            FullyConnected(output_size), Sigmoid()]
+            FullyConnected(output_size)]
 
 def conv1(output_size):
     return [ConvolutionalLayer((5, 5), 10, [1, 1, 1, 1]), BatchNormalization(), Sigmoid(),

@@ -34,5 +34,5 @@ def build_resnet(output_size, size_seq, convolution_generator):
     for _ in range(size_seq[-1] - 1):
         residual_seq += convolution_generator(num_filters)
     sequence += [ResidualLayer(residual_seq), BatchNormalization(), ReLu(), AveragePool(None, [1, 1])]
-    sequence += [FullyConnected(output_size, flatten=True), Softmax()]
+    sequence += [FullyConnected(output_size, flatten=True)]
     return sequence
