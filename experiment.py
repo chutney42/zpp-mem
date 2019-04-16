@@ -111,7 +111,7 @@ def create_network(network_definition, output_types, output_shapes):
     elif cost_func_name == 'softmax_cross_entropy':
         cost_func = tf.losses.softmax_cross_entropy # Do not use any activation in last layer.
 
-    sequence = sequences_dict[network_definition['sequence']](output_shapes[1][1xs].value)
+    sequence = sequences_dict[network_definition['sequence']](output_shapes[1][1].value)
 
     return Network(output_types,
                    output_shapes,
