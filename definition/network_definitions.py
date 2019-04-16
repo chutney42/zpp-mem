@@ -17,7 +17,7 @@ default_network = {
     "restore_model_path": None,
     "save_model_path": None,
 
-    "minimum_accuracy": [(1, 40)],
+    "minimum_accuracy": [(1, 1)],
     "batch_size": 10,
     "epochs": 4,
     "eval_period": 1000,
@@ -28,7 +28,7 @@ default_network = {
 liao_network = {
     "type": "BP",
     "dataset_name": "cifar10",
-    "sequence": "liao_cifar",
+    "sequence": "liao_cifar_bn",
     "cost_function": "softmax_cross_entropy",
     "learning_rate": 0.01,
     "momentum": 0.9,
@@ -42,9 +42,9 @@ liao_network = {
     "restore_model_path": None,
     "save_model_path": None,
 
-    "minimum_accuracy": [(1, 40)],
-    "batch_size": 10,
-    "epochs": 4,
+    "minimum_accuracy": [(1, 1)],
+    "batch_size": 100,
+    "epochs": 50,
     "eval_period": 1000,
     "stat_period": 100,
     "seed": randint(1, 100000000),
