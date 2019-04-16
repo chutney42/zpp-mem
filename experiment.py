@@ -117,8 +117,8 @@ def create_network(network_definition, output_types, output_shapes):
                    output_shapes,
                    sequence,
                    cost_func,
-                   tf.train.MomentumOptimizer(network_definition["learning_rate"],
-                                              network_definition["momentum"]), # TODO
+                   tf.train.AdamOptimizer(network_definition["learning_rate"]),
+                                              #network_definition["momentum"]), # TODO
                    scope=model,
                    gather_stats=network_definition['gather_stats'],
                    save_graph=network_definition['save_graph'],
