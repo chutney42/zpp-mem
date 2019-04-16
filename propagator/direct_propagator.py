@@ -9,7 +9,7 @@ class DirectPropagator(Propagator):
 
 
 class DirectFixedRandom(DirectPropagator):
-    def __init__(self, output_error_dim, initializer=tf.random_normal_initializer):
+    def __init__(self, output_error_dim, initializer=tf.random_normal_initializer()):
         super().__init__(output_error_dim)
         self.initializer = initializer
 
