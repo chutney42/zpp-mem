@@ -19,27 +19,26 @@ class DirectFeedbackAlignment(BackwardPropagation):
         for layer in sequence:
             if isinstance(layer, ConvolutionalLayer):
                 layer.func = partial(direct_feedback_alignment_conv,
-                                     output_dim=shapes[1][0].value,
+                                     output_dim=shapes[1][1].value,
                                      error_container=self.error_container)
             elif isinstance(layer, FullyConnected):
                 layer.func = partial(direct_feedback_alignment_fc,
-                                     output_dim=shapes[1][0].value,
+                                     output_dim=shapes[1][1].value,
                                      error_container=self.error_container)
             elif isinstance(layer, ResidualLayer):
                 layer.conv_func = partial(direct_feedback_alignment_conv,
-                                     output_dim=shapes[1][0].value,
+                                     output_dim=shapes[1][1].value,
                                      error_container=self.error_container)
-
                 self._initialize_custom_gradients(layer.sequence, shapes)
 
-     def build(self):
-            self.result = self.build_forward()
-            self.cost = self.cost_function(self.labels, self.result)
-            self.build_test(self.result)
-            self.error_container.append(tf.gradients(self.cost, self.result, name="error")[0])
-            update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-            self.step = self.optimizer.minimize(self.cost)
-            self.step = tf.group([self.step, update_ops])
+    def build(self):
+        self.result = self.build_forward()
+        self.cost = self.cost_function(self.labels, self.result)
+        self.build_test(self.result)
+        self.error_container.append(tf.gradients(self.cost, self.result, name="error")[0])
+        update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+        self.step = self.optimizer.minimize(self.cost)
+        self.step = tf.group([self.step, update_ops])
 
 
 

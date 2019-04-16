@@ -1,26 +1,30 @@
 from layer import *
 
 
-def batch_relu_conv(num_filters, strides=[1, 1, 1, 1]):
-    return [BatchNormalization(), ReLu(), ConvolutionalLayer((3, 3), num_of_filters=num_filters, strides=strides)]
+def batch_relu_conv(num_filters, strides=[1, 1]):
+    return [BatchNormalization(), ReLu(),
+            ConvolutionalLayer((3, 3), num_of_filters=num_filters, strides=strides, padding='SAME')]
 
 
-def batch_relu_conv_3(num_filters, strides=[1, 1, 1, 1]):
-    return [BatchNormalization(), ReLu(), ConvolutionalLayer((1, 1), num_of_filters=num_filters, strides=strides),
-            BatchNormalization(), ReLu(), ConvolutionalLayer((3, 3), num_of_filters=num_filters),
-            BatchNormalization(), ReLu(), ConvolutionalLayer((1, 1), num_of_filters=num_filters * 4),
+def batch_relu_conv_3(num_filters, strides=[1, 1]):
+    return [BatchNormalization(), ReLu(),
+            ConvolutionalLayer((1, 1), num_of_filters=num_filters, strides=strides, padding='SAME'),
+            BatchNormalization(), ReLu(),
+            ConvolutionalLayer((3, 3), num_of_filters=num_filters, strides=[1, 1], padding='SAME'),
+            BatchNormalization(), ReLu(),
+            ConvolutionalLayer((1, 1), num_of_filters=num_filters * 4, strides=[1, 1], padding='SAME'),
             ]
 
 
 def build_resnet(output_size, size_seq, convolution_generator):
     num_filters = 64
 
-    residual_seq = [ConvolutionalLayer((3, 3), num_of_filters=num_filters)]
+    residual_seq = [ConvolutionalLayer((3, 3), num_of_filters=num_filters, strides=[1, 1], padding='SAME')]
     for _ in range(size_seq[0] - 1):
         residual_seq += convolution_generator(num_filters)
 
-    sequence = [ConvolutionalLayer((7, 7), num_of_filters=64, strides=[1, 2, 2, 1]), BatchNormalization(), ReLu(),
-                MaxPool([3, 3], strides=[2, 2]), ResidualLayer(residual_seq)]
+    sequence = [ConvolutionalLayer((7, 7), num_of_filters=64, strides=[2, 2], padding='SAME'), BatchNormalization(),
+                ReLu(), MaxPool([3, 3], strides=[2, 2]), ResidualLayer(residual_seq)]
 
     for seq in size_seq[1:-1]:
         num_filters *= 2
