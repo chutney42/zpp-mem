@@ -1,6 +1,5 @@
 import tensorflow as tf
 
-from tensorflow.initializers import he_normal
 from layer.weight_layer.weight_layer import WeightLayer
 
 

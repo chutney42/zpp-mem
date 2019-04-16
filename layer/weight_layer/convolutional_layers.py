@@ -4,13 +4,13 @@ from layer.weight_layer.weight_layer import WeightLayer
 
 
 class ConvolutionalLayer(WeightLayer):
-    def __init__(self, filter_dim, num_of_filters, strides=[1,1,1,1], padding="SAME", func=tf.nn.conv2d, use_cudnn_on_gpu=True, data_format='NHWC',
+    def __init__(self, filter_dim, num_of_filters, strides, padding, func=tf.nn.conv2d, use_cudnn_on_gpu=True, data_format='NHWC',
                  dilations=[1, 1, 1, 1], filters_initializer=tf.initializers.he_normal, add_biases=False,
                  biases_initializer=tf.zeros_initializer, scope="convolutional_layer"):
         super().__init__(scope=scope)
         self.filter_dim = filter_dim
         self.num_of_filters = num_of_filters
-        self.strides = strides
+        self.strides = [1] + strides + [1]
         self.padding = padding
         self.func = func
         self.use_cudnn_on_gpu = use_cudnn_on_gpu

@@ -1,23 +1,26 @@
 from numpy.random import randint
 
 default_network = {
-    "type": "DFA",
+    "type": "BP",
     "dataset_name": "mnist",
-    "sequence": "conv0",
+    "sequence": "conv1",
     "cost_function": "softmax_cross_entropy",
-    "learning_rate": 0.001,
+    "learning_rate": 0.01,
+
     "gather_stats": False,
+    "save_graph": False,
+    "memory_only": False,
+
     "restore_model": False,
     "save_model": False,
     "restore_model_path": None,
     "save_model_path": None,
 
-    "minimum_accuracy": [(1, 99)],
+    "minimum_accuracy": [(1, 40)],
     "batch_size": 10,
     "epochs": 4,
     "eval_period": 1000,
     "stat_period": 100,
-    "memory_only": False,
     "seed": randint(1, 100000000),
 }
 

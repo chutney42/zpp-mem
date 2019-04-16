@@ -10,7 +10,7 @@ class Backpropagation(BackwardPropagation):
     def __init__(self, types, shapes, sequence, *args, **kwargs):
         self._initialize_custom_gradients(sequence)
         super().__init__(types, shapes, sequence, *args, **kwargs)
-        
+
     def _initialize_custom_gradients(self, sequence):
         for layer in sequence:
             if isinstance(layer, ConvolutionalLayer):

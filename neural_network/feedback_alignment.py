@@ -1,10 +1,8 @@
-import tensorflow as tf
-
+from custom_operations import feedback_alignment_fc, feedback_alignment_conv
 from layer import ResidualLayer
-from neural_network.backward_propagation import BackwardPropagation
 from layer.weight_layer.convolutional_layers import ConvolutionalLayer
 from layer.weight_layer.fully_connected import FullyConnected
-from custom_operations import feedback_alignment_fc, feedback_alignment_conv
+from neural_network.backward_propagation import BackwardPropagation
 
 
 class FeedbackAlignment(BackwardPropagation):
