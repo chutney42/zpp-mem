@@ -100,6 +100,18 @@ just_bp_2_2.update({
     "epochs": 80
 })
 
+first_dfa_3 = dict(first_dfa_1)
+first_dfa_3.update({
+    "epochs": 5,
+    "batch_size": 128
+})
+
+then_bp_3 = dict(then_bp_1)
+then_bp_3.update({
+    "epochs": 35,
+    "batch_size": 128
+})
+
 vgg_16 = dict(default_network)
 vgg_16.update({
     "minimum_accuracy": [(10, 12), (50, 20)],
