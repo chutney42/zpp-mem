@@ -120,6 +120,7 @@ def create_network(network_definition, output_types, output_shapes):
                    tf.train.GradientDescentOptimizer(network_definition["learning_rate"]), # TODO
                    scope=model,
                    gather_stats=network_definition['gather_stats'],
+                   save_graph=network_definition['save_graph'],
                    # restore_model_path=network['restore_model_path'],
                    # save_model_path=network['save_model_path'],
                    restore_model=network_definition['restore_model'],
@@ -130,7 +131,6 @@ def train_network(neural_network, training, test, network):
     start_learning_time = time.time()
     neural_network.train(training_set=training,
                          validation_set=test,
-                         batch_size=network['batch_size'],
                          epochs=network['epochs'],
                          eval_period=network['eval_period'],
                          stat_period=network['stat_period'],
@@ -144,6 +144,6 @@ if __name__ == '__main__':
     if network_def['seed'] is not None:
         tf.set_random_seed(network_def['seed'])
 
-    training_set, test_set = datasets_dict[network_def['dataset_name']]()
+    training_set, test_set = datasets_dict[network_def['dataset_name']](network_def['batch_size'])
     neural_net = create_network(network_def, training_set.output_types, training_set.output_shapes)
     train_network(neural_net, training_set, test_set, network_def)

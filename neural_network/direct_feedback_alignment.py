@@ -34,7 +34,7 @@ class DirectFeedbackAlignment(BackwardPropagation):
 class DirectFeedbackAlignmentMem(NeuralNetwork): # TODO
     def __init__(self, types, shapes, sequence, cost_function_name,
                  propagator_initializer=tf.random_normal_initializer(), *args, **kwargs):
-        propagator = DirectFixedRandom(shapes[1][0].value, propagator_initializer)
+        propagator = DirectFixedRandom(shapes[1][1].value, propagator_initializer)
         super().__init__(types, shapes, sequence, cost_function_name, propagator, *args, **kwargs)
 
     def build_forward(self):
