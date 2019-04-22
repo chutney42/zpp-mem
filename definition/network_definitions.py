@@ -26,9 +26,9 @@ default_network = {
 }
 
 liao_network = {
-    "type": "BP",
-    "dataset_name": "cifar10",
-    "sequence": "liao_cifar_bn",
+    "type": "DFA",
+    "dataset_name": "mnist",
+    "sequence": "liao_mnist_bn",
     "cost_function": "softmax_cross_entropy",
     "learning_rate": 0.01,
     "momentum": 0.9,
