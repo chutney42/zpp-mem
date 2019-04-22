@@ -98,7 +98,7 @@ class NeuralNetwork(object):
             self.validation_it = validation_set.make_initializable_iterator()
 
         config = tf.ConfigProto()
-        config.gpu_options.allow_growth = True
+        #config.gpu_options.allow_growth = True
         with tf.Session(config=config) as self.sess:
             self.__train_all_epochs(epochs, eval_period, stat_period, minimum_accuracy)
 

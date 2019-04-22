@@ -6,6 +6,32 @@ default_network = {
     "sequence": "conv1",
     "cost_function": "softmax_cross_entropy",
     "learning_rate": 0.01,
+    "momentum": 0.9,
+    
+    "gather_stats": False,
+    "save_graph": False,
+    "memory_only": False,
+
+    "restore_model": False,
+    "save_model": False,
+    "restore_model_path": None,
+    "save_model_path": None,
+
+    "minimum_accuracy": [(1, 1)],
+    "batch_size": 10,
+    "epochs": 4,
+    "eval_period": 1000,
+    "stat_period": 100,
+    "seed": randint(1, 100000000),
+}
+
+liao_network = {
+    "type": "DFA",
+    "dataset_name": "mnist",
+    "sequence": "liao_mnist_bn",
+    "cost_function": "softmax_cross_entropy",
+    "learning_rate": 0.01,
+    "momentum": 0.9,
 
     "gather_stats": False,
     "save_graph": False,
@@ -16,13 +42,14 @@ default_network = {
     "restore_model_path": None,
     "save_model_path": None,
 
-    "minimum_accuracy": [(1, 40)],
-    "batch_size": 10,
-    "epochs": 4,
+    "minimum_accuracy": [(1, 1)],
+    "batch_size": 100,
+    "epochs": 50,
     "eval_period": 1000,
     "stat_period": 100,
     "seed": randint(1, 100000000),
 }
+
 
 vgg_16 = dict(default_network)
 vgg_16.update({

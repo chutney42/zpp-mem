@@ -13,11 +13,11 @@ class DirectFeedbackAlignment(BackwardPropagation):
         for layer in sequence:
             if isinstance(layer, ConvolutionalLayer):
                 layer.func = partial(direct_feedback_alignment_conv,
-                                     output_dim=shapes[1][0].value,
+                                     output_dim=shapes[1][1].value,
                                      error_container=self.error_container)
             elif isinstance(layer, FullyConnected):
                 layer.func = partial(direct_feedback_alignment_fc,
-                                     output_dim=shapes[1][0].value,
+                                     output_dim=shapes[1][1].value,
                                      error_container=self.error_container)
         super().__init__(types, shapes, sequence, *args, **kwargs)
         
