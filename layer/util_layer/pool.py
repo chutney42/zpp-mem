@@ -4,7 +4,8 @@ from layer.layer import Layer
 
 
 class Pool(Layer):
-    def __init__(self, pooling_function, kernel_size, strides, padding="VALID", data_format='NHWC', scope="pool_layer"):
+    def __init__(self, pooling_function, kernel_size, strides, padding="VALID", reshape=False,
+                 data_format='NHWC', scope="pool_layer"):
         super().__init__(trainable=False, scope=scope)
         self.kernel_size = None
         if kernel_size is not None:
@@ -18,6 +19,7 @@ class Pool(Layer):
         self.data_format = data_format
         self.pooling_function = pooling_function
         self.pooling_function_name = None
+        self.reshape = reshape
 
     def __str__(self):
         return f"{self.pooling_function_name}({self.kernel_size}, {self.strides}, {self.padding})"
@@ -29,7 +31,12 @@ class Pool(Layer):
             if self.kernel_size is None:
                 self.kernel_size = [1] + list(map(lambda x: x.value, input.shape[1:-1])) + [1]
             output = self.pooling_function(input, self.kernel_size, self.strides, self.padding, self.data_format)
-            return output
+            print(output.shape)
+            if self.reshape:
+                return tf.layers.flatten(output)
+            else:
+                return output
+
 
 class MaxPool(Pool):
     def __init__(self, kernel_size, strides, padding="VALID", data_format='NHWC', scope="max_pool_layer"):
@@ -38,6 +45,7 @@ class MaxPool(Pool):
 
 
 class AveragePool(Pool):
-    def __init__(self, kernel_size, strides, padding="VALID", data_format='NHWC', scope="avg_pool_layer"):
-        super().__init__(tf.nn.avg_pool, kernel_size, strides, padding, data_format, scope)
+    def __init__(self, kernel_size, strides, padding="VALID", reshape=False, data_format='NHWC',
+                 scope="avg_pool_layer"):
+        super().__init__(tf.nn.avg_pool, kernel_size, strides, padding, reshape, data_format, scope)
         self.pooling_function_name = "AveragePool"
