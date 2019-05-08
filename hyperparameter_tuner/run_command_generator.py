@@ -19,7 +19,8 @@ class run_command_generator():
         for train_params in all_parrams_gennerator:
             command = str(train_params).replace('(', '').replace(')', '').replace('\'', '').replace(',', '')
             stripped_command = command.replace(' ', '_').replace('-', '').replace('.', '')
-            command = f"{self.run_command}  {command}  >  {self.output_path}/{stripped_command}"
+            output_path = f"{self.output_path}/{stripped_command}"
+            command = f"{self.run_command}  {command} >{output_path}.out 2>{output_path}.err"
 
             yield command
 

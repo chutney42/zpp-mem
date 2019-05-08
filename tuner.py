@@ -1,26 +1,29 @@
 import os
+import re
 
 from hyperparameter_tuner.run_command_generator import run_command_generator as cmd_generator
 from hyperparameter_tuner.single_parameter_generator import single_parameter_generator as sgen
 from datetime import datetime
 import time
 
+result_regexp = re.compile(r'(total accuracy.*)')
+
 
 def extract_to_csv(path):
     print(path)
     directory = os.fsencode(path)
-    output_file = open(f"{path}/summarise.csv", "w+")
-
-    for file in os.listdir(directory):
-        filename = os.fsdecode(file)
-
-        if not filename.endswith(".csv"):
-            input_file = open(f"{path}/{filename}", "r")
-            lines = input_file.readlines()
-            output_file.write(f"file:{filename};result:{lines[-2]}")
-            print(f"file:{filename};result:{lines[-2]}")
-            input_file.close()
-    output_file.close()
+    with open(f"{path}/summarise.csv", "w+") as output_file:
+        for file in os.listdir(directory):
+            filename = os.fsdecode(file)
+            if filename.endswith(".out"):
+                with open(f"{path}/{filename}", "r") as input_file:
+                    for line in input_file:
+                        matcher = result_regexp.match(line)
+                        if matcher is not None:
+                            result = f"file:{filename};result:{matcher.group(1)}"
+                            output_file.write(result)
+                            print(result)
+                            break
 
 
 if __name__ == '__main__':
@@ -33,7 +36,8 @@ if __name__ == '__main__':
                                      ], command_prefix="python experiment.py",
                                     output_path=output_path).run_commands()
 
-    os.system(f"mkdir {output_path}")
+    os.mkdir("hyperparameter_tuner/results")
+    os.mkdir(output_path)
     os.system(f"touch {output_path}/summarise.csv")
 
     for command in vgg_16_BP_tuner:
