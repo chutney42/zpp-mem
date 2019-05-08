@@ -59,12 +59,46 @@ vgg_16.update({
     "epochs": 100,
     "cost_function": "softmax_cross_entropy",
     "dataset_name": "cifar10"
-
 })
 
 vgg_16_DFA = dict(vgg_16)
 vgg_16_DFA.update({
     "type": "DFA",
     "minimum_accuracy": [(20, 20), (50, 40)],
+})
 
+moskovitz_2 = dict(default_network)
+moskovitz_2.update({
+    "sequence": "moskovitz_cifar_2",
+    "dataset_name": "cifar10",
+    "batch_size": 128
+})
+
+first_dfa_1 = dict(moskovitz_2)
+first_dfa_1.update({
+    "learning_rate": 0.05,
+    "epochs": 30,
+    "type": "DFA",
+    "save_model": True,
+    "save_model_path": "./saved/model.ckpt"
+})
+
+then_bp_1 = dict(moskovitz_2)
+then_bp_1.update({
+    "learning_rate": 0.05,
+    "epochs": 10,
+    "restore_model": True,
+    "restore_model_path": "./saved/model.ckpt"
+})
+
+just_dfa_1 = dict(first_dfa_1)
+just_dfa_1.update({
+    "epochs": 40,
+    "save_model": False
+})
+
+just_bp_1 = dict(then_bp_1)
+just_bp_1.update({
+    "epochs": 40,
+    "restore_model": False
 })
