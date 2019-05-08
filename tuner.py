@@ -32,7 +32,6 @@ if __name__ == '__main__':
                                     command_prefix="python experiment.py",
                                     output_path=output_path).run_commands()
 
-    os.mkdir("hyperparameter_tuner/results")
     os.mkdir(output_path)
     os.system(f"touch {output_path}/summarise.csv")
 
