@@ -122,8 +122,8 @@ def create_network(network_definition, output_types, output_shapes):
                    scope=model,
                    gather_stats=network_definition['gather_stats'],
                    save_graph=network_definition['save_graph'],
-                   # restore_model_path=network['restore_model_path'],
-                   # save_model_path=network['save_model_path'],
+                   restore_model_path=network_definition['restore_model_path'],
+                   save_model_path=network_definition['save_model_path'],
                    restore_model=network_definition['restore_model'],
                    save_model=network_definition['save_model'])
 
