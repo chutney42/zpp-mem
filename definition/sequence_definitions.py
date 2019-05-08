@@ -97,7 +97,39 @@ def liao_cifar_bn(output_size):
             BatchNormalization(momentum=0.9),
             FullyConnected(output_size)]
 
-            
+
+def moskovitz_cifar_1(output_size):
+    return [ConvolutionalLayer(filter_dim=(5, 5), num_of_filters=64, strides=[1, 1], padding="SAME"),
+            MaxPool([2, 2], [2, 2], padding="SAME"),
+            ReLu(),
+            ConvolutionalLayer(filter_dim=(5, 5), num_of_filters=64, strides=[1, 1], padding="SAME"),
+            MaxPool([2, 2], [2, 2], padding="SAME"),
+            ReLu(),
+            FullyConnected(192, flatten=True),
+            ReLu(),
+            FullyConnected(output_size)]
+
+
+def moskovitz_cifar_2(output_size):
+    return [ConvolutionalLayer(filter_dim=(3, 3), num_of_filters=96, strides=[1, 1], padding="SAME"),
+            ReLu(),
+            ConvolutionalLayer(filter_dim=(3, 3), num_of_filters=96, strides=[1, 1], padding="SAME"),
+            ReLu(),
+            ConvolutionalLayer(filter_dim=(3, 3), num_of_filters=96, strides=[2, 2], padding="SAME"),
+            ReLu(),
+            ConvolutionalLayer(filter_dim=(3, 3), num_of_filters=192, strides=[1, 1], padding="SAME"),
+            ReLu(),
+            ConvolutionalLayer(filter_dim=(3, 3), num_of_filters=192, strides=[1, 1], padding="SAME"),
+            ReLu(),
+            ConvolutionalLayer(filter_dim=(3, 3), num_of_filters=192, strides=[2, 2], padding="SAME"),
+            ReLu(),
+            ConvolutionalLayer(filter_dim=(3, 3), num_of_filters=192, strides=[1, 1], padding="SAME"),
+            ReLu(),
+            ConvolutionalLayer(filter_dim=(1, 1), num_of_filters=192, strides=[1, 1], padding="SAME"),
+            ReLu(),
+            ConvolutionalLayer(filter_dim=(1, 1), num_of_filters=10, strides=[1, 1], padding="SAME"),
+            ReLu(),
+            AveragePool([8, 8], [1, 1], reshape=True, padding="VALID")]
 
 ''' TODO
 def vgg_16(output_size):
