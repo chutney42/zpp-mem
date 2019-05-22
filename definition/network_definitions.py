@@ -1,16 +1,16 @@
 from numpy.random import randint
 
 default_network = {
-    "type": "BP",
+    "type": "DFA",
     "dataset_name": "mnist",
-    "sequence": "conv1",
+    "sequence": "long_fc",
     "cost_function": "softmax_cross_entropy",
     "learning_rate": 0.01,
     "momentum": 0.9,
     
     "gather_stats": False,
     "save_graph": False,
-    "memory_only": False,
+    "memory_only": True,
 
     "restore_model": False,
     "save_model": False,

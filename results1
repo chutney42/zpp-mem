@@ -1,0 +1,10 @@
+python experiment.py  -name vgg_16 -learning_rate 0.001 -batch_size 16 -seed 10  >  hyperparameter_tuner/results/2019-04-0723:11:33.378339/name_vgg_16_learning_rate_0001_batch_size_16_seed_10
+
+
+
+
+python experiment.py  -name vgg_16 -learning_rate 0.001 -batch_size 32 -seed 10  >  hyperparameter_tuner/results/2019-04-0723:11:33.378339/name_vgg_16_learning_rate_0001_batch_size_32_seed_10
+
+
+
+

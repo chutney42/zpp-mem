@@ -1,4 +1,8 @@
 import os
+
+import memory_trace.mem_util
+import memory_trace.memory_util
+
 from layer.layer import *
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'  # hacked by Adam
@@ -8,7 +12,8 @@ file_name = "run_auto_increment"
 
 class NeuralNetwork(object):
     def __init__(self, types, shapes, sequence, cost_function, optimizer, scope="main", gather_stats=False,
-                 save_graph=False, restore_model=False, save_model=False, restore_model_path=None, save_model_path=None):
+                 save_graph=False, restore_model=False, save_model=False, restore_model_path=None,
+                 save_model_path=None):
         print(f"Create {scope} model")
         self.scope = scope
         self.sequence = sequence
@@ -98,7 +103,10 @@ class NeuralNetwork(object):
             self.validation_it = validation_set.make_initializable_iterator()
 
         config = tf.ConfigProto()
-        #config.gpu_options.allow_growth = True
+        config.gpu_options.allow_growth = True
+        config.gpu_options.allow_growth = True
+        config.log_device_placement = False
+        config.graph_options.optimizer_options.opt_level = tf.OptimizerOptions.L0
         with tf.Session(config=config) as self.sess:
             self.__train_all_epochs(epochs, eval_period, stat_period, minimum_accuracy)
 
@@ -110,7 +118,7 @@ class NeuralNetwork(object):
                           f" accuracy after {min_acc[0]} epochs, network achieved {current_accuracy} accuracy")
                     return True
             return False
-        
+
         writer, val_writer = self.__init_writers()
         training_handle, validation_handle = self.__init_handlers()
         self.__init_global_variables()
@@ -168,6 +176,8 @@ class NeuralNetwork(object):
 
     def __train_single_epoch(self, training_it, training_handle, writer, eval_period, stat_period):
         self.sess.run(training_it.initializer)
+        iii = 0
+        t_m = 0
         while True:
             try:
                 feed_dict = {self.handle: training_handle, self.training_mode: True}
@@ -175,25 +185,39 @@ class NeuralNetwork(object):
                 if self.memory_only or (self.gather_stats and self.counter % stat_period is 0):
                     run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
                     run_metadata = tf.RunMetadata()
-                    summary, _, acc, loss = self.sess.run(
-                        [self.merged_summary, self.step, self.acc_update, self.loss_update], feed_dict, run_options,
-                        run_metadata)
-                    writer.add_run_metadata(run_metadata, f"step_{self.counter}")
-                    writer.add_summary(summary, self.counter)
+                    with memory_trace.memory_util.capture_stderr() as stderr:
+                        iii += 1
+                        summary, _, acc, loss = self.sess.run(
+                            [self.merged_summary, self.step, self.acc_update, self.loss_update], feed_dict, run_options,
+                            run_metadata)
+                        writer.add_run_metadata(run_metadata, f"step_{self.counter}")
+                        writer.add_summary(summary, self.counter)
 
-                    if self.memory_only or self.counter is stat_period:
-                        self.__gather_memory_usage(run_metadata)
-                        if self.memory_only:
-                            break
+                        memory_trace.mem_util.print_memory_timeline(run_metadata, file=f"{self.scope}_{self.run_number - 1}_{iii}_meta.txt")
+                        print(memory_trace.mem_util.peak_memory(run_metadata))
+                        peak_memory = memory_trace.mem_util.peak_memory(run_metadata)['/gpu:0']
+                        print("peak memory: %.3f MB" % (peak_memory / 10 ** 6))
+                        t_m = memory_trace.mem_util.print_plot(run_metadata, filename=f"{self.scope}_{self.run_number - 1}_{iii}", total_mem=t_m)
+                        val = stderr.getvalue()
+                        memory_trace.memory_util.print_memory_timeline(val, ignore_less_than_bytes=100, file=f"{self.scope}_{self.run_number - 1}_{iii}_log.txt")
+                        memory_trace.memory_util.plot_memory_timeline(val, ignore_less_than_bytes=100,
+                                                                      filename=f"{self.scope}_{self.run_number - 1}_{iii}")
+
+                        if iii == 5:
+                            exit(0)
+
+                    # if self.memory_only or self.counter is stat_period:
+                    #     self.__gather_memory_usage(run_metadata)
+                    #     if self.memory_only:
+                    #         break
                 else:
                     summary, loss_summary, _, acc, loss = self.sess.run(
                         [self.acc_summary, self.loss_summary, self.step, self.acc_update, self.loss_update], feed_dict)
                     writer.add_summary(loss_summary, self.counter)
                     writer.add_summary(summary, self.counter)
 
-
                 if self.counter % eval_period is 0:
-                    print(f"iteration: {self.counter}, accuracy: {acc*100}%, loss: {loss}")
+                    print(f"iteration: {self.counter}, accuracy: {acc * 100}%, loss: {loss}")
 
                 self.counter += 1
             except tf.errors.OutOfRangeError:
@@ -255,7 +279,8 @@ class NeuralNetwork(object):
             while True:
                 try:
                     batch_xs, batch_ys = sess.run(next_batch)
-                    res = sess.run(self.acc, feed_dict={self.features: batch_xs, self.labels: batch_ys, self.trainig_mode: False})
+                    res = sess.run(self.acc,
+                                   feed_dict={self.features: batch_xs, self.labels: batch_ys, self.trainig_mode: False})
                     total_res += res
                     counter += batch_size
                 except tf.errors.OutOfRangeError:
