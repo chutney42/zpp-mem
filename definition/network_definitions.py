@@ -3,10 +3,11 @@ from numpy.random import randint
 default_network = {
     "type": "BP",
     "dataset_name": "mnist",
-    "sequence": "conv1",
+    "sequence": "fc0",
     "cost_function": "softmax_cross_entropy",
     "learning_rate": 0.01,
-    "momentum": 0.9,
+#    "momentum": 0.9,
+    "minimize_manually": True,
     
     "gather_stats": False,
     "save_graph": False,
@@ -26,12 +27,13 @@ default_network = {
 }
 
 liao_network = {
-    "type": "DFA",
+    "type": "BP",
     "dataset_name": "mnist",
-    "sequence": "liao_mnist_bn",
+    "sequence": "liao_mnist",
     "cost_function": "softmax_cross_entropy",
-    "learning_rate": 0.01,
-    "momentum": 0.9,
+    "learning_rate": 0.005,
+#    "momentum": 0.9,
+    "minimize_manually": True,
 
     "gather_stats": False,
     "save_graph": False,

@@ -4,9 +4,8 @@ import tensorflow as tf
 class Layer(object):
     def __init__(self, trainable, scope="layer"):
         self.trainable = trainable
-        if trainable:
-            self.step = None
-            self.variables = []
+        self.step = None
+        self.variables = []
         self.scope = scope
         self.input = None
         self.input_shape = None
@@ -25,7 +24,8 @@ class Layer(object):
         return input
 
     def gather_stats_backward(self, gradients):
-        raise NotImplementedError("This method should be implemented in subclass")
+        #raise NotImplementedError("This method should be implemented in subclass")
+        pass
     
     def build_forward(self, input, remember_input=False, gather_stats=False):
         raise NotImplementedError("This method should be implemented in subclass")
@@ -38,4 +38,5 @@ class Layer(object):
             self.step = optimizer.apply_gradients(grads_and_vars)
         if gather_stats:
             self.gather_stats_backward(gradients)
-        return gradients[0]
+        return gradients[0], variables[0]
+

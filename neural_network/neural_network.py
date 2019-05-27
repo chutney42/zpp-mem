@@ -8,11 +8,12 @@ file_name = "run_auto_increment"
 
 class NeuralNetwork(object):
     def __init__(self, types, shapes, sequence, cost_function, optimizer, scope="main", gather_stats=False,
-                 save_graph=False, restore_model=False, save_model=False, restore_model_path=None, save_model_path=None):
+                 save_graph=False, restore_model=False, save_model=False, restore_model_path=None, save_model_path=None, minimize_manually=True):
         print(f"Create {scope} model")
         self.scope = scope
         self.sequence = sequence
         self.optimizer = optimizer
+        self.minimize_manually = minimize_manually
         self.cost_function = cost_function
         self.training_mode = tf.placeholder(tf.bool)
         for i, layer in enumerate(self.sequence):
@@ -65,7 +66,7 @@ class NeuralNetwork(object):
     def build_forward(self):
         raise NotImplementedError("This method should be implemented in subclass")
 
-    def build_backward(self, error):
+    def build_backward(self, error, output):
         raise NotImplementedError("This method should be implemented in subclass")
 
     def build_test(self, a):
@@ -79,12 +80,19 @@ class NeuralNetwork(object):
         self.acc_summary = tf.summary.scalar("accuracy", self.acc)
         self.loss_summary = tf.summary.scalar("loss", self.loss)
 
+    def build_error(self, cost, result):
+        return tf.gradients(cost, result, name="error")[0]
+
     def build(self):
         self.result = self.build_forward()
         self.cost = self.cost_function(self.labels, self.result)
         self.build_test(self.result)
         update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-        self.step = self.optimizer.minimize(self.cost)
+        error = self.build_error(self.cost, self.result)
+        if self.minimize_manually:
+            self.step = self.build_backward(error, self.result)
+        else:
+            self.step = self.optimizer.minimize(self.cost)
         self.step = tf.group([self.step, update_ops])
 
     def train(self, training_set, validation_set, epochs=2, eval_period=1000, stat_period=100,

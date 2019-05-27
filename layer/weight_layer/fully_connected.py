@@ -5,7 +5,7 @@ from layer.weight_layer.weight_layer import WeightLayer
 
 
 class FullyConnected(WeightLayer):
-    def __init__(self, output_dim, func=(lambda x, w : tf.matmul(x, w)),
+    def __init__(self, output_dim, func=tf.matmul,
                  weights_initializer=tf.initializers.he_normal, flatten=False, add_biases=True,
                  biases_initializer=tf.zeros_initializer, scope="fully_connected_layer"):
         super().__init__(func, scope)
