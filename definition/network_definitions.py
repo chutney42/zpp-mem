@@ -1,7 +1,7 @@
 from numpy.random import randint
 
 default_network = {
-    "type": "DFA",
+    "type": "BP",
     "dataset_name": "mnist",
     "sequence": "long_fc",
     "cost_function": "softmax_cross_entropy",

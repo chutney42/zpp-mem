@@ -154,7 +154,7 @@ def _print_parsed_timeline(timeline, gpu_only=False, ignore_less_than_bytes=0, f
                 continue  # ignore small allocations
 
             total_memory += allocated_bytes
-            f.write("%6d %10d %10d %s\n" % (timestamp, total_memory,
+            f.write("%d %d %d %s\n" % (timestamp, total_memory,
                                           allocated_bytes, kernel_name))
 
 
