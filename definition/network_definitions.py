@@ -1,14 +1,15 @@
 from numpy.random import randint
 
+
 default_network = {
     "type": "BP",
     "dataset_name": "mnist",
-    "sequence": "fc0",
+    "sequence": "fc",
     "cost_function": "softmax_cross_entropy",
     "learning_rate": 0.01,
 #    "momentum": 0.9,
     "minimize_manually": True,
-    
+
     "gather_stats": False,
     "save_graph": False,
     "memory_only": False,
@@ -20,7 +21,7 @@ default_network = {
 
     "minimum_accuracy": [(1, 1)],
     "batch_size": 10,
-    "epochs": 4,
+    "epochs": 30,
     "eval_period": 1000,
     "stat_period": 100,
     "seed": randint(1, 100000000),
