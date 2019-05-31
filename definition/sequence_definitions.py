@@ -2,11 +2,15 @@ from definition.resnet import *
 from layer import *
 
 
-def fc(output_size):
+def fcReLu(output_size):
     return [FullyConnected(100, flatten=True), ReLu(),
             FullyConnected(30), ReLu(),
             FullyConnected(output_size)]
 
+def fcSigmoid(output_size):
+    return [FullyConnected(50, flatten=True), Sigmoid(),
+            FullyConnected(30), Sigmoid(),
+            FullyConnected(output_size), Sigmoid()]
 
 def long_fc(output_size):
     sequence = []

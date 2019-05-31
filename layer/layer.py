@@ -12,6 +12,8 @@ class Layer(object):
         self.learning_rate = None
         self.momentum = None
         self.traning_mode = None
+        if trainable:
+            self.step = []
 
     def save_input(self, input):
         self.input = input
