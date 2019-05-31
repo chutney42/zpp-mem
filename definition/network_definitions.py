@@ -25,6 +25,15 @@ default_network = {
     "seed": randint(1, 100000000),
 }
 
+mosco = dict(default_network)
+mosco.update({
+    "dataset_name": "cifar10",
+    "sequence": "moskovitz_cifar_2",
+    "learning_rate": 0.001,
+    "batch_size": 128,
+    "epochs": 40
+})
+
 liao_network = {
     "type": "DFA",
     "dataset_name": "mnist",
