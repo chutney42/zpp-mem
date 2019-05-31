@@ -118,11 +118,13 @@ class NeuralNetwork(object):
         self.counter = 0
         self.epoch = 0
         print(f"start training for epochs={epochs}")
-        for _ in range(epochs):
+        for i in range(epochs):
             self.__train_single_epoch(self.training_it, training_handle, writer, eval_period, stat_period)
             acc, loss = self.__validate(self.validation_it, validation_handle, val_writer)
             print(f"finished epoch {self.epoch}, accuracy: {acc}%, loss:{loss}")
 
+            if i != 0 and i % 10 == 0:
+                self.learning_rate /= 10
             if self.memory_only or should_terminate_training(acc, minimum_accuracy):
                 break
 

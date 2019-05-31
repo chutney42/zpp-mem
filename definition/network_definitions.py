@@ -31,8 +31,38 @@ mosco.update({
     "sequence": "moskovitz_cifar_2",
     "learning_rate": 0.001,
     "batch_size": 128,
-    "epochs": 40,
+    "epochs": 10,
     "minimum_accuracy": [(3, 11)],
+})
+
+mosco_1 = dict(mosco)
+mosco_1.update({
+    "learning_rate": 0.1,
+    "epochs": 20,
+    "type": "DFA",
+    "save_model": True,
+    "save_model_path": "./saved/model.ckpt"
+})
+
+mosco_2 = dict(mosco)
+mosco_2.update({
+    "learning_rate": 0.01,
+    "epochs": 10,
+    "restore_model": True,
+    "restore_model_path": "./saved/model.ckpt",
+    "save_model": True,
+    "save_model_path": "./saved/model.ckpt"
+})
+
+
+mosco_3 = dict(mosco)
+mosco_3.update({
+    "learning_rate": 0.001,
+    "epochs": 10,
+    "restore_model": True,
+    "restore_model_path": "./saved/model.ckpt",
+    "save_model": True,
+    "save_model_path": "./saved/model.ckpt"
 })
 
 liao_network = {
