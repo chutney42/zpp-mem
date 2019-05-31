@@ -60,7 +60,7 @@ class DirectFeedbackAlignmentMem(DirectFeedbackAlignment): # TODO
                     step = build_partial_backward(perror, a, i, j + 1, step)
                     i = j + 1
 
-            if not isinstance(self.sequence[j + 1], WeightLayer):
-                step = build_partial_backward(error, a, i, j + 1, step)
+            #if not isinstance(self.sequence[j + 1], WeightLayer):
+            step = build_partial_backward(error, a, i, j + 1, step)
 
             return tf.group(step)
