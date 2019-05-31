@@ -28,7 +28,7 @@ def extract_to_csv(path):
 
 if __name__ == '__main__':
     output_path = f"hyperparameter_tuner/results/{str(datetime.now()).replace(' ', '')}"
-    vgg_16_BP_tuner = cmd_generator([sgen("name", ["mosco_1", "mosco_2", "mosco_3"])],
+    vgg_16_BP_tuner = cmd_generator([sgen("name", ["mosco_4", "mosco_5", "mosco_6"])],
                                      # sgen("learning_type", ["BP", "FA", "DFA"]),
                                      # sgen("learning_rate", [0.1, 0.01, 0.001, 0.0001, 0.00001])],
                                     command_prefix="python experiment.py",

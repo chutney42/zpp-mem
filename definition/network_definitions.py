@@ -53,7 +53,6 @@ mosco_2.update({
     "save_model_path": "./saved_2/model.ckpt"
 })
 
-
 mosco_3 = dict(mosco)
 mosco_3.update({
     "learning_rate": 0.03,
@@ -62,6 +61,34 @@ mosco_3.update({
     "restore_model_path": "./saved_2/model.ckpt",
     "save_model": True,
     "save_model_path": "./saved_3/model.ckpt"
+})
+
+mosco_4 = dict(mosco)
+mosco_4.update({
+    "learning_rate": 0.05,
+    "epochs": 120,
+    "save_model": True,
+    "save_model_path": "./saved_4/model.ckpt"
+})
+
+mosco_5 = dict(mosco)
+mosco_5.update({
+    "learning_rate": 0.005,
+    "epochs": 120,
+    "restore_model": True,
+    "restore_model_path": "./saved_4/model.ckpt",
+    "save_model": True,
+    "save_model_path": "./saved_5/model.ckpt"
+})
+
+mosco_6 = dict(mosco)
+mosco_6.update({
+    "learning_rate": 0.0005,
+    "epochs": 16,
+    "restore_model": True,
+    "restore_model_path": "./saved_5/model.ckpt",
+    "save_model": True,
+    "save_model_path": "./saved_6/model.ckpt"
 })
 
 liao_network = {
