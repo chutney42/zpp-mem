@@ -117,7 +117,7 @@ def create_network(network_definition, output_types, output_shapes):
                    output_shapes,
                    sequence,
                    cost_func,
-                   tf.train.AdamOptimizer(network_definition["learning_rate"]),
+                   tf.train.GradientDescentOptimizer(network_definition["learning_rate"]),
                                               #network_definition["momentum"]), # TODO
                    scope=model,
                    gather_stats=network_definition['gather_stats'],

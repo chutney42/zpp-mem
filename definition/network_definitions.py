@@ -31,7 +31,8 @@ mosco.update({
     "sequence": "moskovitz_cifar_2",
     "learning_rate": 0.001,
     "batch_size": 128,
-    "epochs": 40
+    "epochs": 40,
+    "minimum_accuracy": [(3, 11)],
 })
 
 liao_network = {
