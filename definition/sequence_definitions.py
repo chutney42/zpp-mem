@@ -131,15 +131,15 @@ def moskovitz_cifar_2(output_size):
             ReLu(),
             AveragePool([8, 8], [1, 1], reshape=True, padding="VALID")]
 
-''' TODO
+
 def vgg_16(output_size):
     def convolutional_layer_block(filter_dim, number_of_filters, stride=[1, 1], with_pooling=False):
         if with_pooling == False:
-            return Block([ConvolutionalLayer(filter_dim, stride=stride, number_of_filters=number_of_filters),
-                          BatchNormalization(), ReLu()])
+            return [ConvolutionalLayer(filter_dim, strides=stride, num_of_filters=number_of_filters),
+                          BatchNormalization(), ReLu()]
         else:
-            return Block([ConvolutionalLayer(filter_dim, stride=stride, number_of_filters=number_of_filters),
-                          BatchNormalization(), ReLu(), MaxPool([2, 2], [2, 2], padding="SAME")])
+            return [ConvolutionalLayer(filter_dim, strides=stride, num_of_filters=number_of_filters),
+                          BatchNormalization(), ReLu(), MaxPool([2, 2], [2, 2], padding="SAME")]
 
     return [
         convolutional_layer_block((3, 3), number_of_filters=64),
@@ -164,7 +164,7 @@ def vgg_16(output_size):
         Block([FullyConnected(output_size), Softmax()])
     ]
 
-
+'''
 def vgg_16_without_BN(output_size):
     def convolutional_layer_block(filter_dim, number_of_filters, stride=[1, 1], with_pooling=False):
         if with_pooling == False:
