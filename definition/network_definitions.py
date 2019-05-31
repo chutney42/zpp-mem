@@ -39,30 +39,29 @@ mosco_1 = dict(mosco)
 mosco_1.update({
     "learning_rate": 0.1,
     "epochs": 20,
-    "type": "DFA",
     "save_model": True,
-    "save_model_path": "./saved/model.ckpt"
+    "save_model_path": "./saved_1/model.ckpt"
 })
 
 mosco_2 = dict(mosco)
 mosco_2.update({
-    "learning_rate": 0.01,
+    "learning_rate": 0.06,
     "epochs": 10,
     "restore_model": True,
-    "restore_model_path": "./saved/model.ckpt",
+    "restore_model_path": "./saved_1/model.ckpt",
     "save_model": True,
-    "save_model_path": "./saved/model.ckpt"
+    "save_model_path": "./saved_2/model.ckpt"
 })
 
 
 mosco_3 = dict(mosco)
 mosco_3.update({
-    "learning_rate": 0.001,
+    "learning_rate": 0.03,
     "epochs": 10,
     "restore_model": True,
-    "restore_model_path": "./saved/model.ckpt",
+    "restore_model_path": "./saved_2/model.ckpt",
     "save_model": True,
-    "save_model_path": "./saved/model.ckpt"
+    "save_model_path": "./saved_3/model.ckpt"
 })
 
 liao_network = {

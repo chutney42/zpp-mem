@@ -123,8 +123,6 @@ class NeuralNetwork(object):
             acc, loss = self.__validate(self.validation_it, validation_handle, val_writer)
             print(f"finished epoch {self.epoch}, accuracy: {acc}%, loss:{loss}")
 
-            if i != 0 and i % 10 == 0:
-                self.learning_rate /= 10
             if self.memory_only or should_terminate_training(acc, minimum_accuracy):
                 break
 
