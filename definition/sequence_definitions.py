@@ -14,6 +14,13 @@ def long_fc(output_size):
     sequence += [FullyConnected(output_size), Sigmoid()]
     return sequence
 
+def epic_long_fc(output_size):
+    sequence = []
+    for i in range(200):
+        sequence += [FullyConnected(50, flatten=i == 0), BatchNormalization(), Sigmoid()]
+    sequence += [FullyConnected(output_size), Sigmoid()]
+    return sequence
+
 def long_conv(output_size):
     sequence = []
     for i in range(30):

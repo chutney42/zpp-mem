@@ -25,6 +25,14 @@ default_network = {
     "seed": randint(1, 100000000),
 }
 
+long_mnist = dict(default_network)
+long_mnist.update({
+    "sequence": "epic_long_fc",
+    "minimum_accuracy": [(10, 15), (20, 25)],
+    "batch_size": 128,
+    "epochs": 100
+})
+
 mosco = dict(default_network)
 mosco.update({
     "dataset_name": "cifar10",
