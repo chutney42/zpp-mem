@@ -1,8 +1,6 @@
 import os
 
 import memory_trace.mem_util
-import memory_trace.memory_util
-
 from layer.layer import *
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'  # hacked by Adam
@@ -12,12 +10,14 @@ file_name = "run_auto_increment"
 
 class NeuralNetwork(object):
     def __init__(self, types, shapes, sequence, cost_function, optimizer, scope="main", gather_stats=False,
-                 save_graph=False, restore_model=False, save_model=False, restore_model_path=None,
-                 save_model_path=None):
+                 save_graph=False, restore_model=False, save_model=False, restore_model_path=None, save_model_path=None,
+                 minimize_manually=True):
+
         print(f"Create {scope} model")
         self.scope = scope
         self.sequence = sequence
         self.optimizer = optimizer
+        self.minimize_manually = minimize_manually
         self.cost_function = cost_function
         self.training_mode = tf.placeholder(tf.bool)
         for i, layer in enumerate(self.sequence):
@@ -70,7 +70,7 @@ class NeuralNetwork(object):
     def build_forward(self):
         raise NotImplementedError("This method should be implemented in subclass")
 
-    def build_backward(self, error):
+    def build_backward(self, error, output):
         raise NotImplementedError("This method should be implemented in subclass")
 
     def build_test(self, a):
@@ -84,12 +84,19 @@ class NeuralNetwork(object):
         self.acc_summary = tf.summary.scalar("accuracy", self.acc)
         self.loss_summary = tf.summary.scalar("loss", self.loss)
 
+    def build_error(self, cost, result):
+        return tf.gradients(cost, result, name="error")[0]
+
     def build(self):
         self.result = self.build_forward()
         self.cost = self.cost_function(self.labels, self.result)
         self.build_test(self.result)
         update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-        self.step = self.optimizer.minimize(self.cost)
+        error = self.build_error(self.cost, self.result)
+        if self.minimize_manually:
+            self.step = self.build_backward(error, self.result)
+        else:
+            self.step = self.optimizer.minimize(self.cost)
         self.step = tf.group([self.step, update_ops])
 
     def train(self, training_set, validation_set, epochs=2, eval_period=1000, stat_period=100,
@@ -104,9 +111,11 @@ class NeuralNetwork(object):
 
         config = tf.ConfigProto()
         config.gpu_options.allow_growth = True
-        config.gpu_options.allow_growth = True
-        config.log_device_placement = False
-        config.graph_options.optimizer_options.opt_level = tf.OptimizerOptions.L0
+        # config.gpu_options.deferred_deletion_bytes = 1
+        # config.gpu_options.per_process_gpu_memory_fraction = 0.32
+        # config.gpu_options.allow_growth = True
+        # config.log_device_placement = False
+        # config.graph_options.optimizer_options.opt_level = tf.OptimizerOptions.L0
         with tf.Session(config=config) as self.sess:
             self.__train_all_epochs(epochs, eval_period, stat_period, minimum_accuracy)
 
@@ -177,7 +186,6 @@ class NeuralNetwork(object):
     def __train_single_epoch(self, training_it, training_handle, writer, eval_period, stat_period):
         self.sess.run(training_it.initializer)
         iii = 0
-        t_m = 0
         while True:
             try:
                 feed_dict = {self.handle: training_handle, self.training_mode: True}
@@ -185,31 +193,27 @@ class NeuralNetwork(object):
                 if self.memory_only or (self.gather_stats and self.counter % stat_period is 0):
                     run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
                     run_metadata = tf.RunMetadata()
-                    with memory_trace.memory_util.capture_stderr() as stderr:
-                        iii += 1
-                        summary, _, acc, loss = self.sess.run(
-                            [self.merged_summary, self.step, self.acc_update, self.loss_update], feed_dict, run_options,
-                            run_metadata)
-                        writer.add_run_metadata(run_metadata, f"step_{self.counter}")
-                        writer.add_summary(summary, self.counter)
 
-                        memory_trace.mem_util.print_memory_timeline(run_metadata, file=f"{self.scope}_{self.run_number - 1}_{iii}_meta.txt")
-                        print(memory_trace.mem_util.peak_memory(run_metadata))
-                        peak_memory = memory_trace.mem_util.peak_memory(run_metadata)['/gpu:0']
-                        print("peak memory: %.3f MB" % (peak_memory / 10 ** 6))
-                        t_m = memory_trace.mem_util.print_plot(run_metadata, filename=f"{self.scope}_{self.run_number - 1}_{iii}", total_mem=t_m)
-                        val = stderr.getvalue()
-                        memory_trace.memory_util.print_memory_timeline(val, ignore_less_than_bytes=100, file=f"{self.scope}_{self.run_number - 1}_{iii}_log.txt")
-                        memory_trace.memory_util.plot_memory_timeline(val, ignore_less_than_bytes=100,
-                                                                      filename=f"{self.scope}_{self.run_number - 1}_{iii}")
+                    iii += 1
 
-                        if iii == 5:
-                            exit(0)
+                    summary, _, acc, loss = self.sess.run(
+                        [self.merged_summary, self.step, self.acc_update, self.loss_update], feed_dict, run_options,
+                        run_metadata)
+                    writer.add_run_metadata(run_metadata, f"step_{self.counter}")
+                    writer.add_summary(summary, self.counter)
 
-                    # if self.memory_only or self.counter is stat_period:
-                    #     self.__gather_memory_usage(run_metadata)
-                    #     if self.memory_only:
-                    #         break
+                    if self.memory_only and iii == 5:
+                        self.__gather_memory_usage(run_metadata)
+                        memory_trace.mem_util.print_peak(run_metadata)
+                        memory_trace.mem_util.print_plot(run_metadata,
+                                                         filename=f"./plots/{self.run_number - 1}_{self.scope}_{iii}_meta.png")
+                        memory_trace.mem_util.print_memory_timeline(run_metadata,
+                                                                    file=f"./plots/{self.run_number - 1}_{self.scope}_{iii}_meta.txt")
+                        break
+                    elif self.counter is stat_period:
+                        self.__gather_memory_usage(run_metadata)
+
+
                 else:
                     summary, loss_summary, _, acc, loss = self.sess.run(
                         [self.acc_summary, self.loss_summary, self.step, self.acc_update, self.loss_update], feed_dict)

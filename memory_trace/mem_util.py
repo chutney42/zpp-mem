@@ -1,4 +1,5 @@
-# Utilities to figure out memory usage of run call
+# Code from repository https://github.com/yaroslavvb/chain_constant_memory
+#Utilities to figure out memory usage of run call
 #
 # Usage:
 #   import mem_util
@@ -49,6 +50,8 @@
 # See multiple_memory_obtain_example.py for details on using these additional
 # methods
 
+import numpy as np
+
 def peak_memory(run_metadata):
     """Return dictionary of peak memory usage (bytes) for each device.
 
@@ -66,6 +69,11 @@ def peak_memory(run_metadata):
         result[device_name] = _peak_from_nodestats(dev_stat.node_stats)
     return result
 
+
+def print_peak(run_metadata):
+    res = peak_memory(run_metadata)
+    for n,v in res.items():
+        print(f"{n}: {v/1024/1024}Mb")
 
 def _timeline_from_nodestats(nodestats):
     """Return sorted memory allocation records from list of nodestats
@@ -168,16 +176,11 @@ def print_plot(run_metadata, gpu_only=False, ignore_less_than_bytes=0, filename=
     device = peak_pairs[chosen_peak][0]
 
     device_metadata = _device_stats_dict(run_metadata)
-    # print("Printing timeline for "+device)
     timeline = _timeline_from_nodestats(device_metadata[device])
-    # timeline = []
-    # for dev in peak_pairs:
-    #    timeline += _timeline_from_nodestats(device_metadata[dev[0]])
     total_memory = total_mem
-    timestamps = [[], []]
-    data = [[], []]
-    index = 0
-    current_time = 0
+    timestamps = []
+    data = []
+    first_timestamp = timeline[0][0]
     for record in timeline:
         timestamp, kernel_name, allocated_bytes, allocator_type = record
         allocated_bytes = int(allocated_bytes)
@@ -185,27 +188,15 @@ def print_plot(run_metadata, gpu_only=False, ignore_less_than_bytes=0, filename=
         if abs(allocated_bytes) < ignore_less_than_bytes:
             continue  # ignore small allocations
 
-        #if "Equal" in str(kernel_name):
-        #    index = 1
-
         total_memory += allocated_bytes
-        timestamps[index].append(timestamp - .00000001)
-        data[index].append(total_memory)
-        # if abs(int(record[2])) > 16 * total_memory + 10000000:
-        #  continue
+        timestamps.append(timestamp - first_timestamp)
+        data.append(total_memory)
 
-        total_memory += int(record[2])
-        timestamps[index].append(timestamp)
-        data[index].append(total_memory)
-        current_time += 1
 
-    print(len(timestamps[0]))
-    print(len(timestamps[1]))
-
-    plt.plot(timestamps[0], data[0], color='blue')
-    #plt.plot(timestamps[1], data[1], color='red')
-
-    plt.savefig(f'{filename}_meta.png')
+    plt.plot(timestamps, np.array(data)/1024, color='blue')
+    plt.xlabel("czas w mikrosekundach")
+    plt.ylabel("Zaalokowana pamięc w kilobajtach")
+    plt.savefig(filename)
     return total_memory
 
 def _simplify_device_name(device):
