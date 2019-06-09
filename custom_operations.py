@@ -1,6 +1,7 @@
 import tensorflow as tf
 import numpy as np
 
+
 def feedback_alignment_fc(input, weights, initializer=tf.initializers.he_normal(), name="fa_fc"):
     random = tf.get_variable("random", shape=reversed(weights.get_shape().as_list()),
                              initializer=initializer, use_resource=True, trainable=False)
@@ -14,6 +15,7 @@ def feedback_alignment_fc(input, weights, initializer=tf.initializers.he_normal(
     with tf.name_scope(name):
         return func(input)
 
+   
 def feedback_alignment_conv(input, weights, strides, padding, use_cudnn_on_gpu=True, data_format='NHWC',
                             dilations=[1, 1, 1, 1], initializer=tf.initializers.he_normal(),
                             name="fa_conv"):
@@ -30,8 +32,9 @@ def feedback_alignment_conv(input, weights, strides, padding, use_cudnn_on_gpu=T
     with tf.name_scope(name):
         return func(input)
 
+
 def direct_feedback_alignment_fc(input, weights, output_dim, error_container, initializer=tf.initializers.he_normal(),
-                                 name="fa_fc"):
+                                 name="dfa_fc"):
     random = tf.get_variable("random", shape=[output_dim, weights.shape[0]], initializer=initializer, use_resource=True, trainable=False)
     @tf.custom_gradient
     def func(x):
@@ -42,10 +45,11 @@ def direct_feedback_alignment_fc(input, weights, output_dim, error_container, in
         return tf.matmul(x, weights), grad
     with tf.name_scope(name):
         return func(input)
-       
+
+
 def direct_feedback_alignment_conv(input, weights, output_dim, error_container, strides, padding,
                                    use_cudnn_on_gpu=True, data_format='NHWC', dilations=[1, 1, 1, 1],
-                                   initializer=tf.initializers.he_normal(), name="fa_conv"):
+                                   initializer=tf.initializers.he_normal(), name="dfa_conv"):
     input_shape = tf.shape(input)
     input_flat_shape = np.prod(input.shape[1:])
     random = tf.get_variable("random", shape=[output_dim, input_flat_shape],
@@ -60,4 +64,3 @@ def direct_feedback_alignment_conv(input, weights, output_dim, error_container, 
         return tf.nn.conv2d(input, weights, strides, padding, use_cudnn_on_gpu, data_format, dilations), grad
     with tf.name_scope(name):
         return func(input)
-

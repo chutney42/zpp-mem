@@ -13,5 +13,4 @@ class Backpropagation(BackwardPropagation):
                 layer.func = tf.nn.conv2d
             elif isinstance(layer, FullyConnected):
                 layer.func = lambda x, w : tf.matmul(x, w)
-        super().__init__(types, shapes, sequence, *args, **kwargs)
-        
+        super().__init__(types, shapes, sequence, *args, **kwargs)            

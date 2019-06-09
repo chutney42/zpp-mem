@@ -6,6 +6,7 @@ from definition import sequence_definitions
 from definition import dataset_definitions
 from definition import network_definitions
 
+
 sequences_dict = dict(getmembers(sequence_definitions, isfunction))
 datasets_dict = dict(getmembers(dataset_definitions, isfunction))
 networks_dict = {
@@ -18,22 +19,35 @@ networks_list = [
 ]
 
 
+def str2bool(v):
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
+
+
 def get_id_and_name_from_arguments():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-id', type=int, required=False, help='number of network')
-    parser.add_argument('-name', type=str, required=False, help='network name')
+    parser.add_argument('--id', type=int, help='number of network')
+    parser.add_argument('--name', type=str, help='network name')
 
-    parser.add_argument('-learning_type', type=str, required=False, help='type')
-    parser.add_argument('-learning_rate', type=float, required=False, help='learning rate')
-    parser.add_argument('-batch_size', type=int, required=False, help='batch size')
-    parser.add_argument('-epochs', type=int, required=False, help='epochs')
-    parser.add_argument('-cost_function', type=str, required=False, help='cost function')
-    parser.add_argument('-dataset_name', type=str, required=False, help='dataset name')
-    parser.add_argument('-sequence', type=str, required=False, help='sequence')
-    parser.add_argument('-seed', type=int, required=False, help='seed')
-    parser.add_argument('-memory_only', type=bool, required=False, help='memory only')
-    parser.add_argument('-gather_stats', type=bool, required=False, help='gather stats')
-    parser.add_argument('-momentum', type=float, required=False, help='momentum')
+    parser.add_argument('--type', type=str, help='type')
+    parser.add_argument('--learning_rate', type=float, help='learning rate')
+    parser.add_argument('--batch_size', type=int, help='batch size')
+    parser.add_argument('--epochs', type=int, help='epochs')
+    parser.add_argument('--cost_function', type=str, help='cost function')
+    parser.add_argument('--dataset_name', type=str, help='dataset name')
+    parser.add_argument('--sequence', type=str, help='sequence')
+    parser.add_argument('--seed', type=int, help='seed')
+    parser.add_argument('--memory_only', type=str2bool, help='memory only')
+    parser.add_argument('--gather_stats', type=str2bool, help='gather stats')
+    parser.add_argument('--save_graph', type=str2bool, help='save graph')
+    parser.add_argument('--minimize_manually', type=str2bool, help='minimize manually')
+
+    
+#    parser.add_argument('-momentum', type=float, help='momentum')
 
     network_id = parser.parse_args().id
     network_name = parser.parse_args().name
@@ -43,7 +57,7 @@ def get_id_and_name_from_arguments():
 def get_network_definition():
     network_id, network_name, parser = get_id_and_name_from_arguments()
 
-    learning_type = parser.parse_args().learning_type
+    type = parser.parse_args().type
     learning_rate = parser.parse_args().learning_rate
     batch_size = parser.parse_args().batch_size
     epochs = parser.parse_args().epochs
@@ -52,8 +66,10 @@ def get_network_definition():
     sequence = parser.parse_args().sequence
     gather_stats = parser.parse_args().gather_stats
     memory_only = parser.parse_args().memory_only
+    save_graph = parser.parse_args().save_graph
+    minimize_manually = parser.parse_args().minimize_manually
     seed = parser.parse_args().seed
-    momentum = parser.parse_args().momentum
+#    momentum = parser.parse_args().momentum
 
     if network_id is not None:
         print(f"running network with id={network_id}")
@@ -65,8 +81,8 @@ def get_network_definition():
         network_name = "default_network"
         network_definition = dict(networks_dict[network_name])
 
-    if learning_type is not None:
-        network_definition.update({"type": learning_type})
+    if type is not None:
+        network_definition.update({"type": type})
     if learning_rate is not None:
         network_definition.update({"learning_rate": learning_rate})
     if batch_size is not None:
@@ -83,11 +99,14 @@ def get_network_definition():
         network_definition.update({"gather_stats": gather_stats})
     if memory_only is not None:
         network_definition.update({"memory_only": memory_only})
+    if save_graph is not None:
+        network_definition.update({"save_graph": save_graph})
+    if minimize_manually is not None:
+        network_definition.update({"minimize_manually": minimize_manually})
     if seed is not None:
         network_definition.update({"seed": seed})
-    if momentum is not None:
-        network_definition.update({"momentum": momentum})
-
+        #    if momentum is not None:
+        #        network_definition.update({"momentum": momentum})
     print(network_definition)
     return network_definition
 
@@ -98,6 +117,8 @@ def create_network(network_definition, output_types, output_shapes):
         from neural_network.backpropagation import Backpropagation as Network
     elif model == 'DFA':
         from neural_network.direct_feedback_alignment import DirectFeedbackAlignment as Network
+    elif model == 'DFAMEM':
+        from neural_network.direct_feedback_alignment import DirectFeedbackAlignmentMem as Network
     elif model == 'FA':
         from neural_network.feedback_alignment import FeedbackAlignment as Network
     else:
@@ -117,7 +138,7 @@ def create_network(network_definition, output_types, output_shapes):
                    output_shapes,
                    sequence,
                    cost_func,
-                   tf.train.AdamOptimizer(network_definition["learning_rate"]),
+                   tf.train.GradientDescentOptimizer(network_definition["learning_rate"]),
                                               #network_definition["momentum"]), # TODO
                    scope=model,
                    gather_stats=network_definition['gather_stats'],
@@ -125,7 +146,8 @@ def create_network(network_definition, output_types, output_shapes):
                    # restore_model_path=network['restore_model_path'],
                    # save_model_path=network['save_model_path'],
                    restore_model=network_definition['restore_model'],
-                   save_model=network_definition['save_model'])
+                   save_model=network_definition['save_model'],
+                   minimize_manually=network_definition['minimize_manually'])
 
 
 def train_network(neural_network, training, test, network):

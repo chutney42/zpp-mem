@@ -2,12 +2,12 @@ import tensorflow as tf
 from functools import partial
 from neural_network.neural_network import NeuralNetwork
 from neural_network.backward_propagation import BackwardPropagation
-from layer.weight_layer.convolutional_layers import ConvolutionalLayer
-from layer.weight_layer.fully_connected import FullyConnected
+from layer.weight_layer import WeightLayer, ConvolutionalLayer, FullyConnected
 from custom_operations import direct_feedback_alignment_fc, direct_feedback_alignment_conv
 
 
 class DirectFeedbackAlignment(BackwardPropagation):
+
     def __init__(self, types, shapes, sequence, *args, **kwargs):
         self.error_container = []
         for layer in sequence:
@@ -20,43 +20,46 @@ class DirectFeedbackAlignment(BackwardPropagation):
                                      output_dim=shapes[1][1].value,
                                      error_container=self.error_container)
         super().__init__(types, shapes, sequence, *args, **kwargs)
-        
-    def build(self):
-        self.result = self.build_forward()
-        self.cost = self.cost_function(self.labels, self.result)
-        self.build_test(self.result)
-        self.error_container.append(tf.gradients(self.cost, self.result, name="error")[0])
-        update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-        self.step = self.optimizer.minimize(self.cost)
-        self.step = tf.group([self.step, update_ops])
+
+    def build_error(self, cost, result):
+        self.error_container.append(tf.gradients(cost, result, name="error")[0])
+        return self.error_container[0]
 
 
-class DirectFeedbackAlignmentMem(NeuralNetwork): # TODO
-    def __init__(self, types, shapes, sequence, cost_function_name,
-                 propagator_initializer=tf.random_normal_initializer(), *args, **kwargs):
-        propagator = DirectFixedRandom(shapes[1][1].value, propagator_initializer)
-        super().__init__(types, shapes, sequence, cost_function_name, propagator, *args, **kwargs)
+class DirectFeedbackAlignmentMem(DirectFeedbackAlignment): # TODO
 
     def build_forward(self):
-        a = self.features
-        for block in self.sequence:
-            for layer in block:
+        with tf.name_scope("forward"):
+            a = self.features
+            for layer in self.sequence:
                 a = layer.build_forward(a, remember_input=False, gather_stats=self.gather_stats)
-        return a
+            return a
 
-    def build_backward(self, output_error):
-        self.step = []
-        a = self.features
-        for i, block in enumerate(self.sequence):
-            for layer in block:
-                a = layer.build_forward(a, remember_input=True, gather_stats=self.gather_stats)
-            if i + 1 < len(self.sequence):
-                error = self.sequence[i + 1].head.build_propagate(output_error, gather_stats=self.gather_stats)
-            else:
-                error = output_error
-            for layer in reversed(block.tail):
-                error = layer.build_backward(error, gather_stats=self.gather_stats)
+    def build_backward(self, error, output):
+        with tf.name_scope("backward"):
+
+            def build_partial_backward(error, output, first, last, step):
+                for layer in reversed(self.sequence[first + 1 : last]):
+                    error, output = layer.build_backward(error, output, self.optimizer, self.gather_stats)
+                    if layer.trainable:
+                        step.append(layer.step)
+                self.sequence[first].build_update(error, output, self.optimizer)
+                layer = self.sequence[first]
                 if layer.trainable:
-                    self.step.append(layer.step)
-            block.head.build_update(error, gather_stats=self.gather_stats)
-            self.step.append(block.head.step)
+                    step.append(layer.step)
+                return step
+
+            step = []
+            i = 0
+            a = self.sequence[0].build_forward(self.features, remember_input=True, gather_stats=self.gather_stats)
+
+            for j, layer in enumerate(self.sequence[1:]):
+                a = layer.build_forward(a, remember_input=True, gather_stats=self.gather_stats)
+                if isinstance(layer, WeightLayer):
+                    perror = layer.build_propagate(1.0, a)
+                    step = build_partial_backward(perror, a, i, j + 1, step)
+                    i = j + 1
+
+            step = build_partial_backward(error, a, i, j + 1, step)
+
+            return tf.group(step)
