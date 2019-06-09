@@ -49,6 +49,7 @@
 # Additionally one could use LOG_MEMORY messages to get memory allocation info
 # See multiple_memory_obtain_example.py for details on using these additional
 # methods
+import matplotlib
 
 import numpy as np
 
@@ -192,10 +193,12 @@ def print_plot(run_metadata, gpu_only=False, ignore_less_than_bytes=0, filename=
         timestamps.append(timestamp - first_timestamp)
         data.append(total_memory)
 
-
-    plt.plot(timestamps, np.array(data)/1024, color='blue')
-    plt.xlabel("czas w mikrosekundach")
-    plt.ylabel("Zaalokowana pamięc w kilobajtach")
+    matplotlib.rcParams.update({'font.size': 18})
+    plt.plot(np.array(timestamps)/1000, np.array(data)/1024, color='blue')
+    plt.xlabel("czas w ms")
+    plt.ylabel("Zaalokowana pamięć w KB")
+    plt.gca().set_ylim([0,2500])
+    plt.tight_layout()
     plt.savefig(filename)
     return total_memory
 
