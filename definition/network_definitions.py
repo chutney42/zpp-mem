@@ -2,9 +2,9 @@ from numpy.random import randint
 
 
 default_network = {
-    "type": "BP",
+    "type": "DFAMEM",
     "dataset_name": "mnist",
-    "sequence": "fc",
+    "sequence": "fcReLu",
     "cost_function": "softmax_cross_entropy",
     "learning_rate": 0.01,
 #    "momentum": 0.9,

@@ -4,7 +4,6 @@ import tensorflow as tf
 class Layer(object):
     def __init__(self, trainable, scope="layer"):
         self.trainable = trainable
-        self.step = None
         self.variables = []
         self.scope = scope
         self.input = None
