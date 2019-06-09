@@ -1,5 +1,6 @@
 from numpy.random import randint
 
+
 default_network = {
     "type": "DFAMEM",
     "dataset_name": "mnist",
@@ -9,7 +10,7 @@ default_network = {
     "learning_rate": 0.01,
 #    "momentum": 0.9,
     "minimize_manually": True,
-    
+
     "gather_stats": False,
     "save_graph": False,
     "memory_only": True,
@@ -21,11 +22,32 @@ default_network = {
 
     "minimum_accuracy": [(1, 1)],
     "batch_size": 10,
-    "epochs": 4,
+    "epochs": 30,
     "eval_period": 1000,
     "stat_period": 100,
     "seed": randint(1, 100000000),
 }
+
+fcSigmoid = dict(default_network)
+fcSigmoid.update({
+    "sequence": "fcSigmoid",
+    "cost_function": "mean_squared_error",
+    "learning_reate": 0.05,
+    "batch_size": 10,
+    "epochs":30,
+    "minimize_manually": True,
+})
+
+fcReLu = dict(default_network)
+fcReLu.update({
+    "sequence": "fcReLu",
+    "cost_function": "softmax_cross_entropy",
+    "learning_reate": 0.01,
+    "batch_size": 10,
+    "epochs":30,
+    "minimize_manually": True,
+})
+
 
 liao_network = {
     "type": "BP",
@@ -47,7 +69,7 @@ liao_network = {
 
     "minimum_accuracy": [(1, 1)],
     "batch_size": 100,
-    "epochs": 50,
+    "epochs": 150,
     "eval_period": 1000,
     "stat_period": 100,
     "seed": randint(1, 100000000),
