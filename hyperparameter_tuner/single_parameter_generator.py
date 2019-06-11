@@ -6,7 +6,7 @@ class single_parameter_generator():
     def params(self, value=None):
         if value is None:
             for param_value in self.range:
-                yield f"-{self.parameter_name} {param_value}"
+                yield f"-{self.parameter_name} {param_value}" # TODO zmienic
         else:
             yield f"-{self.parameter_name} {value}"
 
