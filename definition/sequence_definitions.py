@@ -109,7 +109,23 @@ def liao_cifar_bn(output_size):
             BatchNormalization(momentum=0.9),
             FullyConnected(output_size)]
 
-            
+def experiment_mnist_fc(output_size):
+    return [FullyConnected(100, flatten=True),
+            ReLu(),
+            FullyConnected(30),
+            ReLu(),
+            FullyConnected(output_size)]
+
+def experiment_mnist_conv(output_size):
+    return [ConvolutionalLayer(filter_dim=(5, 5), num_of_filters=20, strides=[1, 1], padding="SAME"),
+            MaxPool([2, 2], [2, 2]),
+            ReLu(),
+            ConvolutionalLayer(filter_dim=(5, 5), num_of_filters=50, strides=[1, 1], padding="SAME"),
+            MaxPool([2, 2], [2, 2]),
+            ReLu(),
+            FullyConnected(500, flatten=True),
+            ReLu(),
+            FullyConnected(output_size)]
 
 ''' TODO
 def vgg_16(output_size):
