@@ -108,10 +108,10 @@ exp_mnist_conv.update({
     "epochs": 150
 })
 
-exp_cifar_resnet = dict(default_network)
-exp_cifar_resnet.update({
+exp_cifar_mosko = dict(default_network)
+exp_cifar_mosko.update({
     "dataset_name": "cifar10",
-    "sequence": "experiment_cifar_resnet",
+    "sequence": "experiment_cifar_mosko",
     "learning_rate": 0.01,
     "batch_size": 100,
     "epochs": 5

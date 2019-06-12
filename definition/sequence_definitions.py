@@ -120,11 +120,19 @@ def experiment_mnist_conv(output_size):
             ReLu(),
             FullyConnected(output_size)]
 
-def experiment_cifar_resnet(output_size):
-    return [ConvolutionalLayer(filter_dim=(5, 5), num_of_filters=64, strides=[], padding="SAME"),
+def experiment_cifar_mosko(output_size):
+    return [ConvolutionalLayer(filter_dim=[5, 5], num_of_filters=64, strides=[1, 1], padding="SAME"),
             MaxPool([3, 3], [2, 2]),
+            BatchNormalization(),
             ReLu(),
-            ]
+            ConvolutionalLayer(filter_dim=[5, 5], num_of_filters=64, strides=[1, 1], padding="SAME"),
+            AveragePool([3, 3], [2, 2]),
+            BatchNormalization(),
+            ReLu(),
+            ConvolutionalLayer(filter_dim=[5, 5], num_of_filters=64, strides=[1, 1], padding="SAME"),
+            AveragePool([3, 3], [2, 2]),
+            ReLu(),
+            FullyConnected(output_size, flatten=True)]
 
 ''' TODO
 def vgg_16(output_size):

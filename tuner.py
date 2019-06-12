@@ -31,7 +31,7 @@ if __name__ == '__main__':
     vgg_16_BP_tuner = cmd_generator([sgen("name", ["exp_cifar_resnet"]),
                                      # sgen("batch_size", [16, 32, 64]),
                                      sgen("type", ["BP", "FA", "DFA", "DFAMEM"]),
-                                     sgen("learning_rate", [0.1, 0.01, 0.005, 0.001]),
+                                     sgen("learning_rate", [0.1, 0.01, 0.005, 0.001, 0.0001]),
                                      # sgen("sequence", ["vgg_16", "vgg_16_without_BN"])
                                      ], command_prefix="python experiment.py",
                                     output_path=output_path).run_commands()
