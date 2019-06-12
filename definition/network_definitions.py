@@ -2,7 +2,7 @@ from numpy.random import randint
 
 
 default_network = {
-    "type": "DFAMEM",
+    "type": "DFA",
     "dataset_name": "mnist",
     "sequence": "long_fc2",
 
@@ -12,7 +12,7 @@ default_network = {
     "minimize_manually": True,
 
     "gather_stats": False,
-    "save_graph": False,
+    "save_graph": True,
     "memory_only": True,
 
     "restore_model": False,
