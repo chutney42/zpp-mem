@@ -142,7 +142,22 @@ exp_cifar_liao_memdfa.update({
     "learning_rate": 0.00001,
 })
 
-exp_cifar_liao_bn = dict(exp_cifar_liao_bp)
-exp_cifar_liao_bn.update({
+exp_cifar_liao_bn_bp = dict(exp_cifar_liao_bp)
+exp_cifar_liao_bn_bp.update({
     "sequence": "liao_cifar_bn"
+})
+
+exp_cifar_liao_bn_fa = dict(exp_cifar_liao_bn_bp)
+exp_cifar_liao_bn_fa.update({
+    "learning_rate": 0.00001,
+})
+
+exp_cifar_liao_bn_dfa = dict(exp_cifar_liao_bn_bp)
+exp_cifar_liao_bn_dfa.update({
+    "learning_rate": 0.00001,
+})
+
+exp_cifar_liao_bn_memdfa = dict(exp_cifar_liao_bn_bp)
+exp_cifar_liao_bn_memdfa.update({
+    "learning_rate": 0.00001,
 })
