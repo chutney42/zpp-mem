@@ -117,10 +117,32 @@ exp_cifar_mosko.update({
     "epochs": 5
 })
 
-exp_cifar_liao = dict(default_network)
-exp_cifar_liao.update({
+exp_cifar_liao_bp = dict(default_network)
+exp_cifar_liao_bp.update({
     "dataset_name": "cifar10",
     "sequence": "liao_cifar",
+    "learning_rate": 0.01,
     "batch_size": 100,
-    "epochs": 5
+    "epochs": 100
+})
+
+
+exp_cifar_liao_fa = dict(exp_cifar_liao_bp)
+exp_cifar_liao_fa.update({
+    "learning_rate": 0.00001,
+})
+
+exp_cifar_liao_dfa = dict(exp_cifar_liao_bp)
+exp_cifar_liao_dfa.update({
+    "learning_rate": 0.00001,
+})
+
+exp_cifar_liao_memdfa = dict(exp_cifar_liao_bp)
+exp_cifar_liao_memdfa.update({
+    "learning_rate": 0.00001,
+})
+
+exp_cifar_liao_bn = dict(exp_cifar_liao_bp)
+exp_cifar_liao_bn.update({
+    "sequence": "liao_cifar_bn"
 })
