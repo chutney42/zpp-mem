@@ -116,3 +116,11 @@ exp_cifar_mosko.update({
     "batch_size": 100,
     "epochs": 5
 })
+
+exp_cifar_liao = dict(default_network)
+exp_cifar_liao.update({
+    "dataset_name": "cifar10",
+    "sequence": "liao_cifar",
+    "batch_size": 100,
+    "epochs": 5
+})
