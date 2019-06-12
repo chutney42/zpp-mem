@@ -120,6 +120,9 @@ def experiment_mnist_conv(output_size):
             ReLu(),
             FullyConnected(output_size)]
 
+def experiment_cifar_resnet(output_size):
+    return resnet_18(output_size)
+
 ''' TODO
 def vgg_16(output_size):
     def convolutional_layer_block(filter_dim, number_of_filters, stride=[1, 1], with_pooling=False):

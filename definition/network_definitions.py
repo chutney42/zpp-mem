@@ -96,8 +96,8 @@ vgg_16_DFA.update({
 exp_mnist_fc = dict(default_network)
 exp_mnist_fc.update({
     "sequence": "experiment_mnist_fc",
-    "batch_size": 10,
-    "epochs": 20
+    "batch_size": 100,
+    "epochs": 100
 })
 
 exp_mnist_conv = dict(default_network)
@@ -106,4 +106,13 @@ exp_mnist_conv.update({
     "learning_rate": 0.005,
     "batch_size": 100,
     "epochs": 150
+})
+
+exp_cifar_resnet = dict(default_network)
+exp_cifar_resnet.update({
+    "dataset_name": "cifar10",
+    "sequence": "experiment_cifar_resnet",
+    "learning_rate": 0.01,
+    "batch_size": 100,
+    "epochs": 5
 })
