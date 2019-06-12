@@ -121,7 +121,8 @@ exp_cifar_liao_bp = dict(default_network)
 exp_cifar_liao_bp.update({
     "dataset_name": "cifar10",
     "sequence": "liao_cifar",
-    "learning_rate": 0.01,
+    "minimum_accuracy": [(3, 11), (10, 20)],
+    "learning_rate": 0.001,
     "batch_size": 100,
     "epochs": 100
 })
