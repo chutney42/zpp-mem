@@ -121,7 +121,10 @@ def experiment_mnist_conv(output_size):
             FullyConnected(output_size)]
 
 def experiment_cifar_resnet(output_size):
-    return resnet_18(output_size)
+    return [ConvolutionalLayer(filter_dim=(5, 5), num_of_filters=64, strides=[], padding="SAME"),
+            MaxPool([3, 3], [2, 2]),
+            ReLu(),
+            ]
 
 ''' TODO
 def vgg_16(output_size):
