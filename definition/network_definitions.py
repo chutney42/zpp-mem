@@ -2,17 +2,18 @@ from numpy.random import randint
 
 
 default_network = {
-    "type": "DFAMEM",
+    "type": "DFA",
     "dataset_name": "mnist",
-    "sequence": "fcReLu",
+    "sequence": "long_fc2",
+
     "cost_function": "softmax_cross_entropy",
     "learning_rate": 0.01,
 #    "momentum": 0.9,
     "minimize_manually": True,
 
     "gather_stats": False,
-    "save_graph": False,
-    "memory_only": False,
+    "save_graph": True,
+    "memory_only": True,
 
     "restore_model": False,
     "save_model": False,
@@ -91,4 +92,19 @@ vgg_16_DFA.update({
     "type": "DFA",
     "minimum_accuracy": [(20, 20), (50, 40)],
 
+})
+
+exp_mnist_fc = dict(default_network)
+exp_mnist_fc.update({
+    "sequence": "experiment_mnist_fc",
+    "batch_size": 10,
+    "epochs": 20
+})
+
+exp_mnist_conv = dict(default_network)
+exp_mnist_conv.update({
+    "sequence": "experiment_mnist_conv",
+    "learning_rate": 0.005,
+    "batch_size": 100,
+    "epochs": 150
 })

@@ -28,15 +28,15 @@ def extract_to_csv(path):
 
 if __name__ == '__main__':
     output_path = f"hyperparameter_tuner/results/{str(datetime.now()).replace(' ', '')}"
-    vgg_16_BP_tuner = cmd_generator([sgen("name", ["vgg_16"]),
-                                     sgen("batch_size", [16, 32, 64]),
-                                     sgen("learning_rate", [0.01, 0.05, 0.5, 1.5]),
-                                     sgen("learning_type", ["BP", "DFA"]),
-                                     sgen("sequence", ["vgg_16", "vgg_16_without_BN"])
+    vgg_16_BP_tuner = cmd_generator([sgen("-name", ["exp_mnist_fc", "exp_mnist_conv"]),
+                                     # sgen("batch_size", [16, 32, 64]),
+                                     # sgen("learning_rate", [0.01, 0.05, 0.5, 1.5]),
+                                     sgen("-type", ["BP", "FA", "DFA", "DFAMEM"]),
+                                     # sgen("sequence", ["vgg_16", "vgg_16_without_BN"])
                                      ], command_prefix="python experiment.py",
                                     output_path=output_path).run_commands()
 
-    os.mkdir("hyperparameter_tuner/results")
+    # os.mkdir("hyperparameter_tuner/results")
     os.mkdir(output_path)
     os.system(f"touch {output_path}/summarise.csv")
 
