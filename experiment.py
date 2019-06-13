@@ -6,7 +6,6 @@ from definition import sequence_definitions
 from definition import dataset_definitions
 from definition import network_definitions
 
-
 sequences_dict = dict(getmembers(sequence_definitions, isfunction))
 datasets_dict = dict(getmembers(dataset_definitions, isfunction))
 networks_dict = {
@@ -138,7 +137,7 @@ def create_network(network_definition, output_types, output_shapes):
                    output_shapes,
                    sequence,
                    cost_func,
-                   tf.train.GradientDescentOptimizer(network_definition["learning_rate"]),
+                   tf.train.AdamOptimizer(network_definition["learning_rate"]),
                                               #network_definition["momentum"]), # TODO
                    scope=model,
                    gather_stats=network_definition['gather_stats'],

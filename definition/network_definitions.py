@@ -108,18 +108,34 @@ exp_mnist_conv.update({
     "epochs": 150
 })
 
-exp_cifar_vgg = dict(default_network)
-exp_cifar_vgg.update({
+exp_cifar_vgg_bp = dict(default_network)
+exp_cifar_vgg_bp.update({
+    "type": "BP",
     "dataset_name": "cifar10",
     "sequence": "vgg_16",
     "cost_function": "softmax_cross_entropy",
-    "minimize_manually": False,
     "learning_rate": 0.001,
     "memory_only": False,
-
-    "minimum_accuracy": [(1, 1)],
+    "minimize_manually": False,
+    "minimum_accuracy": [(5, 20)],
     "batch_size": 100,
-    "epochs": 5,
+    "epochs": 80,
+})
+
+exp_cifar_vgg_fa = dict(exp_cifar_vgg_bp)
+exp_cifar_vgg_fa.update({
+    "type": "FA",
+    "learning_rate": 0.000005
+})
+
+exp_cifar_vgg_dfa = dict(exp_cifar_vgg_fa)
+exp_cifar_vgg_dfa.update({
+    "type": "DFA"
+})
+
+exp_cifar_vgg_memdfa = dict(exp_cifar_vgg_fa)
+exp_cifar_vgg_memdfa.update({
+    "type": "DFAMEM"
 })
 
 exp_cifar_mosko = dict(default_network)
