@@ -28,9 +28,9 @@ def extract_to_csv(path):
 
 if __name__ == '__main__':
     output_path = f"hyperparameter_tuner/results/{str(datetime.now()).replace(' ', '')}"
-    vgg_16_BP_tuner = cmd_generator([sgen("name", ["exp_cifar_liao_bp", "exp_cifar_liao_fa", "exp_cifar_liao_dfa", "exp_cifar_liao_memdfa"]),
-                                     # sgen("batch_size", [16, 32, 64]),
-                                     # sgen("sequence", ["vgg_16", "vgg_16_without_BN"])
+    vgg_16_BP_tuner = cmd_generator([sgen("name", ["exp_cifar_vgg"]),
+                                     sgen("type", ["BP", "DFA"]),
+                                     sgen("learning_rate", [0.01, 0.005, 0.001, 0.0005, 0.0001, 0.00005, 0.00001]),
                                      ], command_prefix="python experiment.py",
                                     output_path=output_path).run_commands()
 
@@ -45,4 +45,4 @@ if __name__ == '__main__':
 
         extract_to_csv(output_path)
         print("\n\n\n")
-        time.sleep(10)
+        time.sleep(2)

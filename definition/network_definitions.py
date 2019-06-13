@@ -108,6 +108,19 @@ exp_mnist_conv.update({
     "epochs": 150
 })
 
+exp_cifar_vgg = dict(default_network)
+exp_cifar_vgg.update({
+    "dataset_name": "cifar",
+    "sequence": "vgg_16",
+    "cost_function": "softmax_cross_entropy",
+    "learning_rate": 0.01,
+    "memory_only": False,
+
+    "minimum_accuracy": [(1, 1)],
+    "batch_size": 100,
+    "epochs": 5,
+})
+
 exp_cifar_mosko = dict(default_network)
 exp_cifar_mosko.update({
     "dataset_name": "cifar10",
