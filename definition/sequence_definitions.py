@@ -165,7 +165,7 @@ def vgg_16(output_size):
 
     sequence.extend([FullyConnected(4096, flatten=True), BatchNormalization(), ReLu()]),
     sequence.extend([FullyConnected(4096), BatchNormalization(), ReLu()]),
-    sequence.extend([FullyConnected(output_size), Softmax()])
+    sequence.extend([FullyConnected(output_size)])
     return sequence
 
 ''' TODO
