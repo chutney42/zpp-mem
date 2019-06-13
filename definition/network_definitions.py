@@ -47,7 +47,7 @@ fcReLu.update({
     "minimize_manually": True,
 })
 
-liao_netowrk = dict(default_network)
+liao_network = dict(default_network)
 liao_network = {
     "type": "DFA",
     "dataset_name": "cifar10",
@@ -67,7 +67,6 @@ vgg_16.update({
     "epochs": 100,
     "cost_function": "softmax_cross_entropy",
     "dataset_name": "cifar10"
-
 })
 
 vgg_16_DFA = dict(vgg_16)
