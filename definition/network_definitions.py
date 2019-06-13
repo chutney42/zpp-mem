@@ -113,7 +113,8 @@ exp_cifar_vgg.update({
     "dataset_name": "cifar10",
     "sequence": "vgg_16",
     "cost_function": "softmax_cross_entropy",
-    "learning_rate": 0.01,
+    "minimize_manually": False,
+    "learning_rate": 0.001,
     "memory_only": False,
 
     "minimum_accuracy": [(1, 1)],
