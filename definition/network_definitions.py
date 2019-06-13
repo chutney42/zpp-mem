@@ -31,7 +31,7 @@ vgg_16.update({
     "minimum_accuracy": [(10, 12), (50, 20)],
     "type": "BP",
     "sequence": "vgg_16",
-    "epochs": 100,
+    "epochs": 5,
     "cost_function": "softmax_cross_entropy",
     "dataset_name": "cifar10"
 
