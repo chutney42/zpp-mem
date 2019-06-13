@@ -96,6 +96,20 @@ vgg_16_DFA.update({
 exp_mnist_fc = dict(default_network)
 exp_mnist_fc.update({
     "sequence": "experiment_mnist_fc",
+    "batch_size": 10,
+    "epochs": 20
+})
+
+exp_mnist_conv = dict(default_network)
+exp_mnist_conv.update({
+    "sequence": "experiment_mnist_conv",
+    "learning_rate": 0.005,
+    "batch_size": 100,
+    "epochs": 150
+})
+exp_mnist_fc = dict(default_network)
+exp_mnist_fc.update({
+    "sequence": "experiment_mnist_fc",
     "batch_size": 100,
     "epochs": 100
 })

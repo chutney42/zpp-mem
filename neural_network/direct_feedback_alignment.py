@@ -1,13 +1,13 @@
-import tensorflow as tf
 from functools import partial
-from neural_network.neural_network import NeuralNetwork
-from neural_network.backward_propagation import BackwardPropagation
-from layer.weight_layer import WeightLayer, ConvolutionalLayer, FullyConnected
+
+import tensorflow as tf
+
 from custom_operations import direct_feedback_alignment_fc, direct_feedback_alignment_conv
+from layer.weight_layer import WeightLayer, ConvolutionalLayer, FullyConnected
+from neural_network.backward_propagation import BackwardPropagation
 
 
 class DirectFeedbackAlignment(BackwardPropagation):
-
     def __init__(self, types, shapes, sequence, *args, **kwargs):
         self.error_container = []
         for layer in sequence:
@@ -26,7 +26,7 @@ class DirectFeedbackAlignment(BackwardPropagation):
         return self.error_container[0]
 
 
-class DirectFeedbackAlignmentMem(DirectFeedbackAlignment): # TODO
+class DirectFeedbackAlignmentMem(DirectFeedbackAlignment):
 
     def build_forward(self):
         with tf.name_scope("forward"):
@@ -54,11 +54,12 @@ class DirectFeedbackAlignmentMem(DirectFeedbackAlignment): # TODO
             a = self.sequence[0].build_forward(self.features, remember_input=True, gather_stats=self.gather_stats)
 
             for j, layer in enumerate(self.sequence[1:]):
-                a = layer.build_forward(a, remember_input=True, gather_stats=self.gather_stats)
-                if isinstance(layer, WeightLayer):
-                    perror = layer.build_propagate(1.0, a)
-                    step = build_partial_backward(perror, a, i, j + 1, step)
-                    i = j + 1
+                with tf.get_default_graph().control_dependencies(step[-1:] + [a]):
+                    a = layer.build_forward(a, remember_input=True, gather_stats=self.gather_stats)
+                    if isinstance(layer, WeightLayer):
+                        perror = layer.build_propagate(1.0, a)
+                        step = build_partial_backward(perror, a, i, j + 1, step)
+                        i = j + 1
 
             step = build_partial_backward(error, a, i, j + 1, step)
 

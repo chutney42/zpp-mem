@@ -39,10 +39,10 @@ def direct_feedback_alignment_fc(input, weights, output_dim, error_container, in
     @tf.custom_gradient
     def func(x):
         def grad(dy, variables=[weights]):
-            dx = tf.matmul(error_container[0], random)
-            dw = tf.matmul(tf.transpose(x), dy)
+            dx = tf.matmul(error_container[0], random, name='matmul_grad_x')
+            dw = tf.matmul(tf.transpose(x), dy, name='matmul_grad_w')
             return dx, [dw]
-        return tf.matmul(x, weights), grad
+        return tf.matmul(x, weights, name='matmul_forward_x'), grad
     with tf.name_scope(name):
         return func(input)
 

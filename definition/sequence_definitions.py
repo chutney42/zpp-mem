@@ -19,6 +19,13 @@ def long_fc(output_size):
     sequence += [FullyConnected(output_size), Sigmoid()]
     return sequence
 
+def long_fc2(output_size):
+    sequence = []
+    for i in range(20):
+        sequence += [FullyConnected(500, flatten=(i == 0)), Sigmoid()]
+    sequence += [FullyConnected(output_size), Sigmoid()]
+    return sequence
+
 def long_conv(output_size):
     sequence = []
     for i in range(30):
