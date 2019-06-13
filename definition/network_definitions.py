@@ -110,7 +110,7 @@ exp_mnist_conv.update({
 
 exp_cifar_vgg = dict(default_network)
 exp_cifar_vgg.update({
-    "dataset_name": "cifar",
+    "dataset_name": "cifar10",
     "sequence": "vgg_16",
     "cost_function": "softmax_cross_entropy",
     "learning_rate": 0.01,

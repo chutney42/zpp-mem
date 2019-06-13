@@ -139,33 +139,34 @@ def vgg_16(output_size):
     def convolutional_layer_block(filter_dim, number_of_filters, strides=[1, 1], with_pooling=False):
         if with_pooling == False:
             return [ConvolutionalLayer(filter_dim, strides=strides, num_of_filters=number_of_filters, padding="SAME"),
-                          BatchNormalization(), ReLu()]
+                    BatchNormalization(), ReLu()]
         else:
             return [ConvolutionalLayer(filter_dim, strides=strides, num_of_filters=number_of_filters, padding="SAME"),
-                          BatchNormalization(), ReLu(), MaxPool([2, 2], [2, 2], padding="SAME")]
+                    BatchNormalization(), ReLu(), MaxPool([2, 2], [2, 2], padding="SAME")]
 
-    return [
-        convolutional_layer_block((3, 3), number_of_filters=64),
-        convolutional_layer_block((3, 3), number_of_filters=64, with_pooling=True),
+    sequence = []
+    sequence.extend(convolutional_layer_block((3, 3), number_of_filters=64))
+    sequence.extend(convolutional_layer_block((3, 3), number_of_filters=64, with_pooling=True))
 
-        convolutional_layer_block((3, 3), number_of_filters=128),
-        convolutional_layer_block((3, 3), number_of_filters=128, with_pooling=True),
-        convolutional_layer_block((3, 3), number_of_filters=256),
-        convolutional_layer_block((3, 3), number_of_filters=256),
-        convolutional_layer_block((3, 3), number_of_filters=256, with_pooling=True),
+    sequence.extend(convolutional_layer_block((3, 3), number_of_filters=128))
+    sequence.extend(convolutional_layer_block((3, 3), number_of_filters=128, with_pooling=True))
 
-        convolutional_layer_block((3, 3), number_of_filters=512),
-        convolutional_layer_block((3, 3), number_of_filters=512),
-        convolutional_layer_block((3, 3), number_of_filters=512, with_pooling=True),
+    sequence.extend(convolutional_layer_block((3, 3), number_of_filters=256))
+    sequence.extend(convolutional_layer_block((3, 3), number_of_filters=256))
+    sequence.extend(convolutional_layer_block((3, 3), number_of_filters=256, with_pooling=True))
 
-        convolutional_layer_block((3, 3), number_of_filters=512),
-        convolutional_layer_block((3, 3), number_of_filters=512),
-        convolutional_layer_block((3, 3), number_of_filters=512, with_pooling=True),
+    sequence.extend(convolutional_layer_block((3, 3), number_of_filters=512))
+    sequence.extend(convolutional_layer_block((3, 3), number_of_filters=512))
+    sequence.extend(convolutional_layer_block((3, 3), number_of_filters=512, with_pooling=True))
 
-        Block([FullyConnected(4096, flatten=True), BatchNormalization(), ReLu()]),
-        Block([FullyConnected(4096), BatchNormalization(), ReLu()]),
-        Block([FullyConnected(output_size), Softmax()])
-    ]
+    sequence.extend(convolutional_layer_block((3, 3), number_of_filters=512))
+    sequence.extend(convolutional_layer_block((3, 3), number_of_filters=512))
+    sequence.extend(convolutional_layer_block((3, 3), number_of_filters=512, with_pooling=True))
+
+    sequence.extend([FullyConnected(4096, flatten=True), BatchNormalization(), ReLu()]),
+    sequence.extend([FullyConnected(4096), BatchNormalization(), ReLu()]),
+    sequence.extend([FullyConnected(output_size), Softmax()])
+    return sequence
 
 ''' TODO
 def vgg_16(output_size):
