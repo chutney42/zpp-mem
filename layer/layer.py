@@ -5,16 +5,14 @@ class Layer(object):
     def __init__(self, trainable, scope="layer"):
         self.trainable = trainable
         self.variables = []
+        if trainable:
+            self.step = []
         self.scope = scope
         self.input = None
         self.input_shape = None
         self.learning_rate = None
-        if trainable:
-            self.step = []
         self.momentum = None
         self.traning_mode = None
-        if trainable:
-            self.step = []
 
     def save_input(self, input):
         self.input = input

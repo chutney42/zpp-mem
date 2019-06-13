@@ -8,7 +8,6 @@ default_network = {
 
     "cost_function": "softmax_cross_entropy",
     "learning_rate": 0.01,
-#    "momentum": 0.9,
     "minimize_manually": True,
 
     "gather_stats": False,
@@ -48,33 +47,17 @@ fcReLu.update({
     "minimize_manually": True,
 })
 
-
+liao_netowrk = dict(default_network)
 liao_network = {
-    "type": "BP",
-    "dataset_name": "mnist",
+    "type": "DFA",
+    "dataset_name": "cifar10",
     "sequence": "liao_mnist",
     "cost_function": "softmax_cross_entropy",
-    "learning_rate": 0.005,
-#    "momentum": 0.9,
+    "learning_rate": 0.00001,
     "minimize_manually": True,
-
-    "gather_stats": False,
-    "save_graph": False,
-    "memory_only": False,
-
-    "restore_model": False,
-    "save_model": False,
-    "restore_model_path": None,
-    "save_model_path": None,
-
-    "minimum_accuracy": [(1, 1)],
     "batch_size": 100,
     "epochs": 150,
-    "eval_period": 1000,
-    "stat_period": 100,
-    "seed": randint(1, 100000000),
 }
-
 
 vgg_16 = dict(default_network)
 vgg_16.update({
