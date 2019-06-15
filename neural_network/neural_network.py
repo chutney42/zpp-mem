@@ -263,30 +263,3 @@ class NeuralNetwork(object):
     def __switch_context(self):
         for var, val in zip(self.running_vars, self.context):
             self.sess.run(tf.assign(var, val))
-
-    def infer(self, x):
-        # TODO?
-        saver = tf.train.Saver()
-        with tf.Session() as sess:
-            saver.restore(sess, self.restore_model_path)
-            res = sess.run(self.result, feed_dict={self.features: x, self.training_mode: False})
-        return res
-
-    def test(self, data_set, batch_size=10):
-        # TODO?
-        next_batch = data_set.batch(batch_size).make_one_shot_iterator().get_next()
-        total_res = 0
-        counter = 0
-        saver = tf.train.Saver()
-        with tf.Session() as sess:
-            saver.restore(sess, self.restore_model_path)
-            while True:
-                try:
-                    batch_xs, batch_ys = sess.run(next_batch)
-                    res = sess.run(self.acc,
-                                   feed_dict={self.features: batch_xs, self.labels: batch_ys, self.trainig_mode: False})
-                    total_res += res
-                    counter += batch_size
-                except tf.errors.OutOfRangeError:
-                    break
-        return total_res / counter * 100

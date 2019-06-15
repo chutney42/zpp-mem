@@ -1,5 +1,5 @@
 # Code from repository https://github.com/yaroslavvb/chain_constant_memory
-#Utilities to figure out memory usage of run call
+# Utilities to figure out memory usage of run call
 #
 # Usage:
 #   import mem_util
@@ -121,8 +121,6 @@ def _timeline_from_nodestats(nodestats):
     return sorted(lines, key=first_key)
 
 
-# todo: get rid of "timeline_from_nodestats"
-
 def _position_of_largest(my_list):
     """Return index of largest entry """
     import operator
@@ -193,12 +191,12 @@ def print_plot(run_metadata, gpu_only=False, ignore_less_than_bytes=0, filename=
         timestamps.append(timestamp - first_timestamp)
         data.append(total_memory)
 
-    matplotlib.rcParams.update({'font.size': 18})
+    # matplotlib.rcParams.update({'font.size': 18})
     plt.plot(np.array(timestamps)/1000, np.array(data)/1024, color='blue')
     plt.xlabel("czas w ms")
     plt.ylabel("Zaalokowana pamięć w KB")
-    plt.gca().set_ylim([0,2500])
-    plt.tight_layout()
+    # plt.gca().set_ylim([0,2500])
+    # plt.tight_layout()
     plt.savefig(filename)
     return total_memory
 

@@ -13,6 +13,3 @@ network_metadata/*
 *~
 \#*\#
 keras_experiments.py
-datasets/*
-hyperparameter_tuner/results/*
-plots/*

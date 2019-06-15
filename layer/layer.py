@@ -25,7 +25,6 @@ class Layer(object):
         return input
 
     def gather_stats_backward(self, gradients):
-        #raise NotImplementedError("This method should be implemented in subclass")
         pass
     
     def build_forward(self, input, remember_input=False, gather_stats=False):
