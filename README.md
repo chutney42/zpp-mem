@@ -1,32 +1,47 @@
 # ZPP-MEM
 
-## [TensorBoard](https://github.com/tensorflow/tensorboard)
-### Usage
-```python
-def backpropagation(self, ...):
-    tf.summary.scalar("scalar_name", scalar)
-    tf.summary.histogram("histogram_name", tensor)
-    tf.summary.image("image_name", image)
-    # example of image: tf.reshape(weights, (1, weights.shape[0], weights.shape[1], 1))
-    ...
+## Instalation
 
-def train(self, ...):
-    with tf.Session() as sess:
-        writer = tf.summary.FileWriter("logs/log_name", sess.graph)
-        ...
-        for i in range(...):
-            ...
-            merged = tf.summary.merge_all()
-            run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
-            run_metadata = tf.RunMetadata()
-            summary, _ = sess.run([merged, self.step], options=run_options, run_metadata=run_metadata, ...)
-            writer.add_summary(summary, i)
-            writer.add_run_metadata(run_metadata, 'step%d' % i)
-        writer.close()
+To install our project, all you have to do is set up Conda virtual environment.
+Conda can be installed from https://docs.conda.io/en/latest/.
+Once you have Conda working, you need to create virtual environment and install all required packages.
+```bash
+$ conda create --name env_name --file requirements.txt
+$ conda activate env_name
+```
+You can deactivate this environment with command
+```bash
+$ conda deactivate
 ```
 
-### Running
-`$ tensorboard --logdir=logs`
+## Running single experiment
+
+Script for running single experiment is called `experiment.py`.
+For example, you can run `default_network` with learning algorithm `MEM-DFA` like that:
+```bash
+$ python experiment.py --name default_network --type DFAMEM
+```
+You can type `python experiment.py --help` to get list of all possible arguments.
+
+## Running many experiments
+
+There is dedicated script for tuning hiperparameters, called `tuner.py`.
+First, you have to prepare this file with hiperparameters you want to test
+```python
+tuner = cmd_generator(
+    [sgen("name", ["default_network", "vgg16"]),
+     sgen("type", ["BP", "DFA"]),
+     sgen("batch_size", [50, 100, 200],
+     sgen("learning_rate", [0.01, 0.001, 0.0001]))],
+    command_prefix="python experiment.py",
+    output_path=output_path).run_commands()
+```
+Then, you can simple run this script with `python tuner.py`, and wait for the results.
+
+## Accuracy measuments
+
+Network accuracy when run with `experiment.py` script is printed to stdout.
+However, when run with `tuner.py`, all output is redirected to `/hyperparameter/results/<timestamp>`.
 
 ## Memory tracing
 
@@ -34,8 +49,7 @@ We implemented possibility to trace memory usage profile durning single iteratio
 
 Change flag in configuration
 ```python
-    memory_only: True
-
+    "memory_only": True
 ```
 Your run session will be interputted after first run and in directory `./plots/` there will be file *.png with plot and *.txt with raw data to analise.
 
@@ -52,36 +66,3 @@ Raw data format:
 ```python
     "save_graph": True
 ```
-
-## [TensorFlow Profiler](https://github.com/tensorflow/tensorflow/tree/master/tensorflow/core/profiler)
-### Installation
-First install bazel from [here](https://docs.bazel.build/versions/master/bazel-overview.html).
-```
-$ git clone https://github.com/tensorflow/tensorflow.git
-$ cd tensorflow/
-$ bazel build tensorflow/core/profiler:profiler
-```
-
-### Code
-```python
-def train(self, ...):
-    builder = tf.profiler.ProfileOptionBuilder
-    opts = builder(builder.time_and_memory()).order_by('micros').with_empty_output().build()
-    with tf.contrib.tfprof.ProfileContext('profile_out/', trace_steps=[], dump_steps=[]) as pctx:
-        with tf.Session() as sess:
-            ...
-            for i in range(...):
-                ...
-                pctx.trace_next_step()
-                pctx.dump_next_step()
-                sess.run(...)
-                pctx.profiler.profile_operations(options=opts)
-```
-
-### Usage
-```
-$ cd tensorflow/
-$ bazel-bin/tensorflow/core/profiler/profiler --profile_path=profile_out/profile_xxx
-tfprof> graph -step -1 -max_depth 100000 -output timeline:outfile=<filename>
-```
-Then open this URL: chrome://tracing in Chrome and load timeline file.
