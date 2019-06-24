@@ -4,15 +4,15 @@ from numpy.random import randint
 default_network = {
     "type": "DFA",
     "dataset_name": "mnist",
-    "sequence": "long_fc2",
+    "sequence": "fcReLu",
 
     "cost_function": "softmax_cross_entropy",
     "learning_rate": 0.01,
     "minimize_manually": True,
 
     "gather_stats": False,
-    "save_graph": True,
-    "memory_only": True,
+    "save_graph": False,
+    "memory_only": False,
 
     "restore_model": False,
     "save_model": False,
@@ -21,7 +21,7 @@ default_network = {
 
     "minimum_accuracy": [(1, 1)],
     "batch_size": 10,
-    "epochs": 30,
+    "epochs": 1,
     "eval_period": 1000,
     "stat_period": 100,
     "seed": randint(1, 100000000),
@@ -89,4 +89,64 @@ exp_mnist_conv.update({
     "learning_rate": 0.005,
     "batch_size": 100,
     "epochs": 150
+})
+
+
+exp_cifar_vgg_bp = dict(default_network)
+exp_cifar_vgg_bp.update({
+    "type": "BP",
+    "dataset_name": "cifar10",
+    "sequence": "vgg_16",
+    "cost_function": "softmax_cross_entropy",
+    "learning_rate": 0.001,
+    "memory_only": False,
+    "minimize_manually": False,
+    "minimum_accuracy": [(5, 20)],
+    "batch_size": 100,
+    "epochs": 80,
+})
+
+exp_cifar_vgg_fa = dict(exp_cifar_vgg_bp)
+exp_cifar_vgg_fa.update({
+    "type": "FA",
+    "learning_rate": 0.000005
+})
+
+exp_cifar_vgg_dfa = dict(exp_cifar_vgg_fa)
+exp_cifar_vgg_dfa.update({
+    "type": "DFA"
+})
+
+exp_cifar_vgg_memdfa = dict(exp_cifar_vgg_fa)
+exp_cifar_vgg_memdfa.update({
+    "type": "DFAMEM"
+})
+
+exp_cifar_liao_bp = dict(default_network)
+exp_cifar_liao_bp.update({
+    "type": "BP",
+    "dataset_name": "cifar10",
+    "sequence": "liao_cifar",
+    "minimum_accuracy": [(3, 11), (10, 20)],
+    "learning_rate": 0.001,
+    "batch_size": 100,
+    "epochs": 100
+})
+
+exp_cifar_liao_fa = dict(exp_cifar_liao_bp)
+exp_cifar_liao_fa.update({
+    "type": "FA",
+    "learning_rate": 0.00001,
+})
+
+exp_cifar_liao_dfa = dict(exp_cifar_liao_bp)
+exp_cifar_liao_dfa.update({
+    "type": "DFA",
+    "learning_rate": 0.00001,
+})
+
+exp_cifar_liao_memdfa = dict(exp_cifar_liao_bp)
+exp_cifar_liao_memdfa.update({
+    "type": "DFAMEM",
+    "learning_rate": 0.00001,
 })
