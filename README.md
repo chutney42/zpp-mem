@@ -13,7 +13,75 @@ You can deactivate this environment with command
 ```bash
 $ conda deactivate
 ```
+## Defining architecture
+In order to define new network's  architecture, in file `./definition/sequence_definitions` you have to define a function  which returns sequence of layers.
+```python
+def liao_cifar_bn(output_size):
+    return [ConvolutionalLayer(filter_dim=(5, 5), num_of_filters=32, strides=[1, 1],
+                padding="SAME"), 
+            MaxPool(kernel_size=[3, 3], strides=[2, 2], padding="SAME"),
+            ReLu(),
+            BatchNormalization(momentum=0.9),
+            ConvolutionalLayer(filter_dim=(5, 5), num_of_filters=64, strides=[1, 1],
+                padding="SAME"),
+            AveragePool(kernel_size=[3, 3], strides=[2, 2], padding="SAME"),
+            ReLu(),
+            BatchNormalization(momentum=0.9),
+            ConvolutionalLayer(filter_dim=(5, 5), num_of_filters=64, strides=[1, 1],
+                padding="SAME"),
+            AveragePool(kernel_size=[3, 3], strides=[2, 2], padding="SAME"),
+            ReLu(),
+            BatchNormalization(momentum=0.9),
+            FullyConnected(128, flatten=True),
+            ReLu(),
+            BatchNormalization(momentum=0.9),
+            FullyConnected(output_size)]
+```
+## Defining network
+In order to define new neural network, in file `./definition/network_definitions` you have to define a dict describing the network.
 
+```python
+default_network = {
+    "type": "DFA",
+    "dataset_name": "mnist",
+    "sequence": "conv1",
+    "cost_function": "softmax_cross_entropy",
+    "learning_rate": 0.01,
+    "momentum": 0.9,
+    
+    "gather_stats": False,
+    "save_graph": False,
+    "memory_only": False,
+
+    "restore_model": False,
+    "save_model": False,
+    "restore_model_path": None,
+    "save_model_path": None,
+
+    "minimum_accuracy": [(1, 1)],
+    "batch_size": 10,
+    "epochs": 4,
+    "eval_period": 1000,
+    "stat_period": 100,
+    "seed": randint(1, 100000000),
+}
+```
+You can create new network by extending already existing one.
+```python
+
+liao_network = dict(default_network)
+liao_network.update({
+    "dataset_name": "cifar10",
+    "sequence": "liao_cifar_bn",
+
+    "minimum_accuracy": [(10, 30)],
+    "batch_size": 100,
+    "epochs": 50,
+    "eval_period": 1000,
+    "stat_period": 100,
+    "seed": 1,
+})
+```
 ## Running single experiment
 
 Script for running single experiment is called `experiment.py`.
